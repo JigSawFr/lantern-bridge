@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -152,7 +153,8 @@ def test_the_server_settings_are_saved_and_unknown_keys_survive(tmp_path: Path) 
     saved = load(path)
     assert (saved.name, saved.remote_rate, saved.public, saved.admin_lan_only) == ("My shelf", 2.5, True, False)
     assert 'future_key = "kept"' in path.read_text()
-    assert (path.stat().st_mode & 0o777) == 0o600
+    if os.name != "nt":  # Windows has no such modes
+        assert (path.stat().st_mode & 0o777) == 0o600
 
 
 def test_a_folder_and_a_missing_one_are_tested(tmp_path: Path) -> None:
