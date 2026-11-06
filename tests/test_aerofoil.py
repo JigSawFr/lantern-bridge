@@ -33,7 +33,7 @@ BUILD = "0123456789ABCDEF"
 def _zip(text: str = "save") -> bytes:
     out = io.BytesIO()
     with zipfile.ZipFile(out, "w") as z:
-        z.writestr("main", text)
+        z.writestr(zipfile.ZipInfo("main", (2026, 1, 1, 0, 0, 0)), text)  # a fixed date: the same bytes each time
     return out.getvalue()
 
 
