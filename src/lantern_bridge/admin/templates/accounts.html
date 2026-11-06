@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Accounts") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Accounts") }}</h1>
+<p class="lede">{{ _("The accounts of this bridge. Saves and requests of an account are kept for it, and copied to an AeroFoil user when it has one.") }}</p>
+{% if message %}<p class="good" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
+{% if aero %}<p class="muted">{{ _("AeroFoil source") }}: <strong>{{ aero.id }}</strong> · {{ _("service account") }}: {% if aero.user %}<code>{{ aero.user }}</code>{% else %}<span class="dim">{{ _("none") }}</span>{% endif %}</p>{% endif %}
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Account") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Devices") }}</th>{% if aero %}<th>{{ _("Acts on the AeroFoil as") }}</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for a in rows %}
+  <tr>
+    <td><strong>{{ a.name }}</strong>{% if a.state != "active" %} <span class="pill wait">{{ a.state }}</span>{% endif %}</td>
+    <td>{{ a.scopes | join(", ") }}</td><td>{{ a.devices }}</td>
+    {% if aero %}<td>
+      {% if a.login %}
+        <code>{{ a.login.user }}</code> <span class="pill {{ 'ok' if a.login.set else 'bad' }}">{{ a.login.password_env }}{{ '' if a.login.set else ' – ' ~ _('not set') }}</span>
+        <form class="inline" method="post" action="/admin/accounts/{{ a.name }}/login/remove"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="link">{{ _("Remove") }}</button></form>
+      {% else %}
+        <span class="dim">{{ _("the service account") if aero.user else _("nobody: nothing is copied") }}</span>
+        <form method="post" action="/admin/accounts/{{ a.name }}/login" class="row">
+          <input type="hidden" name="csrf" value="{{ session.csrf }}">
+          <label>{{ _("AeroFoil user") }} <input name="user" maxlength="128" required></label>
+          <label>{{ _("Variable holding its password") }} <input name="password_env" maxlength="128" placeholder="AEROFOIL_{{ a.name | upper }}" required pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
+          <button class="ghost small">{{ _("Tie") }}</button>
+        </form>
+      {% endif %}
+    </td>{% endif %}
+  </tr>
+  {% else %}
+  <tr><td colspan="4">{{ _("No account yet: approve a pairing or send an invitation.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<p class="dim">{{ _("Passwords are never stored here: only the name of the environment variable that holds one.") }}</p>
+{% endblock %}

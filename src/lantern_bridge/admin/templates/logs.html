@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Logs{% endblock %}
+{% block title %}{{ _("Logs") }}{% endblock %}
 {% block body %}
-<h1>Logs</h1>
+<h1>{{ _("Logs") }}</h1>
 <form method="get" class="row">
-  <label>Level <select name="level" id="level">{% for l in levels %}<option{% if l == level %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></label>
-  <button>Filter</button>
-  <span id="live" class="muted">live</span>
+  <label>{{ _("Level") }} <select name="level" id="level">{% for l in levels %}<option{% if l == level %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></label>
+  <button class="ghost">{{ _("Filter") }}</button>
+  <span id="live" class="pill ok">{{ _("live") }}</span>
 </form>
 <pre id="log" data-level="{{ level }}" data-last="{{ lines[-1].id if lines else 0 }}">{% for l in lines %}{{ l.time | when }} {{ "%-7s" | format(l.level) }} {{ l.message }}
 {% endfor %}</pre>

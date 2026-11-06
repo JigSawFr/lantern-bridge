@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Invitations") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Invitations") }}</h1>
+<p class="lede">{{ _("An invitation is a code that pairs a device without anyone approving it. Give it to someone you trust, for a short time.") }}</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if created %}<p class="good" role="status">{{ _("Invitation created for") }} <strong>{{ created.user }}</strong>: <code class="code">{{ created.code }}</code></p>{% endif %}
+<form method="post" action="/admin/invitations" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("New invitation") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Account") }} <input name="user" list="users" value="family" maxlength="64" required></label>
+    <label>{{ _("Valid for") }} <select name="days"><option value="1">1 {{ _("day") }}</option><option value="7" selected>7 {{ _("days") }}</option><option value="30">30 {{ _("days") }}</option></select></label>
+    <label>{{ _("Devices that may use it") }} <input name="devices" type="number" min="1" max="20" value="1" required></label>
+    <label>{{ _("Note") }} <input name="note" maxlength="200"></label>
+    <button>{{ _("Create") }}</button>
+  </div>
+  <datalist id="users">{% for u in users %}<option value="{{ u }}">{% endfor %}</datalist>
+</form>
+<h2>{{ _("Open invitations") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Code") }}</th><th>{{ _("Account") }}</th><th>{{ _("Used") }}</th><th>{{ _("Expires") }}</th><th>{{ _("Note") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for i in invitations %}
+  <tr>
+    <td><code>{{ i.code }}</code></td><td>{{ i.user }}</td><td>{{ i.used }} / {{ i.devices }}</td><td>{{ i.expires }}</td><td>{{ i.note or "–" }}</td>
+    <td><form method="post" action="/admin/invitations/{{ i.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this invitation?') }}">{{ _("Revoke") }}</button></form></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">{{ _("No open invitation.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}
+{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

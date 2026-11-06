@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Settings") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Settings") }}</h1>
+<p class="lede">{{ _("These pages write the configuration file. The bridge reads it when it starts: a change waits for a restart.") }}</p>
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
+{% if message %}<p class="good" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if tested %}<p class="{{ 'good' if tested.ok else 'note' }}" role="status"><strong>{{ tested.id }}</strong>: {{ tested.text }}</p>{% endif %}
+
+<form method="post" action="/admin/config/settings" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Server") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Name shown to devices") }} <input name="name" value="{{ file.name }}" maxlength="64" required></label>
+    <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}"></label>
+  </div>
+  <p><label class="check"><input type="checkbox" name="public"{% if file.public %} checked{% endif %}> {{ _("Public: anyone who reaches the server reads the library") }}</label></p>
+  <p><label class="check"><input type="checkbox" name="admin_lan_only"{% if file.admin_lan_only %} checked{% endif %}> {{ _("These pages answer on the local network only") }}</label></p>
+  <button>{{ _("Save") }}</button>
+</form>
+
+<h2>{{ _("Sources") }}</h2>
+<p class="muted">{{ _("When two sources have the same file, the first one in this list serves it (a folder before a shop).") }}</p>
+<div class="scroll"><table>
+  <thead><tr><th>#</th><th>{{ _("Source") }}</th><th>{{ _("Kind") }}</th><th>{{ _("Location") }}</th><th>{{ _("Login") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sources %}
+  <tr>
+    <td>{{ loop.index }}</td><td><strong>{{ s.id }}</strong></td><td><span class="pill">{{ s.kind }}</span></td><td><code>{{ s.location }}</code></td>
+    <td>{% if s.user %}<code>{{ s.user }}</code> <span class="pill {{ 'ok' if s.password_set else 'bad' }}">{{ s.password_env }}{{ '' if s.password_set else ' – ' ~ _('not set') }}</span>{% else %}<span class="dim">–</span>{% endif %}</td>
+    <td class="row">
+      <form method="post" action="/admin/config/sources/{{ s.id }}/test"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small">{{ _("Test") }}</button></form>
+      <form method="post" action="/admin/config/sources/{{ s.id }}/up"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" aria-label="{{ _('Move up') }}"{% if loop.first %} disabled{% endif %}>↑</button></form>
+      <form method="post" action="/admin/config/sources/{{ s.id }}/down"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" aria-label="{{ _('Move down') }}"{% if loop.last %} disabled{% endif %}>↓</button></form>
+      <form method="post" action="/admin/config/sources/{{ s.id }}/remove"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Remove this source from the settings?') }}">{{ _("Remove") }}</button></form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">{{ _("No source configured yet.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<form method="post" action="/admin/config/sources" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Add a source") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Kind") }} <select name="kind">
+      <option value="folder">{{ _("folder: a folder of games on this machine") }}</option>
+      <option value="tinfoil">{{ _("tinfoil: any Tinfoil shop") }}</option>
+      <option value="ownfoil">Ownfoil</option>
+      <option value="aerofoil">AeroFoil</option></select></label>
+    <label>{{ _("Name (letters, digits, - and _)") }} <input name="id" maxlength="32" required pattern="[A-Za-z0-9_-]+"></label>
+    <label>{{ _("Folder, or address of the shop") }} <input name="where" maxlength="500" required placeholder="/games  ·  http://shop:8465/"></label>
+    <label>{{ _("Shop user (optional)") }} <input name="user" maxlength="128"></label>
+    <label>{{ _("Variable holding its password") }} <input name="password_env" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
+  </div>
+  <p class="dim">{{ _("A password is never typed here: name the environment variable of the bridge that holds it.") }}</p>
+  <button>{{ _("Add") }}</button>
+</form>
+{% endblock %}
+{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

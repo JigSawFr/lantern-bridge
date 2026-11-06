@@ -24,9 +24,12 @@ from lantern_bridge.runtime import Runtime
 from lantern_bridge.upstream import BridgeLibrary
 
 
-def make_app(config: Config, state_dir: Path, *, run: bool = True, json_logs: bool = False) -> FastAPI:
+def make_app(
+    config: Config, state_dir: Path, *, run: bool = True, json_logs: bool = False, config_path: Path | None = None
+) -> FastAPI:
     """A Lantern server for `config`; its state (index, accounts) lives in `state_dir`.
 
+    `config_path` is the file the settings pages write (by default `config.toml` in `state_dir`).
     `run=False` leaves the background pass off (tests call `app.state.runtime.cycle()`).
     """
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -67,5 +70,5 @@ def make_app(config: Config, state_dir: Path, *, run: bool = True, json_logs: bo
         logging.getLogger("lantern_bridge.admin").warning(
             "no administrator yet: open /admin/ and enter the setup code %s", store.setup_code()
         )
-    mount(app, Admin(config, runtime, lantern, ring, store))
+    mount(app, Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml"))
     return app

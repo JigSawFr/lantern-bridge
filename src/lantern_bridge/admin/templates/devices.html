@@ -1,20 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Devices{% endblock %}
+{% block title %}{{ _("Devices") }}{% endblock %}
 {% block body %}
-<h1>Devices</h1>
-<table>
-  <thead><tr><th>Device</th><th>Account</th><th>Scopes</th><th>Paired</th><th>Last used</th><th>Bound</th><th></th></tr></thead>
+<h1>{{ _("Devices") }}</h1>
+<p class="lede">{{ _("The devices paired with this bridge, and the account each one acts for.") }}</p>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Device") }}</th><th>{{ _("Account") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Paired") }}</th><th>{{ _("Last used") }}</th><th>{{ _("Bound") }}</th><th></th></tr></thead>
   <tbody>
   {% for d in devices %}
   <tr>
-    <td>{{ d.device }}</td><td>{{ d.user }}</td><td>{{ d.scopes | join(", ") }}</td>
-    <td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td><td>{{ "yes" if d.bound else "no" }}</td>
-    <td><form method="post" action="/admin/devices/{{ d.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger" data-confirm="Revoke this device? It has to pair again.">Revoke</button></form></td>
+    <td><strong>{{ d.device }}</strong></td><td>{{ d.user }}</td><td>{{ d.scopes | join(", ") }}</td>
+    <td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td><td>{{ _("yes") if d.bound else _("no") }}</td>
+    <td><form method="post" action="/admin/devices/{{ d.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this device? It has to pair again.') }}">{{ _("Revoke") }}</button></form></td>
   </tr>
   {% else %}
-  <tr><td colspan="7">No device is paired yet.</td></tr>
+  <tr><td colspan="7">{{ _("No device is paired yet.") }}</td></tr>
   {% endfor %}
   </tbody>
-</table>
+</table></div>
 {% endblock %}
 {% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}
