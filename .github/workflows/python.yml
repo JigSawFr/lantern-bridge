@@ -1,6 +1,7 @@
 # The bridge (src/, tests/): ruff, mypy --strict, and the tests with coverage
-# on Linux (3.12 to 3.15), Windows and macOS. The conformance suite against
-# the bridge, over fake upstreams, joins them with the first source.
+# on Linux (3.12 to 3.15), Windows and macOS, and the specification's
+# conformance suite against the running bridge. The fake upstreams join the
+# suite with the sources that need them.
 name: python
 
 # Called by ci.yml
