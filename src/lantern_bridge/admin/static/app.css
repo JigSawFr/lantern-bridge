@@ -14,7 +14,7 @@
   color-scheme:dark}
 *{box-sizing:border-box}
 html{background:var(--abyss)}
-body{margin:0;min-height:100vh;color:var(--snow);font:16px/1.6 var(--body);
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--snow);font:16px/1.6 var(--body);
   background:radial-gradient(70% 45% at 12% -8%,rgb(0 255 204 / .16),transparent 70%),
     radial-gradient(60% 40% at 88% -6%,rgb(138 92 255 / .2),transparent 70%),
     radial-gradient(50% 40% at 50% 0,rgb(51 187 255 / .1),transparent 70%),var(--abyss);background-repeat:no-repeat}
@@ -43,8 +43,8 @@ nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .lang button{background:none;color:var(--mist);border:0;padding:.35rem .7rem;font:500 .8rem var(--mono);cursor:pointer;min-height:36px}
 .lang button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
-main{max-width:72rem;margin:0 auto;padding:2rem 1rem 1rem}
-footer{max-width:72rem;margin:2.5rem auto 2rem;padding:1.2rem 1rem 0;color:var(--dusk);font:.8rem var(--mono);border-top:1px solid var(--line)}
+main{max-width:72rem;width:100%;margin:0 auto;padding:2rem 1rem 1rem;flex:1 0 auto}
+footer{max-width:72rem;width:100%;margin:2.5rem auto 2rem;padding:1.2rem 1rem 0;color:var(--dusk);font:.8rem var(--mono);border-top:1px solid var(--line)}
 
 .cards,.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}
 .tile,.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.25rem;overflow:hidden}
@@ -98,7 +98,7 @@ dt{color:var(--dusk)}dd{margin:0}
 .auth .mark{width:72px;height:72px;margin-bottom:1rem}
 :focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.tile,.card,button{transition:border-color .2s,box-shadow .2s}.tile:hover{border-color:rgb(0 255 204 / .4)}}
-@media (max-width:40rem){.tools{margin-left:auto}nav{order:3;flex-basis:100%}}
+@media (max-width:40rem){.tools{margin-left:auto}nav{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 1rem}nav::-webkit-scrollbar{display:none}nav a{white-space:nowrap}}
 
 /* -- polish: skip link, toasts, dialog, logs, reveal ----------------------------------------------------- */
 .skip{position:absolute;left:.75rem;top:-4rem;z-index:20;background:var(--snow);color:var(--abyss);padding:.6rem 1rem;border-radius:12px;font-weight:600;text-decoration:none}
@@ -122,3 +122,20 @@ dialog.ask .row{justify-content:flex-end}
 #log .error,#log .critical{background:rgb(255 138 128 / .06)}
 input[type=search]{-webkit-appearance:none;appearance:none}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+/* -- an empty table is a message, not a header over nothing; a narrow screen shows each row as a card ----- */
+table:has(tbody tr:only-child td[colspan]) thead{display:none}
+td[colspan]{color:var(--mist);text-align:center;padding:1.6rem 1rem}
+[hidden]{display:none!important}
+@media (max-width:40rem){
+  .scroll{background:none;border:0;border-radius:0;overflow:visible}
+  table:not(:has(td[colspan])) thead{display:none}
+  table:not(:has(td[colspan])),table:not(:has(td[colspan])) tbody{display:block}
+  table:not(:has(td[colspan])) tr{display:grid;gap:.15rem .75rem;grid-template-columns:max-content 1fr;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:.7rem .9rem;margin-bottom:.75rem}
+  table:not(:has(td[colspan])) td{display:contents}
+  table:not(:has(td[colspan])) td:not([data-label]){display:flex;flex-wrap:wrap;gap:.5rem;grid-column:1/-1;margin-top:.4rem}
+  table:not(:has(td[colspan])) td[data-label]::before{content:attr(data-label);grid-column:1;color:var(--dusk);font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em}
+  table:not(:has(td[colspan])) td>*{grid-column:2}
+  table:not(:has(td[colspan])) td:not([data-label])>*{grid-column:1/-1}
+  .scroll:has(td[colspan]){background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+}

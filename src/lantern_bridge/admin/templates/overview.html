@@ -13,8 +13,9 @@
 <h2>{{ _("Hashing") }}</h2>
 <div class="card glow">
 <p class="muted">{{ _("Hashing is local and read-only: the files are read in place and never changed.") }}</p>
-<progress id="progress" max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
-<p><span data-bind="hashed">{{ state.hashed }}</span> / <span data-bind="total">{{ state.total }}</span> {{ _("files hashed") }} ·
+<p class="muted" data-idle{% if state.total %} hidden{% endif %}>{{ _("Nothing to hash yet: add a source that holds games, then scan.") }}</p>
+<progress id="progress" data-busy{% if not state.total %} hidden{% endif %} max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
+<p data-busy{% if not state.total %} hidden{% endif %}><span data-bind="hashed">{{ state.hashed }}</span> / <span data-bind="total">{{ state.total }}</span> {{ _("files hashed") }} ·
   <span data-bind="pending_size_text">{{ state.pending_bytes | size }}</span> {{ _("to go") }} ·
   {{ _("rate") }} <span data-bind="rate_text">{{ (state.rate | size) ~ "/s" if state.rate else "–" }}</span> ·
   {{ _("time left") }} <span data-bind="eta_text">–</span></p>

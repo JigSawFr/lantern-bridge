@@ -37,6 +37,7 @@ FR: dict[str, str] = {
     "Filter": "Filtrer",
     "Folder, or address of the shop": "Dossier, ou adresse du shop",
     "Hashed": "Hachés",
+    "Nothing to hash yet: add a source that holds games, then scan.": "Rien à hacher pour l'instant : ajoutez une source qui contient des jeux, puis lancez un scan.",
     "Hashing is local and read-only: the files are read in place and never changed.": "Le hachage est local et en lecture seule : les fichiers sont lus sur place et jamais modifiés.",
     "Hashing rate over the network (MiB/s, 0: no limit)": "Débit de hachage par le réseau (Mio/s, 0 : sans limite)",
     "Hashing": "Hachage",
