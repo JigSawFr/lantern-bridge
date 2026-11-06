@@ -22,3 +22,11 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+  # The base images of the Dockerfile
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+      include: scope

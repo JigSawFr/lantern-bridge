@@ -1,0 +1,45 @@
+# The container image: built for amd64 and arm64, and the amd64 one is run and
+# checked (it answers the handshake, and does not run as root). Nothing is
+# published from here: the release workflow will do that.
+name: docker
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  image:
+    name: image (${{ matrix.platform }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ linux/amd64, linux/arm64 ]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # sdk/: the Lantern SDK, the dependency (not its own submodules)
+          submodules: true
+      - name: Emulate arm64
+        if: matrix.platform == 'linux/arm64'
+        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
+      - name: Build
+        run: docker buildx build --platform "${{ matrix.platform }}" --load --tag lantern-bridge:ci .
+      - name: Run it
+        if: matrix.platform == 'linux/amd64'
+        run: |
+          set -eu
+          docker run --detach --name bridge --publish 8080:8080 lantern-bridge:ci
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8080/.well-known/lantern; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8080/.well-known/lantern | grep -q '"uid"'
+          test "$(docker exec bridge id -u)" != 0
+          docker exec bridge lantern-bridge --version
+          docker rm --force bridge
