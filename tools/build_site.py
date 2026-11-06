@@ -13,6 +13,7 @@ audience, the fonts and marks) is boreale-site's, the submodule
 library/boreale-site. Served at https://bridge.lantern.boreale.dev/
 (SITE_URL for another address). Python's standard library only.
 """
+
 import html
 import os
 import shutil
@@ -37,37 +38,81 @@ VERSIONS: dict = {}
 
 # ---- The page.
 
+
 def page_header(language: str, catalog: dict, root: str) -> str:
-    return BRIDGE.header(language, catalog, root, "", links=[
-        ("nav_spec", f"{LANTERN_URL}spec/"), ("footer_conformance", f"{LANTERN_URL}conformance/"), ("nav_sdk", SDK_URL),
-    ], cta=("bridge_cta_link", REPO), github=REPO, label=catalog["nav_label"], latest=VERSIONS)
+    return BRIDGE.header(
+        language,
+        catalog,
+        root,
+        "",
+        links=[
+            ("nav_spec", f"{LANTERN_URL}spec/"),
+            ("footer_conformance", f"{LANTERN_URL}conformance/"),
+            ("nav_sdk", SDK_URL),
+        ],
+        cta=("bridge_cta_link", REPO),
+        github=REPO,
+        label=catalog["nav_label"],
+        latest=VERSIONS,
+    )
 
 
 def page_footer(language: str, catalog: dict, root: str) -> str:
-    return BRIDGE.footer(language, catalog, root, columns=[
-        (catalog["nav_project"], [(catalog["nav_spec"], f"{LANTERN_URL}spec/"), (catalog["footer_conformance"], f"{LANTERN_URL}conformance/"),
-                                  (catalog["nav_sdk"], SDK_URL)]),
-        (catalog["footer_label"], [("GitHub", REPO), (catalog["footer_issues"], f"{REPO}/issues")]),
-    ], fine=catalog["footer_trademarks"])
+    return BRIDGE.footer(
+        language,
+        catalog,
+        root,
+        columns=[
+            (
+                catalog["nav_project"],
+                [
+                    (catalog["nav_spec"], f"{LANTERN_URL}spec/"),
+                    (catalog["footer_conformance"], f"{LANTERN_URL}conformance/"),
+                    (catalog["nav_sdk"], SDK_URL),
+                ],
+            ),
+            (catalog["footer_label"], [("GitHub", REPO), (catalog["footer_issues"], f"{REPO}/issues")]),
+        ],
+        fine=catalog["footer_trademarks"],
+    )
 
 
 def page_html(template: str, language: str, catalog: dict) -> str:
     root = "../" * (0 if language == ENGLISH else 1)
     values = dict(catalog)
-    values.update({
-        "lang": boreale.html_lang(language), "root": root, "home": folder(language), "site": SITE_URL, "page": "bridge",
-        "url": SITE_URL + folder(language), "title": catalog["title_bridge"],
-        "description": html.escape(catalog["description_bridge"], quote=True), "og_locale": OG_LOCALES[language],
-        "first_visit": "", "indexing": BRIDGE.indexing(language, ""),
-        "skip": BRIDGE.skip(catalog), "sky": BRIDGE.sky(home=False), "header": page_header(language, catalog, root),
-        "crumbs": "", "main_class": ' class="wrap"', "footer": page_footer(language, catalog, root),
-        "audience": BRIDGE.audience(root), "repo": REPO, "sdk": SDK_URL,
-        "hero": (f'<div class="wrap hero small">\n    <span class="eyebrow">{catalog["bridge_eyebrow"]}</span>\n'
-                 f'    <h1>{catalog["bridge_title"]}</h1>\n    <p class="lede">{catalog["bridge_lede"]}</p>\n  </div>'),
-        "scripts": (f'<script src="{root}assets/code.js" defer data-copy="{html.escape(catalog["ui_copy"], quote=True)}" '
-                    f'data-copied="{html.escape(catalog["ui_copied"], quote=True)}" '
-                    f'data-failed="{html.escape(catalog["ui_copy_failed"], quote=True)}"></script>'),
-    })
+    values.update(
+        {
+            "lang": boreale.html_lang(language),
+            "root": root,
+            "home": folder(language),
+            "site": SITE_URL,
+            "page": "bridge",
+            "url": SITE_URL + folder(language),
+            "title": catalog["title_bridge"],
+            "description": html.escape(catalog["description_bridge"], quote=True),
+            "og_locale": OG_LOCALES[language],
+            "first_visit": "",
+            "indexing": BRIDGE.indexing(language, ""),
+            "skip": BRIDGE.skip(catalog),
+            "sky": BRIDGE.sky(home=False),
+            "header": page_header(language, catalog, root),
+            "crumbs": "",
+            "main_class": ' class="wrap"',
+            "footer": page_footer(language, catalog, root),
+            "audience": BRIDGE.audience(root),
+            "repo": REPO,
+            "sdk": SDK_URL,
+            "hero": (
+                f'<div class="wrap hero small">\n    <span class="eyebrow">{catalog["bridge_eyebrow"]}</span>\n'
+                f'    <h1>{catalog["bridge_title"]}</h1>\n    <p class="lede">{catalog["bridge_lede"]}</p>\n  </div>'
+            ),
+            "scripts": (
+                f'<script src="{root}assets/code.js" defer data-copy="{html.escape(catalog["ui_copy"], quote=True)}" '
+                f'data-copied="{html.escape(catalog["ui_copied"], quote=True)}" '
+                f'data-failed="{html.escape(catalog["ui_copy_failed"], quote=True)}"></script>'
+            ),
+        }
+    )
     body = (SITE / "home.html").read_text(encoding="utf-8")
     values["body"] = fill(body, values)
     return BRIDGE.links_out(fill(template, values))
@@ -94,7 +139,10 @@ def main() -> None:
         urls.append(SITE_URL + folder(language))
     (out / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + "".join(f"  <url><loc>{html.escape(u)}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+        + "".join(f"  <url><loc>{html.escape(u)}</loc></url>\n" for u in urls)
+        + "</urlset>\n",
+        encoding="utf-8",
+    )
     (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
     host = boreale.urlparse(SITE_URL).hostname if hasattr(boreale, "urlparse") else SITE_URL.split("/")[2]
     if host and not host.endswith("github.io"):

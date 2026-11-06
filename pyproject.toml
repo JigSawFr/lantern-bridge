@@ -83,8 +83,8 @@ packages = ["src/lantern_bridge"]
 line-length = 120
 target-version = "py312"
 src = ["src", "tests"]
-# The SDK submodule is checked by its own CI
-extend-exclude = ["sdk"]
+# The submodules are checked by their own CI
+extend-exclude = ["sdk", "library"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "C4", "PIE", "PT", "RET", "TC", "PL", "S", "BLE", "ASYNC"]
@@ -97,6 +97,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "PLR", "B011", "BLE001", "PT018", "PT011"]
+# The site scripts read our own build output and write long HTML lines
+"tools/**" = ["E501", "S314", "PLW0603"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["lantern_bridge"]

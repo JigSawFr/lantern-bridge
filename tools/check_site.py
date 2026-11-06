@@ -16,6 +16,7 @@
 - no e-mail address and no mailto: link in any file of the site (contact
   goes through the issues).
 """
+
 import os
 import re
 import sys
