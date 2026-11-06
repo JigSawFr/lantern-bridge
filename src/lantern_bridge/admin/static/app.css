@@ -99,3 +99,26 @@ dt{color:var(--dusk)}dd{margin:0}
 :focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.tile,.card,button{transition:border-color .2s,box-shadow .2s}.tile:hover{border-color:rgb(0 255 204 / .4)}}
 @media (max-width:40rem){.tools{margin-left:auto}nav{order:3;flex-basis:100%}}
+
+/* -- polish: skip link, toasts, dialog, logs, reveal ----------------------------------------------------- */
+.skip{position:absolute;left:.75rem;top:-4rem;z-index:20;background:var(--snow);color:var(--abyss);padding:.6rem 1rem;border-radius:12px;font-weight:600;text-decoration:none}
+.skip:focus{top:.75rem}
+main:focus{outline:none}
+#toasts{position:fixed;right:1rem;bottom:1rem;z-index:30;display:grid;gap:.5rem;max-width:min(26rem,calc(100vw - 2rem))}
+.toast{margin:0;box-shadow:0 18px 40px -16px rgb(0 0 0 / .8);backdrop-filter:blur(10px);background:rgb(11 20 36 / .92);transition:opacity .5s,transform .5s}
+.toast.gone{opacity:0;transform:translateY(8px)}
+dialog.ask{border:1px solid var(--line);border-radius:var(--radius);background:var(--night);color:var(--snow);padding:1.4rem 1.5rem;max-width:min(26rem,calc(100vw - 2rem));box-shadow:0 30px 80px -20px rgb(0 0 0 / .9)}
+dialog.ask::backdrop{background:rgb(7 13 24 / .72);backdrop-filter:blur(3px)}
+dialog.ask p{margin:0 0 1.2rem;font-size:1.05rem}
+dialog.ask .row{justify-content:flex-end}
+.reveal{display:flex;align-items:center;gap:.4rem}
+.reveal input{flex:1}
+#log{background:rgb(7 13 24 / .85);border:1px solid var(--line);border-radius:var(--radius);padding:.6rem 0;overflow:auto;max-height:70vh;font:.82rem/1.5 var(--mono);color:var(--mist);margin-top:1rem}
+#log .ln{padding:.1rem 1rem;white-space:pre-wrap;word-break:break-word}
+#log .ln:hover{background:rgb(255 255 255 / .04)}
+#log .ln time{color:var(--dusk)}
+#log .ln b{display:inline-block;min-width:4.5rem;font-weight:600}
+#log .warning b{color:var(--warn)}#log .error b,#log .critical b{color:var(--danger)}#log .info b{color:var(--ice)}#log .debug b{color:var(--dusk)}
+#log .error,#log .critical{background:rgb(255 138 128 / .06)}
+input[type=search]{-webkit-appearance:none;appearance:none}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}

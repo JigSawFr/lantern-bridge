@@ -5,9 +5,9 @@
 <form method="get" class="row">
   <label>{{ _("Level") }} <select name="level" id="level">{% for l in levels %}<option{% if l == level %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></label>
   <button class="ghost">{{ _("Filter") }}</button>
-  <span id="live" class="pill ok">{{ _("live") }}</span>
+  <label>{{ _("Search") }} <input id="grep" type="search" placeholder="{{ _('Search the logs') }}" autocomplete="off"></label>
+  <button type="button" class="ghost" id="pause" data-pause="{{ _('Pause') }}" data-resume="{{ _('Resume') }}">{{ _("Pause") }}</button>
+  <span id="live" class="pill ok" data-offline="{{ _('reconnecting…') }}" data-live="{{ _('live') }}">{{ _("live") }}</span>
 </form>
-<pre id="log" data-level="{{ level }}" data-last="{{ lines[-1].id if lines else 0 }}">{% for l in lines %}{{ l.time | when }} {{ "%-7s" | format(l.level) }} {{ l.message }}
-{% endfor %}</pre>
+<div id="log" role="log" aria-live="off" tabindex="0" data-level="{{ level }}" data-last="{{ lines[-1].id if lines else 0 }}">{% for l in lines %}<div class="ln {{ l.level | lower }}"><time>{{ l.time | when }}</time> <b>{{ l.level }}</b> <span>{{ l.message }}</span></div>{% endfor %}</div>
 {% endblock %}
-{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

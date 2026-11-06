@@ -4,7 +4,7 @@
 <h1>{{ _("Invitations") }}</h1>
 <p class="lede">{{ _("An invitation is a code that pairs a device without anyone approving it. Give it to someone you trust, for a short time.") }}</p>
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-{% if created %}<p class="good" role="status">{{ _("Invitation created for") }} <strong>{{ created.user }}</strong>: <code class="code">{{ created.code }}</code></p>{% endif %}
+{% if created %}<p class="good" role="status">{{ _("Invitation created for") }} <strong>{{ created.user }}</strong>: <code class="code">{{ created.code }}</code> <button type="button" class="ghost small" data-copy-text="{{ created.code }}">{{ _("Copy") }}</button></p>{% endif %}
 <form method="post" action="/admin/invitations" class="card">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
   <h2>{{ _("New invitation") }}</h2>
@@ -23,7 +23,7 @@
   <tbody>
   {% for i in invitations %}
   <tr>
-    <td><code>{{ i.code }}</code></td><td>{{ i.user }}</td><td>{{ i.used }} / {{ i.devices }}</td><td>{{ i.expires }}</td><td>{{ i.note or "–" }}</td>
+    <td><code>{{ i.code }}</code> <button type="button" class="link" data-copy-text="{{ i.code }}">{{ _("Copy") }}</button></td><td>{{ i.user }}</td><td>{{ i.used }} / {{ i.devices }}</td><td>{{ i.expires }}</td><td>{{ i.note or "–" }}</td>
     <td><form method="post" action="/admin/invitations/{{ i.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this invitation?') }}">{{ _("Revoke") }}</button></form></td>
   </tr>
   {% else %}
@@ -32,4 +32,3 @@
   </tbody>
 </table></div>
 {% endblock %}
-{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

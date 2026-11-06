@@ -44,8 +44,7 @@
 
 <h2>{{ _("Server") }}</h2>
 <dl>
-  <dt>Uid</dt><dd><code>{{ uid }}</code></dd>
+  <dt>Uid</dt><dd><code>{{ uid }}</code> <button type="button" class="link" data-copy-text="{{ uid }}">{{ _("Copy") }}</button></dd>
   <dt>{{ _("Access") }}</dt><dd>{% if public %}{{ _("public: anyone who reaches the server reads the library") }}{% else %}{{ _("pairing required: only paired devices read the library") }}{% endif %}</dd>
 </dl>
 {% endblock %}
-{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

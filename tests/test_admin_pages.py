@@ -297,3 +297,28 @@ def test_the_new_pages_need_a_session(tmp_path: Path) -> None:
         assert client.get(path).headers["location"] == "/admin/login"
     for path in ("/admin/config/settings", "/admin/config/sources", "/admin/invitations", "/admin/accounts/a/login"):
         assert client.post(path, data={}).headers["location"] == "/admin/login"
+
+
+# -- finish: what the script and the markup give ------------------------------------------------------------
+
+
+def test_every_page_has_the_script_a_skip_link_and_no_inline_script(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    for page in (client.get("/admin/setup"), _admin(client).get("/admin/"), client.get("/admin/logs")):
+        assert page.text.count('src="/admin/static/app.js"') == 1
+        assert 'class="skip" href="#content"' in page.text and 'id="content"' in page.text
+        assert "<script>" not in page.text and 'id="toasts"' in page.text
+    script = client.get("/admin/static/app.js").text
+    assert "showModal" in script and "textContent" in script and "innerHTML = '<form" in script
+
+
+def test_codes_can_be_copied_and_the_logs_can_be_searched(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path))
+    csrf = _token(client, "/admin/invitations")
+    made = client.post("/admin/invitations", data={"csrf": csrf, "user": "kid", "days": "1", "devices": "1"})
+    assert made.text.count("data-copy-text=") == 2 and "data-toast" not in made.text
+    assert 'id="grep"' in client.get("/admin/logs").text and 'id="pause"' in client.get("/admin/logs").text
+    config = client.post("/admin/config/settings", data={"csrf": csrf, "name": "x", "remote_rate": "1"})
+    assert "data-toast" in client.get(config.headers["location"]).text
+    client.post("/admin/lang", data={"lang": "fr"})
+    assert "Copier" in client.get("/admin/invitations").text
