@@ -45,7 +45,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ConfigError as error:
         print(f"lantern-bridge: {error}", file=sys.stderr)
         return 1
-    uvicorn.run(make_app(name=config.name, uid=config.uid), host=args.host, port=args.port)
+    uvicorn.run(make_app(config, args.config.resolve().parent), host=args.host, port=args.port)
     return 0
 
 

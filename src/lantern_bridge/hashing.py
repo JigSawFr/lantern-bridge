@@ -9,6 +9,7 @@ import os
 from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 
+from lantern_bridge.identify import identify
 from lantern_bridge.index import Entry, Index
 
 _CHUNK = 1024 * 1024
@@ -35,6 +36,17 @@ def scan(root: Path) -> Iterator[Entry]:
                 continue
             info = file.stat()
             yield Entry(path=file.relative_to(root).as_posix(), size=info.st_size, mtime_ns=info.st_mtime_ns)
+
+
+def scan_packages(root: Path) -> Iterator[Entry]:
+    """The Switch packages under ``root`` the names identify, with their queue priority.
+
+    Other files are not hashed: nothing would list them.
+    """
+    for entry in scan(root):
+        identity = identify(entry.path)
+        if identity is not None:
+            yield Entry(entry.path, entry.size, entry.mtime_ns, identity.priority)
 
 
 def hash_pending(
