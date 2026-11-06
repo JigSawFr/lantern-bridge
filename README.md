@@ -58,6 +58,12 @@ path = "/games"
 
 A device has to be **paired** before it reads anything (only the handshake is open). `lantern-bridge invite` prints a code for a new device (`--user`, `--devices`, `--hours`, `--admin`), which the device enters in its Lantern client. To let anyone who can reach the server read it instead, set `public = true` in `config.toml`; that is not recommended outside a network you trust.
 
+### 🖥️ Administration pages
+
+Open `http://<host>:8080/admin/`. The first time, the server writes a one-time **setup code** in its log (look for `setup code`); enter it with the name and password you want for the administrator. Then sign in to see the hashing progress and the sources, approve or refuse the devices that ask to pair, revoke a device, and follow the logs live.
+
+The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. Nothing is loaded from elsewhere.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.

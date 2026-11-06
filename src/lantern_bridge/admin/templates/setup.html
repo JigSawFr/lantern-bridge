@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Setup{% endblock %}
+{% block body %}
+<h1>Create the administrator</h1>
+<p>The server wrote a one-time code in its log (<code>administrator setup code</code>). Enter it here with the name and the password you want.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" class="stack">
+  <label>Setup code <input name="code" autocomplete="off" required autofocus></label>
+  <label>Name <input name="name" autocomplete="username" required maxlength="64"></label>
+  <label>Password (10 characters at least) <input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
+  <button>Create</button>
+</form>
+{% endblock %}

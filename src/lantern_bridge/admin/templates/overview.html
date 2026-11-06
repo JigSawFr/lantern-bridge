@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block body %}
+<h1>Overview</h1>
+<section class="cards">
+  <div><span class="n" data-bind="apps">{{ state.apps }}</span> apps served</div>
+  <div><span class="n" data-bind="titles">{{ state.titles }}</span> titles</div>
+  <div><span class="n" data-bind="waiting">{{ state.waiting }}</span> <a href="/admin/pairings">pairings waiting</a></div>
+</section>
+
+<h2>Hashing</h2>
+<p>Hashing is local and read-only: the files are read in place and never changed.</p>
+<progress id="progress" max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
+<p><span data-bind="hashed">{{ state.hashed }}</span> of <span data-bind="total">{{ state.total }}</span> files hashed ·
+  <span data-bind="pending_size_text">{{ state.pending_bytes | size }}</span> to go ·
+  rate <span data-bind="rate_text">{{ (state.rate | size) ~ "/s" if state.rate else "–" }}</span> ·
+  time left <span data-bind="eta_text">–</span></p>
+<form method="post" action="/admin/scan" class="row">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <button name="action" value="scan">Scan now</button>
+</form>
+
+<h2>Sources</h2>
+<table>
+  <thead><tr><th>Source</th><th>Folder</th><th>State</th><th>Last read</th><th>Hashed</th><th>Pending</th><th></th></tr></thead>
+  <tbody>
+  {% for s in state.sources %}
+  <tr>
+    <td>{{ s.id }}</td><td><code>{{ s.path }}</code></td>
+    <td>{% if s.reachable is none %}waiting{% elif s.reachable %}reachable{% else %}<span class="error">{{ s.error }}</span>{% endif %}</td>
+    <td>{{ s.scanned | when }}</td><td>{{ s.hashed }}</td><td>{{ s.pending }}</td>
+    <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button name="action" value="rehash" data-confirm="Hash every file of this source again?">Rehash</button></form></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7">No source configured: add a <code>[[sources]]</code> table to the configuration file.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Server</h2>
+<dl>
+  <dt>Uid</dt><dd><code>{{ uid }}</code></dd>
+  <dt>Access</dt><dd>{% if public %}public: anyone who reaches the server reads the library{% else %}pairing required: only paired devices read the library{% endif %}</dd>
+  <dt>Hashes</dt><dd>{{ mode }}</dd>
+</dl>
+{% endblock %}
+{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}
