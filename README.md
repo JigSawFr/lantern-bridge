@@ -58,6 +58,19 @@ path = "/games"
 
 A device has to be **paired** before it reads anything (only the handshake is open). `lantern-bridge invite` prints a code for a new device (`--user`, `--devices`, `--hours`, `--admin`), which the device enters in its Lantern client. To let anyone who can reach the server read it instead, set `public = true` in `config.toml`; that is not recommended outside a network you trust.
 
+### 🛒 A Tinfoil shop as a source
+
+```toml
+[[sources]]
+id = "shop"
+kind = "tinfoil"
+url = "http://nas.lan:8465/"
+user = "me"                 # optional; the password is read from this variable, never from the file
+password_env = "SHOP_PASSWORD"
+```
+
+The bridge reads the shop's JSON index (and the directories it names), then reads each file **once**, in the background and at `remote_rate` megabytes per second (10 by default, `0` for no limit), to compute its SHA-256, and relays the shop's bytes afterwards, ranges included. The first pass therefore moves the whole library through the bridge: **mounting the games read-only in the bridge and using a `folder` source is faster and recommended**. The shop is treated as untrusted: the bridge follows nothing outside its origin, caps what it reads and ignores names that would leave a folder. A file present in a folder and in a shop is one app, served by the folder.
+
 ### 🖥️ Administration pages
 
 Open `http://<host>:8080/admin/`. The first time, the server writes a one-time **setup code** in its log (look for `setup code`); enter it with the name and password you want for the administrator. Then sign in to see the hashing progress and the sources, approve or refuse the devices that ask to pair, revoke a device, and follow the logs live.
