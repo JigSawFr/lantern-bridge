@@ -29,7 +29,12 @@ def build_parser() -> argparse.ArgumentParser:
     status = commands.add_parser("status", help="show the sources and the hashing progress")
     rehash = commands.add_parser("rehash", help="compute the hashes of a source (or of all) again")
     rehash.add_argument("source", nargs="?", help="a source id (default: all)")
-    for command in (status, rehash):
+    invite = commands.add_parser("invite", help="print a code that pairs a new device")
+    invite.add_argument("--user", default="family", help="the account the device joins (made if absent)")
+    invite.add_argument("--devices", type=int, default=1, help="how many devices may use the code")
+    invite.add_argument("--hours", type=int, default=24, help="how long the code is good for")
+    invite.add_argument("--admin", action="store_true", help="give the account every scope, administration included")
+    for command in (status, rehash, invite):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
     return parser
 
@@ -68,10 +73,33 @@ def _inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def _invite(args: argparse.Namespace) -> int:
+    from datetime import UTC, datetime, timedelta
+
+    from lantern.server import SqliteAccounts
+    from lantern.server.accounts import SCOPES, utc
+
+    if args.devices < 1 or args.hours < 1:
+        print("lantern-bridge: --devices and --hours are at least 1", file=sys.stderr)
+        return 1
+    accounts_file = args.config.resolve().parent / "accounts.sqlite3"
+    scopes = SCOPES if args.admin else ("library", "saves", "cheats", "requests", "sync.read", "sync.write")
+    with SqliteAccounts(accounts_file) as accounts:
+        user = accounts.user(args.user) or accounts.create_user(args.user, scopes)
+        expires = utc(datetime.now(UTC) + timedelta(hours=args.hours))
+        invitation = accounts.create_invitation(user.name, scopes, expires, args.devices)
+    print(
+        f"Pairing code for {user.name}: {invitation.code} (good until {invitation.expires}, {args.devices} device(s))"
+    )
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command in {"status", "rehash"}:
         return _inspect(args)
+    if args.command == "invite":
+        return _invite(args)
     if args.command != "serve":
         build_parser().print_help()
         return 0

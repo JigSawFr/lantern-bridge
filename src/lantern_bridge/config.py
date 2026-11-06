@@ -46,6 +46,8 @@ class Config:
     uid: str
     name: str = DEFAULT_NAME
     hash_mode: HashMode = "local"
+    # False: every route that serves the library needs a paired device. True: anyone who can reach the server reads it.
+    public: bool = False
     sources: list[FolderSource] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -57,6 +59,7 @@ class Config:
         data["uid"] = self.uid
         data["name"] = self.name
         data["hash_mode"] = self.hash_mode
+        data["public"] = self.public
         data["sources"] = [
             {**self._extra_sources.get(s.id, {}), "id": s.id, "kind": "folder", "path": str(s.path)}
             for s in self.sources
@@ -72,7 +75,7 @@ def _parse(data: dict[str, Any]) -> Config:
         raise ConfigSchemaError(
             f"the configuration has schema {schema}, this version reads up to {SCHEMA}: update lantern-bridge"
         )
-    known = {"schema", "uid", "name", "hash_mode", "sources"}
+    known = {"schema", "uid", "name", "hash_mode", "public", "sources"}
     extra = {k: v for k, v in data.items() if k not in known}
     uid = data.get("uid")
     name = data.get("name", DEFAULT_NAME)
@@ -81,6 +84,9 @@ def _parse(data: dict[str, Any]) -> Config:
     mode = data.get("hash_mode", "local")
     if mode not in _HASH_MODES:
         raise ConfigError(f"`hash_mode` must be one of {', '.join(_HASH_MODES)}")
+    public = data.get("public", False)
+    if not isinstance(public, bool):
+        raise ConfigError("`public` must be true or false")
     sources: list[FolderSource] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -104,7 +110,9 @@ def _parse(data: dict[str, Any]) -> Config:
         uid = check_uid(uid) if uid is not None else new_uid()
     except ValueError as error:
         raise ConfigError(f"`uid`: {error}") from error
-    return Config(uid=uid, name=name, hash_mode=mode, sources=sources, _extra=extra, _extra_sources=extra_sources)
+    return Config(
+        uid=uid, name=name, hash_mode=mode, public=public, sources=sources, _extra=extra, _extra_sources=extra_sources
+    )
 
 
 def load(path: Path) -> Config:

@@ -104,3 +104,18 @@ def test_invalid_files_are_refused_with_a_clear_error(tmp_path: Path, text: str)
     path.write_text(text, encoding="utf-8")
     with pytest.raises(ConfigError):
         load(path)
+
+
+def test_public_is_off_by_default_and_kept(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    assert load(path).public is False
+    config = Config(uid=UID, public=True)
+    save(path, config)
+    assert load(path).public is True
+
+
+def test_public_must_be_a_boolean(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    path.write_text('public = "yes"\n', encoding="utf-8")
+    with pytest.raises(ConfigError):
+        load(path)

@@ -41,5 +41,5 @@ def make_app(config: Config, state_dir: Path, *, run: bool = True) -> FastAPI:
 
     app = FastAPI(title="lantern-bridge", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.runtime = runtime
-    include(app, LanternApp(library, uid=config.uid, name=config.name, accounts=accounts))
+    include(app, LanternApp(library, uid=config.uid, name=config.name, accounts=accounts, public=config.public))
     return app
