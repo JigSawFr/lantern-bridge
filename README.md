@@ -1,8 +1,10 @@
 <div align="center">
 
-# Lantern Bridge
+<img src=".github/readme/banner.png" alt="Lantern Bridge" width="100%">
 
 ### Your Ownfoil, AeroFoil or Tinfoil library, spoken in Lantern
+
+**Ownfoil · AeroFoil · Tinfoil shops · Plain folders**
 
 [![ci](https://github.com/JigSawFr/lantern-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/JigSawFr/lantern-bridge/actions/workflows/ci.yml)
 [![Lantern draft 0.11](https://img.shields.io/badge/Lantern-draft%200.11-blue.svg)](https://lantern.boreale.dev/?utm_source=github&utm_medium=readme)
@@ -10,8 +12,9 @@
 
 [**Specification**](https://lantern.boreale.dev/?utm_source=github&utm_medium=readme) ·
 [**SDK**](https://github.com/JigSawFr/lantern-sdk) ·
-[**Contributing**](CONTRIBUTING.md) ·
-[**Security**](SECURITY.md)
+[**Features**](#-what-it-will-do) ·
+[**Quick&nbsp;start**](#-quick-start) ·
+[**Releases**](#-releases)
 
 </div>
 
@@ -30,6 +33,27 @@ A gateway that presents a library which does not speak [Lantern](https://github.
 - 🖥️ **A small web interface** — status of the sources and of the hashing queue, devices to approve, live logs, configuration.
 - 🛡️ **Distrustful of its upstream** — it follows no URL outside the origin it was configured with, and caps what it reads.
 - 🧪 **Tested against the specification's conformance suite**, over fake upstreams, in CI.
+
+## 🚀 Quick start
+
+Nothing is released yet, so the bridge runs from a checkout (Python 3.12 or later, [uv](https://docs.astral.sh/uv/)). It serves an empty library for now; any Lantern client, or `curl`, can already shake hands with it:
+
+```sh
+git clone --recurse-submodules https://github.com/JigSawFr/lantern-bridge
+cd lantern-bridge && uv sync
+uv run lantern-bridge serve --port 8080
+curl http://127.0.0.1:8080/.well-known/lantern
+```
+
+## 📦 Releases
+
+Nothing is released yet. A release will be made by this repository's CI from a tag, with release-please, and published on [the releases page](https://github.com/JigSawFr/lantern-bridge/releases).
+
+## 🤝 Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md) · [Code of conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md)
+
+Issues and pull requests go on this repository. A change to the protocol itself is proposed in [the specification's repository](https://github.com/JigSawFr/lantern). A security flaw is reported privately, as [SECURITY.md](SECURITY.md) says.
 
 ## 🧑‍💻 Development
 
