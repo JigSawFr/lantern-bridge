@@ -184,3 +184,21 @@ class Index:
         with self._lock:
             done, todo = self._db.execute("SELECT COUNT(sha256), COUNT(*) - COUNT(sha256) FROM files").fetchone()
         return {"hashed": int(done), "pending": int(todo)}
+
+    def counts_by_source(self) -> dict[str, dict[str, int]]:
+        """Per source: how many files are hashed and how many are waiting."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT source, COUNT(sha256), COUNT(*) - COUNT(sha256) FROM files GROUP BY source ORDER BY source"
+            ).fetchall()
+        return {source: {"hashed": int(done), "pending": int(todo)} for source, done, todo in rows}
+
+    def rehash(self, source: str | None = None) -> int:
+        """Forget the hashes of a source (or of all), so they are computed again; returns how many."""
+        query = "UPDATE files SET sha256 = NULL WHERE sha256 IS NOT NULL"
+        args: tuple[str, ...] = ()
+        if source is not None:
+            query += " AND source = ?"
+            args = (source,)
+        with self._transaction() as db:
+            return db.execute(query, args).rowcount

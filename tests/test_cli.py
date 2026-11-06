@@ -47,3 +47,42 @@ def test_unknown_option_is_refused(capsys: pytest.CaptureFixture[str]) -> None:
         main(["--nope"])
     assert stop.value.code == 2
     assert "--nope" in capsys.readouterr().err
+
+
+def _config_with_source(tmp_path: Path) -> Path:
+    config = tmp_path / "config.toml"
+    config.write_text(
+        '[[sources]]\nid = "games"\nkind = "folder"\npath = "/nowhere"\n',
+        encoding="utf-8",
+    )
+    return config
+
+
+def test_status_needs_an_index(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["status", "--config", str(_config_with_source(tmp_path))]) == 1
+    assert "start the server first" in capsys.readouterr().err
+
+
+def test_status_and_rehash_follow_the_index(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from lantern_bridge.index import Entry, Index
+
+    config = _config_with_source(tmp_path)
+    with Index(tmp_path / "index.sqlite3") as index:
+        index.sync("games", [Entry("a", 1, 1), Entry("b", 1, 1)])
+        [first, *_] = index.pending()
+        index.set_hash(first, "a" * 64)
+    assert main(["status", "--config", str(config)]) == 0
+    assert "1 hashed\t1 pending" in capsys.readouterr().out
+    assert main(["rehash", "games", "--config", str(config)]) == 0
+    assert "1 hashes forgotten" in capsys.readouterr().out
+    assert main(["status", "--config", str(config)]) == 0
+    assert "0 hashed\t2 pending" in capsys.readouterr().out
+
+
+def test_rehash_refuses_an_unknown_source(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from lantern_bridge.index import Index
+
+    config = _config_with_source(tmp_path)
+    Index(tmp_path / "index.sqlite3").close()
+    assert main(["rehash", "nope", "--config", str(config)]) == 1
+    assert "no source 'nope'" in capsys.readouterr().err
