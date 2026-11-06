@@ -13,16 +13,14 @@ import tomllib
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
+from urllib.parse import urlsplit
 
 import tomli_w
 from lantern.uid import check_uid, new_uid
 
 SCHEMA = 1
 DEFAULT_NAME = "Lantern bridge"
-
-HashMode = Literal["local", "remote"]
-_HASH_MODES: tuple[HashMode, ...] = ("local", "remote")
 
 
 class ConfigError(ValueError):
@@ -40,17 +38,42 @@ class FolderSource:
     id: str
     path: Path
 
+    @property
+    def location(self) -> str:
+        return str(self.path)
+
+
+@dataclass(frozen=True, slots=True)
+class TinfoilSource:
+    """A Tinfoil shop (any server that answers a JSON index), read over HTTP.
+
+    The password is never in the file: ``password_env`` names the environment variable that holds it.
+    """
+
+    id: str
+    url: str
+    user: str | None = None
+    password_env: str | None = None
+
+    @property
+    def location(self) -> str:
+        return self.url
+
+
+Source = FolderSource | TinfoilSource
+
 
 @dataclass(slots=True)
 class Config:
     uid: str
     name: str = DEFAULT_NAME
-    hash_mode: HashMode = "local"
+    # Megabytes per second read from a shop that is hashed over the network (0: no limit).
+    remote_rate: float = 10.0
     # False: every route that serves the library needs a paired device. True: anyone who can reach the server reads it.
     public: bool = False
     # True: the administration pages answer only to addresses of the local network (and the machine itself).
     admin_lan_only: bool = True
-    sources: list[FolderSource] = field(default_factory=list)
+    sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
     _extra_sources: dict[str, dict[str, Any]] = field(default_factory=dict, repr=False)
@@ -60,14 +83,33 @@ class Config:
         data["schema"] = SCHEMA
         data["uid"] = self.uid
         data["name"] = self.name
-        data["hash_mode"] = self.hash_mode
+        data["remote_rate"] = self.remote_rate
         data["public"] = self.public
         data["admin_lan_only"] = self.admin_lan_only
-        data["sources"] = [
-            {**self._extra_sources.get(s.id, {}), "id": s.id, "kind": "folder", "path": str(s.path)}
-            for s in self.sources
-        ]
+        data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
+
+
+def _source_table(source: Source) -> dict[str, Any]:
+    if isinstance(source, FolderSource):
+        return {"id": source.id, "kind": "folder", "path": str(source.path)}
+    table: dict[str, Any] = {"id": source.id, "kind": "tinfoil", "url": source.url}
+    if source.user is not None:
+        table["user"] = source.user
+    if source.password_env is not None:
+        table["password_env"] = source.password_env
+    return table
+
+
+def _parse_url(sid: str, url: object) -> str:
+    if not isinstance(url, str) or not url:
+        raise ConfigError(f"source {sid!r}: `url` is required")
+    parsed = urlsplit(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ConfigError(f"source {sid!r}: `url` must be an http or https address")
+    if parsed.username or parsed.password:
+        raise ConfigError(f"source {sid!r}: no credentials in the `url`: use `user` and `password_env`")
+    return url
 
 
 def _parse(data: dict[str, Any]) -> Config:
@@ -78,22 +120,22 @@ def _parse(data: dict[str, Any]) -> Config:
         raise ConfigSchemaError(
             f"the configuration has schema {schema}, this version reads up to {SCHEMA}: update lantern-bridge"
         )
-    known = {"schema", "uid", "name", "hash_mode", "public", "admin_lan_only", "sources"}
+    known = {"schema", "uid", "name", "remote_rate", "public", "admin_lan_only", "sources"}
     extra = {k: v for k, v in data.items() if k not in known}
     uid = data.get("uid")
     name = data.get("name", DEFAULT_NAME)
     if not isinstance(name, str) or not name.strip():
         raise ConfigError("`name` must be a non-empty string")
-    mode = data.get("hash_mode", "local")
-    if mode not in _HASH_MODES:
-        raise ConfigError(f"`hash_mode` must be one of {', '.join(_HASH_MODES)}")
+    rate = data.get("remote_rate", 10.0)
+    if isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate < 0:
+        raise ConfigError("`remote_rate` must be a number of megabytes per second, 0 or more")
     public = data.get("public", False)
     if not isinstance(public, bool):
         raise ConfigError("`public` must be true or false")
     lan_only = data.get("admin_lan_only", True)
     if not isinstance(lan_only, bool):
         raise ConfigError("`admin_lan_only` must be true or false")
-    sources: list[FolderSource] = []
+    sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
     if not isinstance(raw_sources, list):
@@ -106,12 +148,23 @@ def _parse(data: dict[str, Any]) -> Config:
             raise ConfigError("a source needs an `id` of letters, digits, `-` and `_`")
         if sid in extra_sources:
             raise ConfigError(f"source id {sid!r} is used twice")
-        if kind != "folder":
+        if kind == "folder":
+            if not isinstance(path, str) or not path:
+                raise ConfigError(f"source {sid!r}: `path` is required")
+            sources.append(FolderSource(id=sid, path=Path(path)))
+            own = {"id", "kind", "path"}
+        elif kind == "tinfoil":
+            user, env = raw.get("user"), raw.get("password_env")
+            for key, value in (("user", user), ("password_env", env)):
+                if value is not None and (not isinstance(value, str) or not value):
+                    raise ConfigError(f"source {sid!r}: `{key}` must be a non-empty string")
+            if (user is None) != (env is None):
+                raise ConfigError(f"source {sid!r}: `user` and `password_env` go together")
+            sources.append(TinfoilSource(id=sid, url=_parse_url(sid, raw.get("url")), user=user, password_env=env))
+            own = {"id", "kind", "url", "user", "password_env"}
+        else:
             raise ConfigError(f"source {sid!r}: kind {kind!r} is not supported by this version")
-        if not isinstance(path, str) or not path:
-            raise ConfigError(f"source {sid!r}: `path` is required")
-        sources.append(FolderSource(id=sid, path=Path(path)))
-        extra_sources[sid] = {k: v for k, v in raw.items() if k not in {"id", "kind", "path"}}
+        extra_sources[sid] = {k: v for k, v in raw.items() if k not in own}
     try:
         uid = check_uid(uid) if uid is not None else new_uid()
     except ValueError as error:
@@ -119,7 +172,7 @@ def _parse(data: dict[str, Any]) -> Config:
     return Config(
         uid=uid,
         name=name,
-        hash_mode=mode,
+        remote_rate=float(rate),
         public=public,
         admin_lan_only=lan_only,
         sources=sources,

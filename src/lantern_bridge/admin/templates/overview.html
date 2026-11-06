@@ -41,7 +41,6 @@
 <dl>
   <dt>Uid</dt><dd><code>{{ uid }}</code></dd>
   <dt>Access</dt><dd>{% if public %}public: anyone who reaches the server reads the library{% else %}pairing required: only paired devices read the library{% endif %}</dd>
-  <dt>Hashes</dt><dd>{{ mode }}</dd>
 </dl>
 {% endblock %}
 {% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

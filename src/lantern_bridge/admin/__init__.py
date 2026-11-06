@@ -100,7 +100,7 @@ class Admin:
             sources.append(
                 {
                     "id": source.id,
-                    "path": str(source.path),
+                    "path": source.location,
                     "reachable": seen.reachable if seen else None,
                     "scanned": seen.scanned if seen else None,
                     "error": seen.error if seen else None,
@@ -258,7 +258,6 @@ def mount(app: FastAPI, admin: Admin) -> None:
             state=admin.state(),
             uid=admin.config.uid,
             public=admin.config.public,
-            mode=admin.config.hash_mode,
         )
 
     @router.get("/api/state")

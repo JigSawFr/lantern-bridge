@@ -8,12 +8,12 @@ from lantern.uid import new_uid
 
 from lantern_bridge import SPEC_DRAFT
 from lantern_bridge.app import make_app
-from lantern_bridge.config import Config, FolderSource
+from lantern_bridge.config import Config, FolderSource, Source
 
 
 def _config(root: Path | None = None, uid: str | None = None, *, public: bool = True) -> Config:
     """Public by default here, so that the tests read the library without pairing a device."""
-    sources = [FolderSource("games", root)] if root is not None else []
+    sources: list[Source] = [FolderSource("games", root)] if root is not None else []
     return Config(uid=uid or new_uid(), name="Test shelf", sources=sources, public=public)
 
 

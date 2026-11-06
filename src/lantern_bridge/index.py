@@ -15,7 +15,7 @@ import contextlib
 import os
 import sqlite3
 import threading
-from collections.abc import Iterable, Iterator
+from collections.abc import Collection, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -151,14 +151,15 @@ class Index:
             db.executemany("DELETE FROM files WHERE source = ? AND path = ?", gone)
         return SyncResult(added=added, changed=changed, removed=len(gone))
 
-    def pending(self, limit: int = 100) -> list[Row]:
-        """Files to hash: the lowest priority number first, then the smallest."""
+    def pending(self, limit: int = 100, sources: Collection[str] | None = None) -> list[Row]:
+        """Files to hash: the lowest priority number first, then the smallest; of `sources` when given."""
+        query = "SELECT source, path, size, mtime_ns, sha256 FROM files WHERE sha256 IS NULL"
+        args: tuple[str | int, ...] = ()
+        if sources is not None:
+            query += " AND source IN (" + ",".join("?" * len(sources)) + ")"  # marks only, never a value
+            args = tuple(sources)
         with self._lock:
-            rows = self._db.execute(
-                "SELECT source, path, size, mtime_ns, sha256 FROM files WHERE sha256 IS NULL "
-                "ORDER BY priority, size, source, path LIMIT ?",
-                (limit,),
-            ).fetchall()
+            rows = self._db.execute(query + " ORDER BY priority, size, source, path LIMIT ?", (*args, limit)).fetchall()
         return [Row(*row) for row in rows]
 
     def set_hash(self, row: Row, sha256: str) -> bool:

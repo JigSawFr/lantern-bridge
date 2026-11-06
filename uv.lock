@@ -376,6 +376,7 @@ wheels = [
 name = "lantern-bridge"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "jinja2" },
     { name = "lantern-protocol", extra = ["fastapi"] },
     { name = "tomli-w" },
@@ -396,6 +397,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "lantern-protocol", extras = ["fastapi"], editable = "sdk/python" },
     { name = "tomli-w", specifier = ">=1.2.0" },

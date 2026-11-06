@@ -34,8 +34,12 @@ class Identity:
 
 
 def identify(path: str) -> Identity | None:
-    """What the name says, or None when it does not say enough."""
-    file = PurePosixPath(path)
+    """What the name says, or None when it does not say enough.
+
+    The name is the last path segment; a shop address that carries its name after a ``#`` (the way
+    Tinfoil indexes do) gives the part after it.
+    """
+    file = PurePosixPath(path.rsplit("#", 1)[-1])
     fmt = file.suffix.lstrip(".").lower()
     if fmt not in _FORMATS:
         return None
