@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# What a bridge writes while it runs (config, index, certificates)
+/data/

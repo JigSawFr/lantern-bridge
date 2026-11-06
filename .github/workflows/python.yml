@@ -1,0 +1,69 @@
+# The bridge (src/, tests/): ruff, mypy --strict, and the tests with coverage
+# on Linux (3.12 to 3.15), Windows and macOS. The conformance suite against
+# the bridge, over fake upstreams, joins them with the first source.
+name: python
+
+# Called by ci.yml
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# uv installs Python and the development environment exactly as uv.lock
+# says (UV_LOCKED: a lock that no longer matches pyproject.toml fails),
+# from its cache when the lock has not changed
+env:
+  PYTHONUTF8: "1"
+  UV_LOCKED: "1"
+  # The version of uv, as setup-uv's step installs it
+  UV_VERSION: 0.13.6
+
+jobs:
+  lint:
+    name: ruff, mypy
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.15"
+      - name: Install
+        run: uv sync
+      - name: ruff
+        run: |
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
+      - name: mypy --strict
+        run: uv run mypy
+
+  test:
+    name: tests (${{ matrix.os }}, ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-26.04 ]
+        python: [ "3.12", "3.13", "3.14", "3.15" ]
+        include:
+          - os: windows-2025
+            python: "3.15"
+          - os: macos-26
+            python: "3.15"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: uv sync
+      - name: pytest, with coverage
+        run: uv run pytest -n auto --cov --cov-report=term

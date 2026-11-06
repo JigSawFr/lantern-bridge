@@ -1,0 +1,101 @@
+[build-system]
+# Pinned, so that a release can be built again byte for byte; raised by hand.
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lantern-bridge"
+description = "A gateway that presents a Tinfoil, Ownfoil or AeroFoil library, or plain folders, as a Lantern server."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSES/MIT.txt"]
+authors = [{ name = "JigSawFr" }]
+requires-python = ">=3.12"
+dynamic = ["version"]
+keywords = ["lantern", "homebrew", "game library", "gateway"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Internet :: WWW/HTTP",
+    "Typing :: Typed",
+]
+# The Lantern SDK joins with the first source.
+dependencies = []
+
+[project.scripts]
+lantern-bridge = "lantern_bridge.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/JigSawFr/lantern-bridge"
+Specification = "https://github.com/JigSawFr/lantern"
+SDK = "https://github.com/JigSawFr/lantern-sdk"
+Issues = "https://github.com/JigSawFr/lantern-bridge/issues"
+Changelog = "https://github.com/JigSawFr/lantern-bridge/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=6",
+    "pytest-xdist>=3.6",
+    "mypy>=1.13",
+    "ruff>=0.8",
+]
+
+# uv (https://docs.astral.sh/uv/) installs the development environment from
+# uv.lock: `uv sync`, then `uv run pytest`. Its resolver takes no file
+# uploaded in the last 14 days: a release has two weeks to be yanked before
+# `uv lock` can pick it up.
+[tool.uv]
+exclude-newer = "14 days"
+
+[tool.hatch.version]
+path = "src/lantern_bridge/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/lantern_bridge", "tests", "README.md", "LICENSES", "pyproject.toml"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lantern_bridge"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "C4", "PIE", "PT", "RET", "TC", "PL", "S", "BLE", "ASYNC"]
+ignore = [
+    "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004",
+    "RET505", "RET506", "SIM108",
+    "PLC0415",
+    "TC001", "TC002", "TC003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "PLR", "B011", "BLE001", "PT018", "PT011"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["lantern_bridge"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+files = ["src", "tests"]
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["lantern_bridge"]
+branch = true
