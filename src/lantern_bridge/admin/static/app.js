@@ -11,6 +11,9 @@
       const value = state[el.dataset.bind];
       if (value !== undefined && value !== null) el.textContent = value;
     }
+    const busy = Number(state.total) > 0;
+    for (const el of document.querySelectorAll("[data-busy]")) el.hidden = !busy;
+    for (const el of document.querySelectorAll("[data-idle]")) el.hidden = busy;
     const bar = document.getElementById("progress");
     if (bar) { bar.max = state.total || 1; bar.value = state.hashed; }
   };
@@ -18,6 +21,34 @@
     const tick = () => get().then(bind).catch(() => {});
     tick();
     setInterval(tick, 2000);
+  }
+
+  // -- tables: on a narrow screen each row becomes a card, so every cell carries its column's name -------
+  for (const table of document.querySelectorAll("table")) {
+    const heads = [...table.querySelectorAll("thead th")].map((th) => th.textContent.trim());
+    for (const row of table.querySelectorAll("tbody tr")) {
+      [...row.children].forEach((td, i) => { if (heads[i] && td.colSpan === 1) td.dataset.label = heads[i]; });
+    }
+  }
+
+  // -- the menu scrolls sideways on a narrow screen: the current page is brought into view ----------------
+  const here = document.querySelector("nav a[aria-current]");
+  if (here && here.scrollIntoView) here.scrollIntoView({ block: "nearest", inline: "center" });
+
+  // -- "Add a source": a folder has no shop user or password --------------------------------------------
+  const kind = document.querySelector("select[data-kind]");
+  if (kind) {
+    const where = kind.form.elements.where;
+    const adjust = () => {
+      const shop = kind.value !== "folder";
+      for (const el of kind.form.querySelectorAll("[data-shop-only]")) {
+        el.hidden = !shop;
+        for (const input of el.querySelectorAll("input")) input.disabled = !shop;
+      }
+      where.placeholder = shop ? where.dataset.phShop : where.dataset.phFolder;
+    };
+    kind.addEventListener("change", adjust);
+    adjust();
   }
 
   // -- logs -------------------------------------------------------------------------------------------

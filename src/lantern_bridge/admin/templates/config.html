@@ -46,17 +46,17 @@
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
   <h2>{{ _("Add a source") }}</h2>
   <div class="form-grid">
-    <label>{{ _("Kind") }} <select name="kind">
+    <label>{{ _("Kind") }} <select name="kind" data-kind>
       <option value="folder">{{ _("folder: a folder of games on this machine") }}</option>
       <option value="tinfoil">{{ _("tinfoil: any Tinfoil shop") }}</option>
       <option value="ownfoil">Ownfoil</option>
       <option value="aerofoil">AeroFoil</option></select></label>
     <label>{{ _("Name (letters, digits, - and _)") }} <input name="id" maxlength="32" required pattern="[A-Za-z0-9_-]+"></label>
-    <label>{{ _("Folder, or address of the shop") }} <input name="where" maxlength="500" required placeholder="/games  ·  http://shop:8465/"></label>
-    <label>{{ _("Shop user (optional)") }} <input name="user" maxlength="128"></label>
-    <label>{{ _("Variable holding its password") }} <input name="password_env" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
+    <label>{{ _("Folder, or address of the shop") }} <input name="where" maxlength="500" required placeholder="/games" data-ph-folder="/games" data-ph-shop="http://shop:8465/"></label>
+    <label data-shop-only>{{ _("Shop user (optional)") }} <input name="user" maxlength="128"></label>
+    <label data-shop-only>{{ _("Variable holding its password") }} <input name="password_env" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
   </div>
-  <p class="dim">{{ _("A password is never typed here: name the environment variable of the bridge that holds it.") }}</p>
+  <p class="dim" data-shop-only>{{ _("A password is never typed here: name the environment variable of the bridge that holds it.") }}</p>
   <button>{{ _("Add") }}</button>
 </form>
 {% endblock %}
