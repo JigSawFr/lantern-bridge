@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from lantern.server import LanternApp, MemoryLibrary, SqliteAccounts
+from lantern.server import LanternApp, SqliteAccounts
 from lantern.server.fastapi import include
 
 from lantern_bridge.admin import Admin, mount
@@ -21,6 +21,7 @@ from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
 from lantern_bridge.runtime import Runtime
+from lantern_bridge.upstream import BridgeLibrary
 
 
 def make_app(config: Config, state_dir: Path, *, run: bool = True, json_logs: bool = False) -> FastAPI:
@@ -29,7 +30,7 @@ def make_app(config: Config, state_dir: Path, *, run: bool = True, json_logs: bo
     `run=False` leaves the background pass off (tests call `app.state.runtime.cycle()`).
     """
     state_dir.mkdir(parents=True, exist_ok=True)
-    library = MemoryLibrary(base="/api/lantern")
+    library = BridgeLibrary(base="/api/lantern")
     runtime = Runtime(config, state_dir, library)
     accounts = SqliteAccounts(state_dir / "accounts.sqlite3")
 
@@ -45,7 +46,17 @@ def make_app(config: Config, state_dir: Path, *, run: bool = True, json_logs: bo
 
     app = FastAPI(title="lantern-bridge", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.runtime = runtime
-    lantern = LanternApp(library, uid=config.uid, name=config.name, accounts=accounts, public=config.public)
+    lantern = LanternApp(
+        library,
+        uid=config.uid,
+        name=config.name,
+        accounts=accounts,
+        public=config.public,
+        saves=runtime.saves,
+        encrypted_saves=False,  # the AeroFoil keeps plain zip archives
+        requests=runtime.requests,
+    )
+    runtime.answer_request = lantern.answer_request
     include(app, lantern)
     ring = LogRing()
     install(ring, json_lines=json_logs)
