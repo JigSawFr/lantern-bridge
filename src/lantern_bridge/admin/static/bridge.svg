@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- lantern-bridge's mark: the frame in the aurora's colours around the night, a bridge's arch and deck in snow. -->
+  <defs><linearGradient id="m-colour" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00FFCC"/><stop offset="0.65" stop-color="#33BBFF"/><stop offset="1" stop-color="#8A5CFF"/></linearGradient></defs>
+  <path d="M58 40 L 198 40 Q 214 40 214 56 L 214 200 Q 214 216 198 216 L 58 216 Q 42 216 42 200 L 42 56 Q 42 40 58 40 Z" fill="#0E1A33" stroke="url(#m-colour)" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M80 150 Q 128 84 176 150" fill="none" stroke="#E8EEF7" stroke-width="12" stroke-linecap="round"/><rect x="66" y="150" width="124" height="12" rx="6" fill="#E8EEF7"/><path d="M104 125 L 104 150 M128 112 L 128 150 M152 125 L 152 150" stroke="#E8EEF7" stroke-width="8" stroke-linecap="round"/>
+</svg>

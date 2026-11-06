@@ -57,7 +57,11 @@ class ShopSource:
 
     @property
     def location(self) -> str:
-        return self.url
+        """The address as the pages show it: never with a login in it."""
+        parts = urlsplit(self.url)
+        if parts.username is None and parts.password is None:
+            return self.url
+        return parts._replace(netloc=parts.netloc.rsplit("@", 1)[-1]).geturl()
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +240,15 @@ def _parse(data: dict[str, Any]) -> Config:
         _extra=extra,
         _extra_sources=extra_sources,
     )
+
+
+def check(config: Config) -> Config:
+    """The configuration as the file would give it back: raises ConfigError for what a reader would refuse
+    (a bad address, two sources of one name…), and gives the values a reader normalises."""
+    try:
+        return _parse(tomllib.loads(config.to_toml()))
+    except tomllib.TOMLDecodeError as error:
+        raise ConfigError(str(error)) from error
 
 
 def load(path: Path) -> Config:

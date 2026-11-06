@@ -107,6 +107,10 @@ class Runtime:
             return Ownfoil(source.url, user=user, password=password)
         return Shop(source.url, user=user, password=password)
 
+    def open_shop(self, source: ShopSource) -> Shop:
+        """A client for a shop of the configuration (the caller closes it)."""
+        return self._shop(source)
+
     def _scan_shops(self) -> None:
         for source, shop in self.shops.items():
             waited = time.monotonic() - self._shop_scanned.get(source, -REMOTE_EVERY)

@@ -1,46 +1,51 @@
 {% extends "base.html" %}
-{% block title %}Overview{% endblock %}
+{% block title %}{{ _("Overview") }}{% endblock %}
 {% block body %}
-<h1>Overview</h1>
+<h1>{{ _("Overview") }}</h1>
+<p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }} <a href="/admin/config">{{ _("Settings") }}</a></p>{% endif %}
 <section class="cards">
-  <div><span class="n" data-bind="apps">{{ state.apps }}</span> apps served</div>
-  <div><span class="n" data-bind="titles">{{ state.titles }}</span> titles</div>
-  <div><span class="n" data-bind="waiting">{{ state.waiting }}</span> <a href="/admin/pairings">pairings waiting</a></div>
+  <div class="tile"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></div>
+  <div class="tile"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></div>
+  <div class="tile"><span class="n" data-bind="waiting">{{ state.waiting }}</span><a class="what" href="/admin/pairings">{{ _("pairings waiting") }}</a></div>
 </section>
 
-<h2>Hashing</h2>
-<p>Hashing is local and read-only: the files are read in place and never changed.</p>
+<h2>{{ _("Hashing") }}</h2>
+<div class="card glow">
+<p class="muted">{{ _("Hashing is local and read-only: the files are read in place and never changed.") }}</p>
 <progress id="progress" max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
-<p><span data-bind="hashed">{{ state.hashed }}</span> of <span data-bind="total">{{ state.total }}</span> files hashed ·
-  <span data-bind="pending_size_text">{{ state.pending_bytes | size }}</span> to go ·
-  rate <span data-bind="rate_text">{{ (state.rate | size) ~ "/s" if state.rate else "–" }}</span> ·
-  time left <span data-bind="eta_text">–</span></p>
+<p><span data-bind="hashed">{{ state.hashed }}</span> / <span data-bind="total">{{ state.total }}</span> {{ _("files hashed") }} ·
+  <span data-bind="pending_size_text">{{ state.pending_bytes | size }}</span> {{ _("to go") }} ·
+  {{ _("rate") }} <span data-bind="rate_text">{{ (state.rate | size) ~ "/s" if state.rate else "–" }}</span> ·
+  {{ _("time left") }} <span data-bind="eta_text">–</span></p>
 <form method="post" action="/admin/scan" class="row">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
-  <button name="action" value="scan">Scan now</button>
+  <button name="action" value="scan">{{ _("Scan now") }}</button>
+  <a class="button" href="/admin/diagnostic.json" download>{{ _("Export a diagnostic") }}</a>
 </form>
+</div>
 
-<h2>Sources</h2>
-<table>
-  <thead><tr><th>Source</th><th>Folder</th><th>State</th><th>Last read</th><th>Hashed</th><th>Pending</th><th></th></tr></thead>
+<h2>{{ _("Sources") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Source") }}</th><th>{{ _("Location") }}</th><th>{{ _("State") }}</th><th>{{ _("Last read") }}</th><th>{{ _("Hashed") }}</th><th>{{ _("Pending") }}</th><th></th></tr></thead>
   <tbody>
   {% for s in state.sources %}
   <tr>
-    <td>{{ s.id }}</td><td><code>{{ s.path }}</code></td>
-    <td>{% if s.reachable is none %}waiting{% elif s.reachable %}reachable{% else %}<span class="error">{{ s.error }}</span>{% endif %}</td>
+    <td><strong>{{ s.id }}</strong></td><td><code>{{ s.path }}</code></td>
+    <td>{% if s.reachable is none %}<span class="pill wait">{{ _("waiting") }}</span>{% elif s.reachable %}<span class="pill ok">{{ _("reachable") }}</span>{% else %}<span class="pill bad">{{ _("unreachable") }}</span><br><span class="error">{{ s.error }}</span>{% endif %}</td>
     <td>{{ s.scanned | when }}</td><td>{{ s.hashed }}</td><td>{{ s.pending }}</td>
-    <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button name="action" value="rehash" data-confirm="Hash every file of this source again?">Rehash</button></form></td>
+    <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button class="ghost small" name="action" value="rehash" data-confirm="{{ _('Hash every file of this source again?') }}">{{ _("Rehash") }}</button></form></td>
   </tr>
   {% else %}
-  <tr><td colspan="7">No source configured: add a <code>[[sources]]</code> table to the configuration file.</td></tr>
+  <tr><td colspan="7">{{ _("No source configured yet.") }} <a href="/admin/config">{{ _("Add one") }}</a></td></tr>
   {% endfor %}
   </tbody>
-</table>
+</table></div>
 
-<h2>Server</h2>
+<h2>{{ _("Server") }}</h2>
 <dl>
   <dt>Uid</dt><dd><code>{{ uid }}</code></dd>
-  <dt>Access</dt><dd>{% if public %}public: anyone who reaches the server reads the library{% else %}pairing required: only paired devices read the library{% endif %}</dd>
+  <dt>{{ _("Access") }}</dt><dd>{% if public %}{{ _("public: anyone who reaches the server reads the library") }}{% else %}{{ _("pairing required: only paired devices read the library") }}{% endif %}</dd>
 </dl>
 {% endblock %}
 {% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

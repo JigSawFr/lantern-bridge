@@ -114,7 +114,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"lantern-bridge: {error}", file=sys.stderr)
         return 1
     uvicorn.run(
-        make_app(config, args.config.resolve().parent, json_logs=args.json_logs), host=args.host, port=args.port
+        make_app(config, args.config.resolve().parent, json_logs=args.json_logs, config_path=args.config.resolve()),
+        host=args.host,
+        port=args.port,
     )
     return 0
 
