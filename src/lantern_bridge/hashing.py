@@ -63,7 +63,7 @@ def hash_pending(
     still match.
     """
     done = 0
-    for row in index.pending(limit):
+    for row in index.pending(limit, tuple(roots)):
         root = roots.get(row.source)
         if root is None:
             continue

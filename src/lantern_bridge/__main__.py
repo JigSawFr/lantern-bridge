@@ -68,7 +68,7 @@ def _inspect(args: argparse.Namespace) -> int:
         counts = index.counts_by_source()
         for source in config.sources:
             c = counts.get(source.id, {"hashed": 0, "pending": 0})
-            print(f"{source.id}\t{source.path}\t{c['hashed']} hashed\t{c['pending']} pending")
+            print(f"{source.id}\t{source.location}\t{c['hashed']} hashed\t{c['pending']} pending")
         if not config.sources:
             print("No source configured.")
     return 0
