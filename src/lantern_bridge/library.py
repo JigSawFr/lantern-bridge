@@ -32,6 +32,12 @@ class Projection:
         self._shown: dict[tuple[str, str], tuple[Row, str, Identity]] = {}
         self._titles: dict[str, str] = {}
 
+    def served(self) -> tuple[int, int]:
+        """How many apps and how many titles the library offers now."""
+        return len({app_id for _, app_id, _ in self._shown.values()}), len(
+            {i.title_id for _, _, i in self._shown.values()}
+        )
+
     def refresh(self) -> tuple[int, int]:
         """Add what became listable, remove what is gone; returns (added, removed)."""
         rows = {(r.source, r.path): r for r in self.index.hashed()}

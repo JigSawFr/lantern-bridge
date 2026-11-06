@@ -26,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8080)
     serve.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
+    serve.add_argument("--json-logs", action="store_true", help="write the logs as JSON lines (for a container)")
     status = commands.add_parser("status", help="show the sources and the hashing progress")
     rehash = commands.add_parser("rehash", help="compute the hashes of a source (or of all) again")
     rehash.add_argument("source", nargs="?", help="a source id (default: all)")
@@ -112,7 +113,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ConfigError as error:
         print(f"lantern-bridge: {error}", file=sys.stderr)
         return 1
-    uvicorn.run(make_app(config, args.config.resolve().parent), host=args.host, port=args.port)
+    uvicorn.run(
+        make_app(config, args.config.resolve().parent, json_logs=args.json_logs), host=args.host, port=args.port
+    )
     return 0
 
 

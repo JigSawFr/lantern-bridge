@@ -185,6 +185,12 @@ class Index:
             done, todo = self._db.execute("SELECT COUNT(sha256), COUNT(*) - COUNT(sha256) FROM files").fetchone()
         return {"hashed": int(done), "pending": int(todo)}
 
+    def pending_bytes(self) -> int:
+        """The size of the files still to hash."""
+        with self._lock:
+            (total,) = self._db.execute("SELECT COALESCE(SUM(size), 0) FROM files WHERE sha256 IS NULL").fetchone()
+        return int(total)
+
     def counts_by_source(self) -> dict[str, dict[str, int]]:
         """Per source: how many files are hashed and how many are waiting."""
         with self._lock:

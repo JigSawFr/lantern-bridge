@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Pairings{% endblock %}
+{% block body %}
+<h1 id="pairings" data-waiting="{{ waiting | length }}">Pairings</h1>
+<p>A device that asks to pair shows a code. Check that it is the code on its screen, then approve it for an account.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<datalist id="users">{% for u in users %}<option value="{{ u }}">{% endfor %}</datalist>
+{% for p in waiting %}
+<article class="card">
+  <h2>{{ p.device }}</h2>
+  <p>Code <code class="code">{{ p.code }}</code> · asked at {{ p.created }} · expires {{ p.expires }}</p>
+  <p>Wants: {{ p.scopes | join(", ") }}</p>
+  <form method="post" action="/admin/pairings/{{ p.id }}" class="row">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}">
+    <label>Account <input name="user" list="users" value="{{ users[0] if users else 'family' }}" maxlength="64" required></label>
+    <button name="decision" value="approve">Approve</button>
+    <button name="decision" value="refuse" class="danger">Refuse</button>
+  </form>
+</article>
+{% else %}
+<p class="muted">Nothing is waiting. Open Lantern on a device and pick this server to pair it.</p>
+{% endfor %}
+<p class="muted">An account that does not exist yet is created with the usual scopes (library, saves, cheats, requests, sync).</p>
+{% endblock %}
+{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

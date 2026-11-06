@@ -1,0 +1,31 @@
+:root{--bg:#f6f7f9;--fg:#1c2330;--muted:#5d6878;--card:#fff;--line:#d7dce4;--accent:#b4570a;--danger:#b3261e;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#12161d;--fg:#e6e9ef;--muted:#9aa5b5;--card:#1b212b;--line:#2c3441;--accent:#f0a04b;--danger:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line);background:var(--card)}
+header nav{display:flex;gap:1rem;flex:1}
+a{color:var(--accent)}
+nav a{text-decoration:none;color:var(--fg);padding:.25rem 0;border-bottom:2px solid transparent}
+nav a[aria-current]{border-color:var(--accent)}
+main{max-width:64rem;margin:0 auto;padding:1rem}
+footer{max-width:64rem;margin:2rem auto;padding:0 1rem;color:var(--muted);font-size:.85rem}
+h1{font-size:1.6rem}h2{font-size:1.2rem;margin-top:2rem}
+table{width:100%;border-collapse:collapse;background:var(--card);display:block;overflow-x:auto}
+th,td{text-align:left;padding:.5rem;border-bottom:1px solid var(--line);vertical-align:top}
+.cards{display:flex;flex-wrap:wrap;gap:1rem}
+.cards div,.card{background:var(--card);border:1px solid var(--line);border-radius:.5rem;padding:.75rem 1rem}
+.card{margin:1rem 0}.card h2{margin:0}
+.n{font-size:1.8rem;font-weight:600}
+progress{width:100%;height:1rem;accent-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end}
+.stack{display:grid;gap:1rem;max-width:26rem}
+label{display:grid;gap:.25rem;font-size:.9rem}
+input,select{font:inherit;padding:.4rem;border:1px solid var(--line);border-radius:.3rem;background:var(--card);color:var(--fg)}
+button{font:inherit;padding:.4rem .9rem;border:0;border-radius:.3rem;background:var(--accent);color:#fff;cursor:pointer}
+button.danger{background:var(--danger)}
+button.link{background:none;color:var(--fg);text-decoration:underline;padding:0}
+.error{color:var(--danger)}.muted{color:var(--muted)}
+.code{font-size:1.3rem;letter-spacing:.1em}
+pre#log{background:var(--card);border:1px solid var(--line);border-radius:.5rem;padding:.75rem;overflow:auto;max-height:70vh;white-space:pre-wrap}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{color:var(--muted)}dd{margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
