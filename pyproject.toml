@@ -53,6 +53,8 @@ dev = [
     "mypy>=1.13",
     "ruff>=0.8",
     "httpx>=0.27",
+    "jsonschema>=4.26.0",
+    "referencing>=0.37.0",
 ]
 
 # uv (https://docs.astral.sh/uv/) installs the development environment from
@@ -108,7 +110,10 @@ warn_unreachable = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not conformance'"
+markers = [
+    "conformance: the specification's conformance suite against the running bridge (needs the SDK's own submodules)",
+]
 
 [tool.coverage.run]
 source = ["lantern_bridge"]
