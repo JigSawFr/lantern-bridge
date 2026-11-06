@@ -86,3 +86,22 @@ def test_rehash_refuses_an_unknown_source(tmp_path: Path, capsys: pytest.Capture
     Index(tmp_path / "index.sqlite3").close()
     assert main(["rehash", "nope", "--config", str(config)]) == 1
     assert "no source 'nope'" in capsys.readouterr().err
+
+
+def test_invite_prints_a_code_the_accounts_know(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from lantern.server import SqliteAccounts
+
+    config = tmp_path / "config.toml"
+    assert main(["invite", "--user", "noor", "--devices", "2", "--config", str(config)]) == 0
+    out = capsys.readouterr().out
+    with SqliteAccounts(tmp_path / "accounts.sqlite3") as accounts:
+        [invitation] = accounts.invitations()
+        assert invitation.code in out
+        assert invitation.user == "noor"
+        assert invitation.devices == 2
+        assert "admin" not in invitation.scopes
+
+
+def test_invite_refuses_nonsense(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["invite", "--devices", "0", "--config", str(tmp_path / "config.toml")]) == 1
+    assert "at least 1" in capsys.readouterr().err

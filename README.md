@@ -56,6 +56,8 @@ path = "/games"
 
 `lantern-bridge status` shows the hashing progress, and `lantern-bridge rehash` computes it again.
 
+A device has to be **paired** before it reads anything (only the handshake is open). `lantern-bridge invite` prints a code for a new device (`--user`, `--devices`, `--hours`, `--admin`), which the device enters in its Lantern client. To let anyone who can reach the server read it instead, set `public = true` in `config.toml`; that is not recommended outside a network you trust.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.
@@ -65,7 +67,7 @@ docker build -t lantern-bridge .
 docker run -p 8080:8080 -v ./config:/config -v /srv/games:/games:ro lantern-bridge
 ```
 
-The image runs as an unprivileged user (uid 10001), so `./config` must be writable by it. For now it is built by the CI, not published.
+To pair a device: `docker exec <container> lantern-bridge invite`. The image runs as an unprivileged user (uid 10001), so `./config` must be writable by it. For now it is built by the CI, not published.
 
 ## 📦 Releases
 

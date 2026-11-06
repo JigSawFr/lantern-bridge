@@ -11,9 +11,10 @@ from lantern_bridge.app import make_app
 from lantern_bridge.config import Config, FolderSource
 
 
-def _config(root: Path | None = None, uid: str | None = None) -> Config:
+def _config(root: Path | None = None, uid: str | None = None, *, public: bool = True) -> Config:
+    """Public by default here, so that the tests read the library without pairing a device."""
     sources = [FolderSource("games", root)] if root is not None else []
-    return Config(uid=uid or new_uid(), name="Test shelf", sources=sources)
+    return Config(uid=uid or new_uid(), name="Test shelf", sources=sources, public=public)
 
 
 def test_handshake_is_the_toolkits(tmp_path: Path) -> None:
@@ -109,3 +110,24 @@ def test_every_title_of_an_app_has_a_sheet_named_by_its_base(tmp_path: Path) -> 
         (root / "Frost Garden - Winter [0100ABCD00011001][v0].nsp").unlink()
         app.state.runtime.cycle()
         assert client.get("/api/lantern/v1/titles/0100ABCD00010000?platform=switch").status_code == 404
+
+
+def test_pairing_is_required_by_default(tmp_path: Path) -> None:
+    root = tmp_path / "games"
+    root.mkdir()
+    (root / "Moss [0100ABCD00020000][v0].nsp").write_bytes(b"moss")
+    app = make_app(_config(root, public=False), tmp_path / "state", run=False)
+    with TestClient(app) as client:
+        app.state.runtime.cycle()
+        assert client.get("/.well-known/lantern").status_code == 200  # the handshake is always open
+        assert client.get("/api/lantern/v1/apps?platform=switch").status_code == 401
+
+
+def test_a_public_bridge_can_be_read_without_pairing(tmp_path: Path) -> None:
+    root = tmp_path / "games"
+    root.mkdir()
+    (root / "Moss [0100ABCD00020000][v0].nsp").write_bytes(b"moss")
+    app = make_app(_config(root), tmp_path / "state", run=False)
+    with TestClient(app) as client:
+        app.state.runtime.cycle()
+        assert len(client.get("/api/lantern/v1/apps?platform=switch").json()["items"]) == 1
