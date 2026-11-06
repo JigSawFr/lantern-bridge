@@ -9,17 +9,20 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from lantern.server import MemoryLibrary
 
-from lantern_bridge.config import Config, FolderSource, OwnfoilSource, ShopSource
+from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
 from lantern_bridge.index import Index
 from lantern_bridge.library import Projection
+from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
+from lantern_bridge.upstream import AeroRequests, AeroSaves, BridgeLibrary, Cheats, Ledger, Logins
 
 log = logging.getLogger("lantern_bridge.runtime")
 
@@ -65,6 +68,25 @@ class Runtime:
         self._remote_failed: dict[tuple[str, str], float] = {}
         self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
+        # The first AeroFoil of the configuration keeps the saves, cheats and requests.
+        self.ledger: Ledger | None = None
+        self.saves: AeroSaves | None = None
+        self.requests: AeroRequests | None = None
+        self.cheats: Cheats | None = None
+        self.aero: AerofoilSource | None = next((s for s in config.sources if isinstance(s, AerofoilSource)), None)
+        #: Set by the application: decides an open request (``LanternApp.answer_request``).
+        self.answer_request: Callable[[str, str, str | None], object] | None = None
+        if self.aero is not None:
+            shop = self.shops[self.aero.id]
+            if not isinstance(shop, AeroFoil):  # the shop of an AerofoilSource always is
+                raise TypeError("an AeroFoil source needs an AeroFoil shop")
+            logins = Logins(self.aero, shop)
+            self.ledger = Ledger(state_dir / "upstream.sqlite3")
+            self.saves = AeroSaves(state_dir / "saves", logins, self.ledger)
+            self.requests = AeroRequests(logins, self.ledger)
+            if isinstance(library, BridgeLibrary):
+                self.cheats = Cheats(library, self.aero.id)
+                library.shop = shop if self.aero.user is not None else None
         self._stop = threading.Event()
         self._wake = threading.Event()
         self._thread: threading.Thread | None = None
@@ -79,6 +101,8 @@ class Runtime:
                 source.password_env,
             )
         user = source.user if password is not None else None
+        if isinstance(source, AerofoilSource):
+            return AeroFoil(source.url, user=user, password=password)
         if isinstance(source, OwnfoilSource):
             return Ownfoil(source.url, user=user, password=password)
         return Shop(source.url, user=user, password=password)
@@ -100,11 +124,25 @@ class Runtime:
             state.reachable, state.scanned, state.error = True, time.time(), None
             if result.added or result.changed or result.removed:
                 log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+            if source == (self.aero.id if self.aero else None):
+                self._mirror(shop)
             if isinstance(shop, Ownfoil):
                 try:
                     self.projection.sheets[source] = shop.sheets()
                 except UpstreamError as error:
                     log.warning("source %s: the sheets cannot be read: %s", source, error)
+
+    def _mirror(self, shop: Shop) -> None:
+        """The AeroFoil's cheats come in, and the fate of the requests made through it."""
+        if not isinstance(shop, AeroFoil):
+            return
+        try:
+            if self.cheats is not None:
+                self.cheats.refresh(shop)
+            if self.requests is not None and self.answer_request is not None:
+                self.requests.pull(self.answer_request)
+        except UpstreamError as error:
+            log.warning("source %s: the cheats cannot be read: %s", shop.url, error)
 
     def source_changed(self, source: str) -> None:
         """A shop said something changed: read it again soon, not after the regular wait."""
@@ -225,3 +263,5 @@ class Runtime:
         for shop in self.shops.values():
             shop.close()
         self.index.close()
+        if self.ledger is not None:
+            self.ledger.close()

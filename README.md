@@ -86,6 +86,36 @@ The bridge asks Ownfoil's GraphQL API (`/api/graphql`) for what it holds: each f
 
 If the account may read Ownfoil's live feed (`/api/ws`, administrators only), the bridge reads the shop again as soon as a task of Ownfoil ends, instead of waiting for the next regular read (every five minutes). Without it, nothing is lost.
 
+### 🪂 An AeroFoil as a source
+
+```toml
+[[sources]]
+id = "aero"
+kind = "aerofoil"
+url = "http://aerofoil:8465/"
+user = "bridge"            # the service account
+password_env = "AEROFOIL_PASSWORD"
+
+[[sources.logins]]         # optional: Lantern account "alice" acts as this AeroFoil user
+account = "alice"
+user = "alice"
+password_env = "AEROFOIL_ALICE"
+```
+
+The shop is read like any Tinfoil shop. On top of it, the first `aerofoil` source of the file also gives:
+
+- **Saves.** The bridge keeps its own copy of each account's backups and mirrors it both ways: a backup made
+  through Lantern is uploaded (`account` and `device` kinds, as AeroFoil's save types), and one that only
+  AeroFoil has (from CyberFoil, say) is brought over, zip archives only. A backup deleted on one side is
+  deleted on the other. The bridge turns encrypted backups off, since AeroFoil keeps plain archives.
+- **Cheats.** The cheat sets of AeroFoil appear as Lantern cheat sets. A client with the `cheats.write` scope
+  writes through to AeroFoil, whose login must then be an administrator's, or the write is refused.
+- **Requests.** A request is also made on AeroFoil, and when AeroFoil closes it (`done`) or denies it
+  (`declined`), the account is told.
+
+A Lantern account with no `logins` entry acts as the service account; with neither, nothing is mirrored for it.
+The age-rating ceiling is not read from AeroFoil: set it on the Lantern token.
+
 ### 🖥️ Administration pages
 
 Open `http://<host>:8080/admin/`. The first time, the server writes a one-time **setup code** in its log (look for `setup code`); enter it with the name and password you want for the administrator. Then sign in to see the hashing progress and the sources, approve or refuse the devices that ask to pair, revoke a device, and follow the logs live.

@@ -70,7 +70,28 @@ class OwnfoilSource(ShopSource):
     """An Ownfoil: its GraphQL API lists the files and gives the sheets and the images."""
 
 
-Source = FolderSource | TinfoilSource | OwnfoilSource
+@dataclass(frozen=True, slots=True)
+class Login:
+    """A Lantern account's login on an AeroFoil (its saves and requests are that user's); the password
+    is in the environment variable ``password_env``."""
+
+    account: str
+    user: str
+    password_env: str
+
+
+@dataclass(frozen=True, slots=True)
+class AerofoilSource(ShopSource):
+    """An AeroFoil: a Tinfoil shop that also keeps saves, cheats and requests (the CyberFoil functions).
+
+    ``user`` and ``password_env`` are the service account (it reads the shop and the cheats, and keeps the
+    saves of an account with no login); ``logins`` give each Lantern account its own AeroFoil user.
+    """
+
+    logins: tuple[Login, ...] = ()
+
+
+Source = FolderSource | TinfoilSource | OwnfoilSource | AerofoilSource
 
 
 @dataclass(slots=True)
@@ -103,13 +124,32 @@ class Config:
 def _source_table(source: Source) -> dict[str, Any]:
     if isinstance(source, FolderSource):
         return {"id": source.id, "kind": "folder", "path": str(source.path)}
-    kind = "ownfoil" if isinstance(source, OwnfoilSource) else "tinfoil"
+    kind = {OwnfoilSource: "ownfoil", AerofoilSource: "aerofoil"}.get(type(source), "tinfoil")
     table: dict[str, Any] = {"id": source.id, "kind": kind, "url": source.url}
     if source.user is not None:
         table["user"] = source.user
     if source.password_env is not None:
         table["password_env"] = source.password_env
+    if isinstance(source, AerofoilSource) and source.logins:
+        table["logins"] = [
+            {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
+        ]
     return table
+
+
+def _logins(sid: str, raw: dict[str, Any]) -> tuple[Login, ...]:
+    rows = raw.get("logins", [])
+    if not isinstance(rows, list):
+        raise ConfigError(f"source {sid!r}: `logins` must be a list of tables")
+    out: list[Login] = []
+    for row in rows:
+        fields = [row.get(k) if isinstance(row, dict) else None for k in ("account", "user", "password_env")]
+        if not all(isinstance(f, str) and f for f in fields):
+            raise ConfigError(f"source {sid!r}: a login needs `account`, `user` and `password_env`")
+        if any(x.account == fields[0] for x in out):
+            raise ConfigError(f"source {sid!r}: the account {fields[0]!r} has two logins")
+        out.append(Login(*fields))  # type: ignore[arg-type]
+    return tuple(out)
 
 
 def _parse_url(sid: str, url: object) -> str:
@@ -164,16 +204,21 @@ def _parse(data: dict[str, Any]) -> Config:
                 raise ConfigError(f"source {sid!r}: `path` is required")
             sources.append(FolderSource(id=sid, path=Path(path)))
             own = {"id", "kind", "path"}
-        elif kind in ("tinfoil", "ownfoil"):
+        elif kind in ("tinfoil", "ownfoil", "aerofoil"):
             user, env = raw.get("user"), raw.get("password_env")
             for key, value in (("user", user), ("password_env", env)):
                 if value is not None and (not isinstance(value, str) or not value):
                     raise ConfigError(f"source {sid!r}: `{key}` must be a non-empty string")
             if (user is None) != (env is None):
                 raise ConfigError(f"source {sid!r}: `user` and `password_env` go together")
-            shop = OwnfoilSource if kind == "ownfoil" else TinfoilSource
-            sources.append(shop(id=sid, url=_parse_url(sid, raw.get("url")), user=user, password_env=env))
-            own = {"id", "kind", "url", "user", "password_env"}
+            url = _parse_url(sid, raw.get("url"))
+            if kind == "aerofoil":
+                sources.append(AerofoilSource(id=sid, url=url, user=user, password_env=env, logins=_logins(sid, raw)))
+                own = {"id", "kind", "url", "user", "password_env", "logins"}
+            else:
+                shop = OwnfoilSource if kind == "ownfoil" else TinfoilSource
+                sources.append(shop(id=sid, url=url, user=user, password_env=env))
+                own = {"id", "kind", "url", "user", "password_env"}
         else:
             raise ConfigError(f"source {sid!r}: kind {kind!r} is not supported by this version")
         extra_sources[sid] = {k: v for k, v in raw.items() if k not in own}
