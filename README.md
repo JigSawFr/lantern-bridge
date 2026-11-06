@@ -36,7 +36,7 @@ A gateway that presents a library which does not speak [Lantern](https://github.
 
 ## 🚀 Quick start
 
-Nothing is released yet, so the bridge runs from a checkout (Python 3.12 or later, [uv](https://docs.astral.sh/uv/)). It serves an empty library for now; any Lantern client, or `curl`, can already shake hands with it:
+Nothing is released yet, so the bridge runs from a checkout (Python 3.12 or later, [uv](https://docs.astral.sh/uv/)). It serves the Switch packages of the folders you list in `config.toml` (created on the first run, with the server's uid), once they are hashed; any Lantern client, or `curl`, can shake hands with it:
 
 ```sh
 git clone --recurse-submodules https://github.com/JigSawFr/lantern-bridge
@@ -44,6 +44,28 @@ cd lantern-bridge && uv sync
 uv run lantern-bridge serve --port 8080
 curl http://127.0.0.1:8080/.well-known/lantern
 ```
+
+A folder is a source in `config.toml`, and its files are named `Name [0100ABCD00010000][v0].nsp`:
+
+```toml
+[[sources]]
+id = "games"
+kind = "folder"
+path = "/games"
+```
+
+`lantern-bridge status` shows the hashing progress, and `lantern-bridge rehash` computes it again.
+
+### 🐳 In a container
+
+Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.
+
+```sh
+docker build -t lantern-bridge .
+docker run -p 8080:8080 -v ./config:/config -v /srv/games:/games:ro lantern-bridge
+```
+
+The image runs as an unprivileged user (uid 10001), so `./config` must be writable by it. For now it is built by the CI, not published.
 
 ## 📦 Releases
 
