@@ -14,10 +14,11 @@ from pathlib import Path
 
 from lantern.server import MemoryLibrary
 
-from lantern_bridge.config import Config, FolderSource, TinfoilSource
+from lantern_bridge.config import Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
 from lantern_bridge.index import Index
 from lantern_bridge.library import Projection
+from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 
 log = logging.getLogger("lantern_bridge.runtime")
@@ -26,6 +27,8 @@ log = logging.getLogger("lantern_bridge.runtime")
 IDLE = 60.0
 #: Seconds between two reads of a shop's index.
 REMOTE_EVERY = 300.0
+#: The shortest time between two reads of a shop that said something changed.
+CHANGED_EVERY = 10.0
 #: Seconds before a file that could not be hashed over the network is tried again.
 REMOTE_RETRY = 900.0
 
@@ -55,8 +58,10 @@ class Runtime:
         self.config = config
         self.index = Index(state_dir / "index.sqlite3")
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
-        self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, TinfoilSource)}
+        self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
         self._shop_scanned: dict[str, float] = {}
+        self._changed: set[str] = set()  # shops that said something changed
+        self._watchers: list[threading.Thread] = []
         self._remote_failed: dict[tuple[str, str], float] = {}
         self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
@@ -65,7 +70,7 @@ class Runtime:
         self._thread: threading.Thread | None = None
         self._remote_thread: threading.Thread | None = None
 
-    def _shop(self, source: TinfoilSource) -> Shop:
+    def _shop(self, source: ShopSource) -> Shop:
         password = os.environ.get(source.password_env) if source.password_env else None
         if source.password_env and password is None:
             log.warning(
@@ -73,12 +78,17 @@ class Runtime:
                 source.id,
                 source.password_env,
             )
-        return Shop(source.url, user=source.user if password is not None else None, password=password)
+        user = source.user if password is not None else None
+        if isinstance(source, OwnfoilSource):
+            return Ownfoil(source.url, user=user, password=password)
+        return Shop(source.url, user=user, password=password)
 
     def _scan_shops(self) -> None:
         for source, shop in self.shops.items():
-            if time.monotonic() - self._shop_scanned.get(source, -REMOTE_EVERY) < REMOTE_EVERY:
+            waited = time.monotonic() - self._shop_scanned.get(source, -REMOTE_EVERY)
+            if waited < (CHANGED_EVERY if source in self._changed else REMOTE_EVERY):
                 continue
+            self._changed.discard(source)
             state = self.stats.sources.setdefault(source, SourceState())
             self._shop_scanned[source] = time.monotonic()
             try:
@@ -90,6 +100,16 @@ class Runtime:
             state.reachable, state.scanned, state.error = True, time.time(), None
             if result.added or result.changed or result.removed:
                 log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+            if isinstance(shop, Ownfoil):
+                try:
+                    self.projection.sheets[source] = shop.sheets()
+                except UpstreamError as error:
+                    log.warning("source %s: the sheets cannot be read: %s", source, error)
+
+    def source_changed(self, source: str) -> None:
+        """A shop said something changed: read it again soon, not after the regular wait."""
+        self._changed.add(source)
+        self.wake()
 
     def hash_remote(self) -> bool:
         """Hash one file of a shop by reading it (at the configured rate); True when it hashed one."""
@@ -149,8 +169,9 @@ class Runtime:
 
         done = hash_pending(self.index, self.roots, limit=batch, on_hashed=hashed)
         self.stats.hashing_seconds += time.monotonic() - began
+        taken = self.projection.fetch_pictures()
         self.projection.refresh()
-        return done
+        return done + taken
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -184,11 +205,21 @@ class Runtime:
         if self.shops:
             self._remote_thread = threading.Thread(target=self._remote_loop, name="lantern-bridge-remote", daemon=True)
             self._remote_thread.start()
+        for source, shop in self.shops.items():
+            if isinstance(shop, Ownfoil):
+                watcher = threading.Thread(
+                    target=shop.watch,
+                    args=(lambda source=source: self.source_changed(source), self._stop),
+                    name=f"lantern-bridge-watch-{source}",
+                    daemon=True,
+                )
+                watcher.start()
+                self._watchers.append(watcher)
 
     def stop(self) -> None:
         self._stop.set()
         self._wake.set()
-        for thread in (self._thread, self._remote_thread):
+        for thread in (self._thread, self._remote_thread, *self._watchers):
             if thread is not None:
                 thread.join(timeout=10)
         for shop in self.shops.values():

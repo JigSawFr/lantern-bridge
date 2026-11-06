@@ -161,25 +161,32 @@ class Shop:
         if self._owns:
             self._client.close()
 
-    def get(self, url: str, *, limit: int = MAX_INDEX) -> bytes:
-        """The body at `url`, read at most `limit` bytes; a redirect is followed only inside the origin."""
+    def get(
+        self, url: str, *, limit: int = MAX_INDEX, body: bytes | None = None, accept: str = "application/json"
+    ) -> bytes:
+        """The body at `url` (POSTing `body` as JSON when given), read at most `limit` bytes; a redirect is
+        followed only inside the origin."""
         here = origin(self.url)
         for _ in range(MAX_REDIRECTS + 1):
             if origin(url) != here:
                 raise UpstreamError("the shop sent the bridge to another origin")
             try:
-                with self._client.stream("GET", url, auth=self._auth, headers={"Accept": "application/json"}) as reply:
+                headers = {"Accept": accept}
+                if body is not None:
+                    headers["Content-Type"] = "application/json"
+                method = "GET" if body is None else "POST"
+                with self._client.stream(method, url, auth=self._auth, headers=headers, content=body) as reply:
                     if reply.status_code in (301, 302, 303, 307, 308):
                         url = urljoin(url, reply.headers.get("location", ""))
                         continue
                     if reply.status_code != 200:
                         raise UpstreamError(f"the shop answered {reply.status_code}")
-                    body = bytearray()
+                    received = bytearray()
                     for chunk in reply.iter_bytes():
-                        body += chunk
-                        if len(body) > limit:
-                            raise UpstreamError(f"the index is larger than {limit >> 20} MiB")
-                    return bytes(body)
+                        received += chunk
+                        if len(received) > limit:
+                            raise UpstreamError(f"the answer is larger than {limit >> 20} MiB")
+                    return bytes(received)
             except httpx.HTTPError as error:
                 raise UpstreamError(f"the shop cannot be reached ({type(error).__name__})") from error
         raise UpstreamError("too many redirects")
