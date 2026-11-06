@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -83,7 +84,8 @@ def test_the_setup_code_is_in_the_log_and_good_once(tmp_path: Path) -> None:
 def test_the_admin_file_is_private_and_holds_no_password(tmp_path: Path) -> None:
     _admin(_client(tmp_path))
     path = tmp_path / "state" / "admin.json"
-    assert path.stat().st_mode & 0o777 == 0o600
+    if os.name != "nt":  # Windows has no POSIX permissions
+        assert path.stat().st_mode & 0o777 == 0o600
     assert PASSWORD not in path.read_text()
     assert json.loads(path.read_text())["schema"] == 1
 
