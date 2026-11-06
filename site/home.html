@@ -1,0 +1,59 @@
+  <p class="note bridge-status">{{bridge_status}}</p>
+
+  <section class="section" id="sources">
+    <h2>{{bridge_sources_title}}</h2>
+    <p class="section-lede">{{bridge_sources_lede}}</p>
+    <ul class="cards cards-small">
+      <li class="card"><h3>{{bridge_src_folders_t}}</h3><p>{{bridge_src_folders_x}}</p></li>
+      <li class="card"><h3>{{bridge_src_tinfoil_t}}</h3><p>{{bridge_src_tinfoil_x}}</p></li>
+      <li class="card"><h3>{{bridge_src_ownfoil_t}}</h3><p>{{bridge_src_ownfoil_x}}</p></li>
+      <li class="card"><h3>{{bridge_src_aerofoil_t}}</h3><p>{{bridge_src_aerofoil_x}}</p></li>
+    </ul>
+  </section>
+
+  <section class="section" id="how">
+    <h2>{{bridge_how_title}}</h2>
+    <p class="section-lede">{{bridge_how_lede}}</p>
+    <ol class="steps">
+      <li><h3>{{bridge_how_1_t}}</h3><p>{{bridge_how_1_x}}</p></li>
+      <li><h3>{{bridge_how_2_t}}</h3><p>{{bridge_how_2_x}}</p></li>
+      <li><h3>{{bridge_how_3_t}}</h3><p>{{bridge_how_3_x}}</p></li>
+    </ol>
+  </section>
+
+  <section class="section" id="run">
+    <h2>{{bridge_run_title}}</h2>
+    <p class="section-lede">{{bridge_run_lede}}</p>
+    <ol class="steps start-steps">
+      <li>
+        <h3>{{bridge_run_1_t}}</h3>
+        <p>{{bridge_run_1_x}}</p>
+        <pre tabindex="0"><code>git clone --recurse-submodules https://github.com/JigSawFr/lantern-bridge
+cd lantern-bridge &amp;&amp; uv sync
+uv run lantern-bridge serve --port 8080</code></pre>
+      </li>
+      <li>
+        <h3>{{bridge_run_2_t}}</h3>
+        <p>{{bridge_run_2_x}}</p>
+        <pre tabindex="0"><code>curl -s http://127.0.0.1:8080/.well-known/lantern</code></pre>
+      </li>
+    </ol>
+    <p class="note">{{bridge_run_note}}</p>
+  </section>
+
+  <section class="section" id="trust">
+    <h2>{{bridge_trust_title}}</h2>
+    <ul class="cards cards-small trust">
+      <li class="card"><h3>{{bridge_trust_1_t}}</h3><p>{{bridge_trust_1_x}}</p></li>
+      <li class="card"><h3>{{bridge_trust_2_t}}</h3><p>{{bridge_trust_2_x}}</p></li>
+      <li class="card"><h3>{{bridge_trust_3_t}}</h3><p>{{bridge_trust_3_x}}</p></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="cta">
+      <h2>{{bridge_cta_title}}</h2>
+      <p>{{bridge_cta}}</p>
+      <div class="actions"><a class="button" href="{{repo}}">{{bridge_cta_link}}</a> <a class="button ghost" href="{{sdk}}">{{bridge_cta_sdk}}</a></div>
+    </div>
+  </section>

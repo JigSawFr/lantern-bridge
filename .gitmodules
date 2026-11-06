@@ -1,3 +1,7 @@
 [submodule "sdk"]
 	path = sdk
 	url = https://github.com/JigSawFr/lantern-sdk.git
+[submodule "library/boreale-site"]
+	path = library/boreale-site
+	url = https://github.com/JigSawFr/boreale-site.git
+	branch = main

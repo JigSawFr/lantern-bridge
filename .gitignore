@@ -13,3 +13,4 @@ build/
 
 # What a bridge writes while it runs (config, index, certificates)
 /data/
+/build/
