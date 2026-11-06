@@ -6,7 +6,8 @@
 
 FROM python:3.13-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /usr/local/bin/uv
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+# The environment is built where it will run: its scripts name their interpreter by path
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never UV_PROJECT_ENVIRONMENT=/opt/venv
 WORKDIR /src
 COPY pyproject.toml uv.lock README.md ./
 COPY sdk/python ./sdk/python
@@ -16,7 +17,7 @@ RUN uv sync --frozen --no-dev --no-editable
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 --no-create-home --home-dir /config bridge \
     && mkdir /config && chown bridge /config
-COPY --from=build /src/.venv /opt/venv
+COPY --from=build /opt/venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     LANTERN_BRIDGE_CONFIG=/config/config.toml
