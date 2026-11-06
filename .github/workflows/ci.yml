@@ -1,0 +1,48 @@
+# The repository's checks, in one run and behind one check: `all green`, the
+# one branch protection requires. Each part is a reusable workflow
+# (python.yml, reuse.yml, workflows.yml), and all of them run on every change:
+# the repository is small enough that filtering by path is not worth it yet.
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  # Every part, on demand
+  workflow_dispatch:
+
+# A new push to a pull request cancels the run on the commit it replaces;
+# on main, every push keeps its own run
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  python:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/python.yml
+
+  reuse:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reuse.yml
+
+  workflows:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/workflows.yml
+
+  all-green:
+    name: all green
+    if: always()
+    needs: [ python, reuse, workflows ]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+        with:
+          jobs: ${{ toJSON(needs) }}
