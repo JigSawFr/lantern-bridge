@@ -44,8 +44,8 @@ class FolderSource:
 
 
 @dataclass(frozen=True, slots=True)
-class TinfoilSource:
-    """A Tinfoil shop (any server that answers a JSON index), read over HTTP.
+class ShopSource:
+    """A shop read over HTTP.
 
     The password is never in the file: ``password_env`` names the environment variable that holds it.
     """
@@ -60,7 +60,17 @@ class TinfoilSource:
         return self.url
 
 
-Source = FolderSource | TinfoilSource
+@dataclass(frozen=True, slots=True)
+class TinfoilSource(ShopSource):
+    """A Tinfoil shop: any server that answers a JSON index."""
+
+
+@dataclass(frozen=True, slots=True)
+class OwnfoilSource(ShopSource):
+    """An Ownfoil: its GraphQL API lists the files and gives the sheets and the images."""
+
+
+Source = FolderSource | TinfoilSource | OwnfoilSource
 
 
 @dataclass(slots=True)
@@ -93,7 +103,8 @@ class Config:
 def _source_table(source: Source) -> dict[str, Any]:
     if isinstance(source, FolderSource):
         return {"id": source.id, "kind": "folder", "path": str(source.path)}
-    table: dict[str, Any] = {"id": source.id, "kind": "tinfoil", "url": source.url}
+    kind = "ownfoil" if isinstance(source, OwnfoilSource) else "tinfoil"
+    table: dict[str, Any] = {"id": source.id, "kind": kind, "url": source.url}
     if source.user is not None:
         table["user"] = source.user
     if source.password_env is not None:
@@ -153,14 +164,15 @@ def _parse(data: dict[str, Any]) -> Config:
                 raise ConfigError(f"source {sid!r}: `path` is required")
             sources.append(FolderSource(id=sid, path=Path(path)))
             own = {"id", "kind", "path"}
-        elif kind == "tinfoil":
+        elif kind in ("tinfoil", "ownfoil"):
             user, env = raw.get("user"), raw.get("password_env")
             for key, value in (("user", user), ("password_env", env)):
                 if value is not None and (not isinstance(value, str) or not value):
                     raise ConfigError(f"source {sid!r}: `{key}` must be a non-empty string")
             if (user is None) != (env is None):
                 raise ConfigError(f"source {sid!r}: `user` and `password_env` go together")
-            sources.append(TinfoilSource(id=sid, url=_parse_url(sid, raw.get("url")), user=user, password_env=env))
+            shop = OwnfoilSource if kind == "ownfoil" else TinfoilSource
+            sources.append(shop(id=sid, url=_parse_url(sid, raw.get("url")), user=user, password_env=env))
             own = {"id", "kind", "url", "user", "password_env"}
         else:
             raise ConfigError(f"source {sid!r}: kind {kind!r} is not supported by this version")
