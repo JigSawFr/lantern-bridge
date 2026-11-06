@@ -92,3 +92,20 @@ def test_the_same_bytes_under_two_names_are_one_app(tmp_path: Path) -> None:
         (root / "a" / "Moss [0100ABCD00020000][v0].nsp").unlink()
         app.state.runtime.cycle()
         assert len(client.get("/api/lantern/v1/apps?platform=switch").json()["items"]) == 1
+
+
+def test_every_title_of_an_app_has_a_sheet_named_by_its_base(tmp_path: Path) -> None:
+    root = tmp_path / "games"
+    root.mkdir()
+    (root / "Frost Garden [0100ABCD00010000][v0].nsp").write_bytes(b"base")
+    (root / "Frost Garden - Winter [0100ABCD00011001][v0].nsp").write_bytes(b"dlc")
+    app = make_app(_config(root), tmp_path / "state", run=False)
+    with TestClient(app) as client:
+        app.state.runtime.cycle()
+        sheet = client.get("/api/lantern/v1/titles/0100ABCD00010000?platform=switch")
+        assert sheet.status_code == 200
+        assert sheet.json()["name"] == "Frost Garden"
+        (root / "Frost Garden [0100ABCD00010000][v0].nsp").unlink()
+        (root / "Frost Garden - Winter [0100ABCD00011001][v0].nsp").unlink()
+        app.state.runtime.cycle()
+        assert client.get("/api/lantern/v1/titles/0100ABCD00010000?platform=switch").status_code == 404
