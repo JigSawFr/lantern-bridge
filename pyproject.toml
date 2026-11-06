@@ -58,14 +58,11 @@ dev = [
 [tool.uv]
 exclude-newer = "14 days"
 
-# The SDK has no release yet: it is taken from its repository, on a commit
-# (its main of 2026-11-06, draft 0.11). Once it is released, this is a version
-# range, and the line below goes.
+# The SDK is a submodule (sdk/), fixed on a commit: its python/ folder is the
+# dependency. The SDK has no release yet; once it has, the submodule goes and
+# this line with it, and the dependency is a version range.
 [tool.uv.sources]
-lantern-protocol = { git = "https://github.com/JigSawFr/lantern-sdk", subdirectory = "python", rev = "6f8a3f8b5a38eec53d2b5d1dae6783f3a8697da0" }
-
-[tool.hatch.metadata]
-allow-direct-references = true
+lantern-protocol = { path = "sdk/python", editable = true }
 
 [tool.hatch.version]
 path = "src/lantern_bridge/_version.py"
@@ -80,6 +77,8 @@ packages = ["src/lantern_bridge"]
 line-length = 120
 target-version = "py312"
 src = ["src", "tests"]
+# The SDK submodule is checked by its own CI
+extend-exclude = ["sdk"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "C4", "PIE", "PT", "RET", "TC", "PL", "S", "BLE", "ASYNC"]

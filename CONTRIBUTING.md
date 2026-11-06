@@ -25,6 +25,9 @@ A security flaw is not an issue: see [SECURITY.md](SECURITY.md).
 - Examples and tests use made-up games and names, and only reserved
   addresses (`example.org`, `192.0.2.0/24`): never a real person, game,
   server or e-mail address.
+- The SDK is the `sdk/` submodule, fixed on a commit: moving it is its own
+  pull request (`chore(sdk): …`), and a change to the toolkit is made in the
+  SDK's repository first.
 - Every file says its licence ([REUSE](https://reuse.software/)).
 
 Pull requests are merged as one squashed commit.

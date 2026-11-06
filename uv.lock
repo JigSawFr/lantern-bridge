@@ -344,7 +344,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lantern-protocol", extras = ["fastapi"], git = "https://github.com/JigSawFr/lantern-sdk?subdirectory=python&rev=6f8a3f8b5a38eec53d2b5d1dae6783f3a8697da0" },
+    { name = "lantern-protocol", extras = ["fastapi"], editable = "sdk/python" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -360,13 +360,41 @@ dev = [
 
 [[package]]
 name = "lantern-protocol"
-version = "0.5.0"
-source = { git = "https://github.com/JigSawFr/lantern-sdk?subdirectory=python&rev=6f8a3f8b5a38eec53d2b5d1dae6783f3a8697da0#6f8a3f8b5a38eec53d2b5d1dae6783f3a8697da0" }
+source = { editable = "sdk/python" }
 
 [package.optional-dependencies]
 fastapi = [
     { name = "fastapi" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "cryptography", marker = "extra == 'crypto'", specifier = ">=42" },
+    { name = "fastapi", marker = "extra == 'fastapi'", specifier = ">=0.110" },
+    { name = "flask", marker = "extra == 'flask'", specifier = ">=3.0" },
+    { name = "httpx", marker = "extra == 'httpx'", specifier = ">=0.27" },
+    { name = "zeroconf", marker = "extra == 'dnssd'", specifier = ">=0.132" },
+]
+provides-extras = ["crypto", "dnssd", "fastapi", "flask", "httpx"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "cryptography", specifier = ">=42" },
+    { name = "fastapi", specifier = ">=0.110" },
+    { name = "flask", specifier = ">=3.0" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "jsonschema", specifier = ">=4.23" },
+    { name = "mypy", specifier = ">=1.13" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "pytest-cov", specifier = ">=6" },
+    { name = "pytest-xdist", specifier = ">=3.6" },
+    { name = "referencing", specifier = ">=0.35" },
+    { name = "rfc3339-validator", specifier = ">=0.1.4" },
+    { name = "ruff", specifier = ">=0.8" },
+    { name = "uvicorn", specifier = ">=0.30" },
+    { name = "zeroconf", specifier = ">=0.132" },
+]
+test = [{ name = "pytest", specifier = ">=8" }]
 
 [[package]]
 name = "librt"

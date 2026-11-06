@@ -14,3 +14,11 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+  # sdk/: the Lantern SDK, moved by a pull request that the CI checks
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+      include: scope

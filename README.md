@@ -34,6 +34,7 @@ A gateway that presents a library which does not speak [Lantern](https://github.
 ## 🧑‍💻 Development
 
 ```sh
+git clone --recurse-submodules https://github.com/JigSawFr/lantern-bridge   # sdk/ is the Lantern SDK
 uv sync
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
@@ -42,7 +43,7 @@ uv run lantern-bridge --version
 uv run lantern-bridge serve --port 8080   # then: curl http://127.0.0.1:8080/.well-known/lantern
 ```
 
-Python 3.12 or later. The SDK is taken from its repository, on a commit, until it has a release. [CONTRIBUTING.md](CONTRIBUTING.md) says how to propose a change; a security flaw is reported privately, as [SECURITY.md](SECURITY.md) says.
+Python 3.12 or later. The Lantern SDK is the `sdk/` submodule, fixed on a commit until it has a release (`git submodule update --init` after a pull). [CONTRIBUTING.md](CONTRIBUTING.md) says how to propose a change; a security flaw is reported privately, as [SECURITY.md](SECURITY.md) says.
 
 ## 🧭 How it's made
 
