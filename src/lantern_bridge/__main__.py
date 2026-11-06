@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from collections.abc import Sequence
-
-from lantern.uid import check_uid, new_uid
+from pathlib import Path
 
 from lantern_bridge import SPEC_DRAFT, __version__
+from lantern_bridge.config import ConfigError, load_or_create
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -21,8 +22,12 @@ def build_parser() -> argparse.ArgumentParser:
     serve = commands.add_parser("serve", help="run the server")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8080)
-    serve.add_argument("--name", default="Lantern bridge", help="what clients show")
-    serve.add_argument("--uid", help="the server's UUID, which never changes (default: a new one, kept nowhere yet)")
+    serve.add_argument(
+        "--config",
+        type=Path,
+        default=Path(os.environ.get("LANTERN_BRIDGE_CONFIG", "config.toml")),
+        help="the configuration file, created with a new uid when absent (default: ./config.toml)",
+    )
     return parser
 
 
@@ -35,10 +40,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     from lantern_bridge.app import make_app
 
-    if args.uid is None:
-        args.uid = new_uid()
-        print(f"No --uid: using {args.uid}, which is not kept (the configuration comes later).", file=sys.stderr)
-    uvicorn.run(make_app(name=args.name, uid=check_uid(args.uid)), host=args.host, port=args.port)
+    try:
+        config = load_or_create(args.config)
+    except ConfigError as error:
+        print(f"lantern-bridge: {error}", file=sys.stderr)
+        return 1
+    uvicorn.run(make_app(name=config.name, uid=config.uid), host=args.host, port=args.port)
     return 0
 
 

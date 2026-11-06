@@ -29,7 +29,11 @@ classifiers = [
 ]
 # The server toolkit does the protocol (routes, pairing, tokens, files, events);
 # the bridge adds the sources. uvicorn runs the FastAPI adapter.
-dependencies = ["lantern-protocol[fastapi]", "uvicorn>=0.30"]
+dependencies = [
+    "lantern-protocol[fastapi]",
+    "tomli-w>=1.2.0",
+    "uvicorn>=0.30",
+]
 
 [project.scripts]
 lantern-bridge = "lantern_bridge.__main__:main"
