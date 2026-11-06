@@ -1,0 +1,62 @@
+# What a release will be, checked before there is one (RELEASING.md): the
+# Python package built twice from the commit, in two folders, with
+# tools/reproduce.sh: the same bytes, or the job fails; its SBOM checked
+# against the CycloneDX schema. Nothing is published or attested here.
+name: release-check
+
+# Called by ci.yml
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  UV_VERSION: 0.13.6
+
+jobs:
+  reproducible:
+    name: reproducible (python)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # sdk/: the Lantern SDK, the dependency (not its own submodules)
+          submodules: true
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+      # As release.yml: build, hatchling and cyclonedx-bom, by hash
+      - name: The release's tools
+        run: |
+          python -m venv "$RUNNER_TEMP/tools"
+          "$RUNNER_TEMP/tools/bin/pip" install --quiet --require-hashes -r tools/release-requirements.txt
+      - name: Built twice, compared
+        env:
+          PYTHON: ${{ runner.temp }}/tools/bin/python
+          REPRODUCE_KEEP: ${{ runner.temp }}/built
+        run: |
+          set -o pipefail
+          tools/reproduce.sh twice | tee "$RUNNER_TEMP/compared.txt"
+          { echo '```'; cat "$RUNNER_TEMP/compared.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: The SBOM against the CycloneDX schema
+        run: |
+          "$RUNNER_TEMP/tools/bin/python" - "$RUNNER_TEMP"/built/*.cdx.json <<'PY'
+          import sys
+          from pathlib import Path
+          from cyclonedx.schema import SchemaVersion
+          from cyclonedx.validation.json import JsonStrictValidator
+
+          status = 0
+          for name in sys.argv[1:]:
+              error = JsonStrictValidator(SchemaVersion.V1_6).validate_str(Path(name).read_text(encoding="utf-8"))
+              print(Path(name).name, "CycloneDX 1.6" if error is None else error)
+              status |= error is not None
+          sys.exit(status)
+          PY

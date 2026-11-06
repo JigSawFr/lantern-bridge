@@ -2,8 +2,7 @@
 # pull request up to date from the Conventional Commits: CHANGELOG.md and the
 # version in src/lantern_bridge/_version.py (release-please-config.json).
 # Merging it creates the vX.Y.Z tag and the GitHub release. The packages and
-# the image are built, attested and published by a release workflow that
-# comes with the first release.
+# the image are built, attested and published by release.yml (RELEASING.md).
 name: release-please
 
 on:
