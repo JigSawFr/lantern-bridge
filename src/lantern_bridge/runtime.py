@@ -58,7 +58,7 @@ class Runtime:
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, TinfoilSource)}
         self._shop_scanned: dict[str, float] = {}
         self._remote_failed: dict[tuple[str, str], float] = {}
-        self.projection = Projection(library, self.index, self.roots)
+        self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         self._stop = threading.Event()
         self._wake = threading.Event()

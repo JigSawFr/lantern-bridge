@@ -9,9 +9,12 @@ from pathlib import Path
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 from lantern.server import MemoryLibrary
+from lantern.uid import new_uid
 
-from lantern_bridge.config import Config, FolderSource, TinfoilSource
+from lantern_bridge.app import make_app
+from lantern_bridge.config import Config, FolderSource, Source, TinfoilSource
 from lantern_bridge.runtime import Runtime
 from lantern_bridge.sources import tinfoil
 from lantern_bridge.sources.tinfoil import (
@@ -301,3 +304,105 @@ def test_local_files_are_hashed_even_when_shop_files_come_first(tmp_path: Path) 
     assert runtime.cycle() == 1  # the shop's file waits for the other thread; the local one is not starved
     assert runtime.index.counts_by_source()["games"]["hashed"] == 1
     runtime.index.close()
+
+
+# -- served by the bridge: relayed, merged ---------------------------------------------------------
+
+
+def _ranged(payload: bytes) -> Callable[[httpx.Request], httpx.Response]:
+    def handler(request: httpx.Request) -> httpx.Response:
+        wanted = request.headers.get("range")
+        if wanted is None:
+            return httpx.Response(200, content=payload)
+        first, _, last = wanted.removeprefix("bytes=").partition("-")
+        return httpx.Response(206, content=payload[int(first) : int(last) + 1 if last else None])
+
+    return handler
+
+
+def _bridge(
+    tmp_path: Path, sources: list[Source], shops: dict[str, Callable[[httpx.Request], httpx.Response]]
+) -> tuple[TestClient, Runtime]:
+    app = make_app(Config(uid=new_uid(), sources=sources, public=True, remote_rate=0.0), tmp_path / "state", run=False)
+    runtime: Runtime = app.state.runtime
+    for source, handler in shops.items():
+        runtime.shops[source] = _shop(handler)
+    return TestClient(app), runtime
+
+
+def _items(client: TestClient) -> list[dict[str, object]]:
+    return client.get("/api/lantern/v1/apps?platform=switch").json()["items"]  # type: ignore[no-any-return]
+
+
+def test_a_shops_file_is_served_by_the_bridge_with_its_ranges(tmp_path: Path) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/":
+            return _json({"files": [{"url": f"games/{NAME}", "size": len(PAYLOAD)}]})
+        return _ranged(PAYLOAD)(request)
+
+    client, runtime = _bridge(tmp_path, [TinfoilSource("shop", BASE)], {"shop": handler})
+    with client:
+        runtime.cycle()
+        assert _items(client) == []  # not listed until hashed
+        assert runtime.hash_remote()
+        runtime.cycle()
+        (item,) = _items(client)
+        assert item["sha256"] == hashlib.sha256(PAYLOAD).hexdigest() and item["size"] == len(PAYLOAD)
+        whole = client.get(str(item["file"]))
+        assert whole.status_code == 200 and whole.content == PAYLOAD
+        assert whole.headers["content-length"] == str(len(PAYLOAD))
+        assert whole.headers["repr-digest"].startswith("sha-256=:")
+        part = client.get(str(item["file"]), headers={"Range": "bytes=10-19"})
+        assert part.status_code == 206 and part.content == PAYLOAD[10:20]
+        assert part.headers["content-range"] == f"bytes 10-19/{len(PAYLOAD)}"
+        assert client.head(str(item["file"])).headers["content-length"] == str(len(PAYLOAD))
+
+
+def test_the_same_bytes_in_two_sources_are_one_app_served_by_the_folder(tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    games.mkdir()
+    local = games / NAME
+    local.write_bytes(PAYLOAD)
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if request.url.path == "/":
+            return _json({"files": [{"url": f"games/{NAME}", "size": len(PAYLOAD)}]})
+        return _ranged(PAYLOAD)(request)
+
+    # the shop comes first in the configuration, and still the folder is preferred: it is local
+    sources: list[Source] = [TinfoilSource("shop", BASE), FolderSource("games", games)]
+    client, runtime = _bridge(tmp_path, sources, {"shop": handler})
+    with client:
+        runtime.cycle()
+        runtime.hash_remote()
+        runtime.cycle()
+        (item,) = _items(client)
+        assert client.get(str(item["file"])).content == PAYLOAD
+        served = [c for c in calls if c != "/"]
+        assert len(served) == 1  # the one read that hashed it; serving came from the folder
+        # the folder file goes: the shop serves the same app, which stays listed and keeps its id
+        local.unlink()
+        runtime.cycle()
+        (after,) = _items(client)
+        assert after["sha256"] == item["sha256"]
+        assert client.get(str(after["file"])).content == PAYLOAD
+        assert len([c for c in calls if c != "/"]) == 2  # now it was read from the shop
+
+
+def test_when_the_best_folder_vanishes_another_serves_the_app(tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    games.mkdir()
+    (games / NAME).write_bytes(PAYLOAD)
+    other = tmp_path / "more"
+    other.mkdir()
+    (other / NAME).write_bytes(PAYLOAD)
+    client, runtime = _bridge(tmp_path, [FolderSource("games", games), FolderSource("more", other)], {})
+    with client:
+        runtime.cycle()
+        assert len(_items(client)) == 1
+        (games / NAME).unlink()
+        runtime.cycle()
+        (item,) = _items(client)
+        assert client.get(str(item["file"])).content == PAYLOAD  # now served from the other folder
