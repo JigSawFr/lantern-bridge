@@ -9,7 +9,7 @@
 <form method="post" class="stack">
   <label>{{ _("Setup code") }} <input name="code" autocomplete="off" required autofocus></label>
   <label>{{ _("Name") }} <input name="name" autocomplete="username" required maxlength="64"></label>
-  <label>{{ _("Password (10 characters at least)") }} <input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
+  <label>{{ _("Password (10 characters at least)") }} <span class="reveal"><input name="password" type="password" autocomplete="new-password" required minlength="10"><button type="button" class="link" data-reveal>{{ _("Show") }}</button></span></label>
   <button>{{ _("Create") }}</button>
 </form>
 </div>

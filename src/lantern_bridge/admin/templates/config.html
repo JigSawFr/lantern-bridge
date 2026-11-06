@@ -4,7 +4,7 @@
 <h1>{{ _("Settings") }}</h1>
 <p class="lede">{{ _("These pages write the configuration file. The bridge reads it when it starts: a change waits for a restart.") }}</p>
 {% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
-{% if message %}<p class="good" role="status">{{ message }}</p>{% endif %}
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 {% if tested %}<p class="{{ 'good' if tested.ok else 'note' }}" role="status"><strong>{{ tested.id }}</strong>: {{ tested.text }}</p>{% endif %}
 
@@ -60,4 +60,3 @@
   <button>{{ _("Add") }}</button>
 </form>
 {% endblock %}
-{% block script %}<script src="/admin/static/app.js" defer></script>{% endblock %}

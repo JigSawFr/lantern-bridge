@@ -10,7 +10,8 @@
 <link rel="icon" type="image/svg+xml" href="/admin/static/bridge.svg">
 <link rel="stylesheet" href="/admin/static/app.css">
 </head>
-<body>
+<body data-cancel="{{ _('Cancel') }}" data-confirm-label="{{ _('Confirm') }}" data-copy="{{ _('Copy') }}" data-copied="{{ _('Copied') }}" data-show="{{ _('Show') }}" data-hide="{{ _('Hide') }}" data-working="{{ _('Working…') }}">
+<a class="skip" href="#content">{{ _("Skip to content") }}</a>
 <header class="top"><div class="bar">
   <a class="brand" href="/admin/"><img src="/admin/static/bridge.svg" alt="" width="34" height="34"><span>{{ name }}<small>lantern-bridge</small></span></a>
   {% if session %}
@@ -28,10 +29,11 @@
     {% if session %}<form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="link">{{ _("Sign out") }}</button></form>{% endif %}
   </div>
 </div></header>
-<main>
+<main id="content" tabindex="-1">
 {% block body %}{% endblock %}
 </main>
+<div id="toasts" role="region" aria-live="polite" aria-label="{{ _('Notifications') }}"></div>
 <footer>lantern-bridge {{ version }} · Lantern draft {{ draft }} · {{ _("A bridge to your own library") }}</footer>
-{% block script %}{% endblock %}
+<script src="/admin/static/app.js" defer></script>
 </body>
 </html>
