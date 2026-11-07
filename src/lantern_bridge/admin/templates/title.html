@@ -4,7 +4,7 @@
 {% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 <p class="crumb"><a href="/admin/library">← {{ _("Library") }}</a></p>
 <section class="hero tone-{{ title.tone }}">
-  <div class="cover big" aria-hidden="true"><span>{{ title.initials }}</span></div>
+  <div class="cover big" aria-hidden="true"><span>{{ title.initials }}</span>{% if has_image %}<img src="/admin/library/{{ title.title_id }}/image/icon" alt="">{% endif %}</div>
   <div class="about">
     <h1>{{ title.name }}</h1>
     <p class="dim"><code>{{ title.title_id }}</code> <button type="button" class="link" data-copy-text="{{ title.title_id }}">{{ _("Copy") }}</button></p>
@@ -14,6 +14,12 @@
     {% if sheet and sheet.summary %}<p class="muted">{{ sheet.summary }}</p>{% endif %}
   </div>
 </section>
+
+{% if shots %}
+<section class="shots" aria-label="{{ _('Screenshots') }}">
+  {% for n in range(shots) %}<img src="/admin/library/{{ title.title_id }}/image/shot-{{ n }}" alt="" loading="lazy">{% endfor %}
+</section>
+{% endif %}
 
 {% if atlas %}
 <section class="card atlas">

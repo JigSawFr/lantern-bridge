@@ -18,7 +18,7 @@ import platform
 import re
 import threading
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterable
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from importlib import resources
@@ -439,6 +439,33 @@ def mount(app: FastAPI, admin: Admin) -> None:
         admin.runtime.wake()
         return redirect("/", request)
 
+    def icons_of(title_ids: Iterable[str]) -> set[str]:
+        """The titles, among these, whose sheet has an icon the bridge holds."""
+        projection = admin.runtime.projection
+        return {i for i in title_ids if (sheet := projection.title(i)) is not None and sheet.icon is not None}
+
+    @router.get("/library/{title_id}/image/{kind}")
+    async def title_image(title_id: str, kind: str, request: Request) -> Response:
+        """An image of a title's sheet (icon, banner or shot-N), read from what the library serves."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        sheet = admin.runtime.projection.title(title_id.upper())
+        shots = sheet.screenshots or [] if sheet is not None else []
+        picked = None
+        if sheet is not None and kind in ("icon", "banner"):
+            picked = sheet.icon if kind == "icon" else sheet.banner
+        elif sheet is not None and kind.startswith("shot-") and kind[5:].isdigit() and int(kind[5:]) < len(shots):
+            picked = shots[int(kind[5:])]
+        ref = admin.runtime.projection.library.media(picked.url.rsplit("/", 1)[-1]) if picked is not None else None
+        if ref is None or ref.data is None:
+            return Response("No such image.", 404, headers=_HEADERS)
+        return Response(
+            ref.data,
+            media_type=ref.content_type,
+            headers={**_HEADERS, "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"},
+        )
+
     @router.get("/library")
     async def library_page(request: Request) -> Response:
         session, _, refused = await authed(request)
@@ -465,6 +492,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             found=found,
             counts=catalog.counts(),
             genres=catalog.genres(),
+            icons=icons_of(t.title_id for t in found.titles),
             sources=[s.id for s in admin.config.sources],
             f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
         )
@@ -474,13 +502,16 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if title is None:
             return admin.page(request, "missing.html", session, status=404, active="library")
         cheats = [c for c in admin.runtime.projection.library.cheats() if c.title_id.upper() == title.title_id]
+        sheet = admin.runtime.projection.title(title.title_id)
         return admin.page(
             request,
             "title.html",
             session,
             active="library",
             title=title,
-            sheet=admin.runtime.projection.title(title.title_id),
+            sheet=sheet,
+            has_image=bool(sheet is not None and sheet.icon is not None),
+            shots=len(sheet.screenshots or []) if sheet is not None else 0,
             cheats=cheats,
             timings=admin.runtime.stats.timings,
             atlas=admin.runtime.atlas.get(title.title_id) if admin.runtime.atlas is not None else None,
