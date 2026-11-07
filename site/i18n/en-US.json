@@ -95,5 +95,15 @@
   "idf_no_format": "Not a package: the name must end in .nsp, .nsz, .xci or .xcz.",
   "idf_no_id": "No 16-digit id in square brackets: the bridge leaves this file out of the library.",
   "idf_count": "{ok} of {all} recognised",
-  "idf_empty": "Paste at least one name."
+  "idf_empty": "Paste at least one name.",
+  "cmp_title": "What each source gives",
+  "cmp_row_library": "Titles, versions and formats, merged by SHA-256",
+  "cmp_row_place": "Files hashed where they are, with no pass through the bridge",
+  "cmp_row_sheets": "Descriptions, genres and images",
+  "cmp_row_live": "Read again as soon as the source changes",
+  "cmp_row_saves": "Saves mirrored both ways",
+  "cmp_row_cheats": "Cheat sets",
+  "cmp_row_requests": "Requests",
+  "cmp_yes": "Yes",
+  "cmp_no": "No"
 }

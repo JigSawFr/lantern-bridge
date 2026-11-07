@@ -937,3 +937,11 @@ pre code .tk-k { color: #7cc4ff; }
 .idf-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mist); font-size: 0.8125rem; }
 .idf-meta code { color: var(--ice); }
 .idf-why { color: var(--mist); font-size: 0.9375rem; }
+
+/* The sources against what they give (compat() in tools/build_site.py). */
+.cmp-title { margin: 28px 0 12px; color: var(--snow); font: 600 1.0625rem/1.4 var(--display); }
+.compat { position: relative; } /* its .sr words are absolutely placed: they stay inside the scrolling box */
+.compat th[scope="row"] { color: var(--snow); font-weight: 500; min-width: 9rem; }
+.compat td { text-align: center; }
+.compat .cmp-yes { color: var(--aurora); font-weight: 600; }
+.compat .cmp-no { color: var(--mist); }

@@ -95,5 +95,15 @@
   "idf_no_format": "Não é um pacote: o nome tem de terminar em .nsp, .nsz, .xci ou .xcz.",
   "idf_no_id": "Sem id de 16 dígitos entre parênteses retos: a ponte deixa este ficheiro fora da biblioteca.",
   "idf_count": "{ok} de {all} reconhecidos",
-  "idf_empty": "Cole pelo menos um nome."
+  "idf_empty": "Cole pelo menos um nome.",
+  "cmp_title": "O que cada fonte oferece",
+  "cmp_row_library": "Títulos, versões e formatos, fundidos por SHA-256",
+  "cmp_row_place": "Ficheiros com hash onde estão, sem passar pela ponte",
+  "cmp_row_sheets": "Descrições, géneros e imagens",
+  "cmp_row_live": "Relida assim que a fonte muda",
+  "cmp_row_saves": "Jogos guardados copiados nos dois sentidos",
+  "cmp_row_cheats": "Conjuntos de cheats",
+  "cmp_row_requests": "Pedidos",
+  "cmp_yes": "Sim",
+  "cmp_no": "Não"
 }

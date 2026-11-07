@@ -95,5 +95,15 @@
   "idf_no_format": "不是软件包：名称必须以 .nsp、.nsz、.xci 或 .xcz 结尾。",
   "idf_no_id": "方括号中没有 16 位 ID：桥接器会把这个文件排除在库之外。",
   "idf_count": "已识别 {ok} / {all}",
-  "idf_empty": "请至少粘贴一个名称。"
+  "idf_empty": "请至少粘贴一个名称。",
+  "cmp_title": "每种来源提供什么",
+  "cmp_row_library": "标题、版本和格式，按 SHA-256 合并",
+  "cmp_row_place": "文件就地哈希，无需经过桥接器",
+  "cmp_row_sheets": "描述、类型和图片",
+  "cmp_row_live": "来源一有变化就重新读取",
+  "cmp_row_saves": "存档双向镜像",
+  "cmp_row_cheats": "金手指集",
+  "cmp_row_requests": "请求",
+  "cmp_yes": "是",
+  "cmp_no": "否"
 }

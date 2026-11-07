@@ -93,6 +93,39 @@ def diagram(catalog: dict) -> str:
     )
 
 
+# What each kind of source gives the library, by feature (README.md, "A Tinfoil shop / An Ownfoil / An AeroFoil as a
+# source"): 1 where the source does it. The order of the columns is bridge_src_*_t's.
+COMPAT_COLUMNS = ("folders", "tinfoil", "ownfoil", "aerofoil")
+COMPAT_ROWS = (
+    ("cmp_row_library", (1, 1, 1, 1)),
+    ("cmp_row_place", (1, 0, 0, 0)),
+    ("cmp_row_sheets", (0, 0, 1, 0)),
+    ("cmp_row_live", (0, 0, 1, 0)),
+    ("cmp_row_saves", (0, 0, 0, 1)),
+    ("cmp_row_cheats", (0, 0, 0, 1)),
+    ("cmp_row_requests", (0, 0, 0, 1)),
+)
+
+
+def compat(catalog: dict) -> str:
+    """The sources against what they give, as a table: a tick and, for a screen reader, the word."""
+    title = html.escape(catalog["cmp_title"])
+    head = "".join(f'<th scope="col">{catalog[f"bridge_src_{c}_t"]}</th>' for c in COMPAT_COLUMNS)
+    rows = []
+    for key, marks in COMPAT_ROWS:
+        cells = "".join(
+            f'<td class="cmp-{"yes" if m else "no"}"><span aria-hidden="true">{"✓" if m else "–"}</span>'
+            f'<span class="sr">{catalog["cmp_yes" if m else "cmp_no"]}</span></td>'
+            for m in marks
+        )
+        rows.append(f'<tr><th scope="row">{catalog[key]}</th>{cells}</tr>')
+    return (
+        f'<div class="table compat" tabindex="0" role="region" aria-label="{title}"><table>'
+        f'<caption class="sr">{title}</caption><thead><tr><td></td>{head}</tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table></div>'
+    )
+
+
 def page_html(template: str, language: str, catalog: dict, lost: bool = False) -> str:
     root = "../" * (0 if language == ENGLISH else 1)
     if lost:
@@ -118,6 +151,7 @@ def page_html(template: str, language: str, catalog: dict, lost: bool = False) -
             "main_class": ' class="wrap"',
             "footer": page_footer(language, catalog, root),
             "audience": BRIDGE.audience(root),
+            "compat": compat(catalog),
             "repo": REPO,
             "sdk": SDK_URL,
             "hero": (

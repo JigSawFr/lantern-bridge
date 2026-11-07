@@ -95,5 +95,15 @@
   "idf_no_format": "Non è un pacchetto: il nome deve finire con .nsp, .nsz, .xci o .xcz.",
   "idf_no_id": "Nessun id di 16 cifre tra parentesi quadre: il bridge lascia questo file fuori dalla libreria.",
   "idf_count": "{ok} di {all} riconosciuti",
-  "idf_empty": "Incolla almeno un nome."
+  "idf_empty": "Incolla almeno un nome.",
+  "cmp_title": "Cosa offre ogni sorgente",
+  "cmp_row_library": "Titoli, versioni e formati, uniti per SHA-256",
+  "cmp_row_place": "File sottoposti ad hash dove si trovano, senza passare dal bridge",
+  "cmp_row_sheets": "Descrizioni, generi e immagini",
+  "cmp_row_live": "Riletta appena la sorgente cambia",
+  "cmp_row_saves": "Salvataggi copiati nei due sensi",
+  "cmp_row_cheats": "Set di trucchi",
+  "cmp_row_requests": "Richieste",
+  "cmp_yes": "Sì",
+  "cmp_no": "No"
 }
