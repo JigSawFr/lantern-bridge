@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "要重新計算所選標題的雜湊嗎？",
  "Export the selection (CSV)": "匯出所選內容 (CSV)",
  "Export this list (CSV)": "匯出此清單 (CSV)",
- "Clear the selection": "取消選取"
+ "Clear the selection": "取消選取",
+ "Diagnostic": "診斷",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "以文字顯示此橋接器的狀態，可貼到支援請求中。除非您要求，否則不包含密碼、權杖、位址或路徑。",
+ "Copy the diagnostic": "複製診斷資訊",
+ "Include addresses, paths and messages": "包含位址、路徑和訊息",
+ "Hide addresses, paths and messages": "隱藏位址、路徑和訊息",
+ "Report a problem": "回報問題"
 }

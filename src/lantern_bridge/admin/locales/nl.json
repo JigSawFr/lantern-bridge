@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "De hashes van de geselecteerde titels opnieuw berekenen?",
  "Export the selection (CSV)": "Selectie exporteren (CSV)",
  "Export this list (CSV)": "Deze lijst exporteren (CSV)",
- "Clear the selection": "Selectie wissen"
+ "Clear the selection": "Selectie wissen",
+ "Diagnostic": "Diagnose",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "De toestand van deze bridge als tekst, om in een ondersteuningsverzoek te plakken. Hij bevat geen wachtwoord, token, adres of pad, tenzij u erom vraagt.",
+ "Copy the diagnostic": "Diagnose kopiëren",
+ "Include addresses, paths and messages": "Adressen, paden en meldingen opnemen",
+ "Hide addresses, paths and messages": "Adressen, paden en meldingen verbergen",
+ "Report a problem": "Een probleem melden"
 }

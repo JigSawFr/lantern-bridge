@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "選択したタイトルのハッシュを再計算しますか？",
  "Export the selection (CSV)": "選択範囲をエクスポート (CSV)",
  "Export this list (CSV)": "この一覧をエクスポート (CSV)",
- "Clear the selection": "選択を解除"
+ "Clear the selection": "選択を解除",
+ "Diagnostic": "診断",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "このブリッジの状態をテキストで表示します。サポートへの問い合わせに貼り付けてください。ご希望がない限り、パスワード、トークン、アドレス、パスは含まれません。",
+ "Copy the diagnostic": "診断をコピー",
+ "Include addresses, paths and messages": "アドレス、パス、メッセージを含める",
+ "Hide addresses, paths and messages": "アドレス、パス、メッセージを隠す",
+ "Report a problem": "問題を報告"
 }

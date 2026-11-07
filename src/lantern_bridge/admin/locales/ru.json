@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "Пересчитать хеши выбранных игр?",
  "Export the selection (CSV)": "Экспортировать выбранное (CSV)",
  "Export this list (CSV)": "Экспортировать этот список (CSV)",
- "Clear the selection": "Снять выбор"
+ "Clear the selection": "Снять выбор",
+ "Diagnostic": "Диагностика",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "Состояние этого шлюза в виде текста, чтобы вставить в обращение в поддержку. В нём нет паролей, токенов, адресов и путей, если вы их не запросите.",
+ "Copy the diagnostic": "Копировать диагностику",
+ "Include addresses, paths and messages": "Включить адреса, пути и сообщения",
+ "Hide addresses, paths and messages": "Скрыть адреса, пути и сообщения",
+ "Report a problem": "Сообщить о проблеме"
 }

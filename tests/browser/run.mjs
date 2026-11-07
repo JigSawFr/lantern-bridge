@@ -46,7 +46,7 @@ const noSideScroll = (page) =>
 
 for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone", { width: 390, height: 800 }]]) {
   await test(`${label}: every page fits the width`, size, async (page) => {
-    for (const path of ["", "library", "activity", "developer", "logs", "pairings", "config"]) {
+    for (const path of ["", "library", "activity", "developer", "logs", "pairings", "config", "diagnostic"]) {
       await page.goto(`${BASE}/${path}`);
       assert.ok(await noSideScroll(page), `${path || "overview"} scrolls sideways`);
     }
@@ -118,7 +118,7 @@ await test("desktop: the search shortcut", { width: 1280, height: 800 }, async (
 
 await test("light theme: the text of every page has an AA contrast", { width: 1200, height: 900 }, async (page) => {
   await page.context().addCookies([{ name: "lb_theme", value: "light", url: `${BASE}/` }]);
-  for (const path of ["", "library", "library?view=list", "library/0100AAAA00000000", "activity", "events", "devices", "pairings", "config", "sources", "logs"]) {
+  for (const path of ["", "library", "library?view=list", "library/0100AAAA00000000", "activity", "events", "devices", "pairings", "config", "sources", "logs", "diagnostic"]) {
     await page.goto(`${BASE}/${path}`);
     const bad = await page.evaluate(() => {
       const lum = (c) => { const a = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
