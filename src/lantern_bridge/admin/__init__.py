@@ -440,7 +440,12 @@ def mount(app: FastAPI, admin: Admin) -> None:
             session,
             active="overview",
             checks=health.run(admin.runtime),
-            todo=attention.collect(admin.runtime, state["waiting"], admin.restart_needed()),
+            todo=attention.collect(
+                admin.runtime,
+                state["waiting"],
+                admin.restart_needed(),
+                paired=len(admin.lantern.accounts.devices()) if admin.lantern.accounts is not None else None,
+            ),
             state=state,
             uid=admin.config.uid,
             public=admin.config.public,
@@ -921,9 +926,40 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if problem is not None:
             return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem)
         log.info("settings changed from the pages: %s", done)
-        return redirect(f"/config?m={done}", request)
+        return redirect(f"/{'start' if fields.get('back') == 'start' else 'config'}?m={done}", request)
 
     _FIXED = {"No such source.", "Only an AeroFoil source has logins.", "Choose a number of devices from 1 to 20."}
+
+    @router.get("/start")
+    async def start(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        done = _DONE.get(request.query_params.get("m", ""))
+        accounts = admin.lantern.accounts
+        try:
+            file = admin.file()
+        except ConfigError:
+            file = admin.config
+        steps = attention.guide(
+            admin.runtime,
+            admin.state(),
+            paired=len(accounts.devices()) if accounts is not None else 0,
+            uid=admin.config.uid,
+            saved=[x.id for x in file.sources],
+            restart=admin.restart_needed(),
+        )
+        return admin.page(
+            request,
+            "_start.html" if request.query_params.get("fragment") else "start.html",
+            session,
+            active="overview",
+            steps=steps,
+            finished=all(step["done"] for step in steps),
+            sources=file.sources,
+            message=t(done) if done else None,
+        )
 
     @router.get("/config")
     async def config_page(request: Request) -> Response:

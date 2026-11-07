@@ -9,7 +9,7 @@ level it deserves, where to go, and, when one gesture settles it, the action beh
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from lantern_bridge import health
 
@@ -31,10 +31,12 @@ class Item:
     external: bool = False
 
 
-def collect(runtime: Runtime, waiting: int, restart: bool) -> list[Item]:
+def collect(runtime: Runtime, waiting: int, restart: bool, paired: int | None = None) -> list[Item]:
     items: list[Item] = []
     if not runtime.config.sources:
-        items.append(Item(WAIT, "No source configured yet.", href="/admin/config", link="Add one"))
+        items.append(Item(WAIT, "No source configured yet.", href="/admin/start", link="Start the setup"))
+    elif paired == 0 and not runtime.config.public and not waiting:
+        items.append(Item(INFO, "No device is paired yet", href="/admin/start", link="Setup guide"))
     for check in health.run(runtime):
         if check.status == health.OK:
             continue
@@ -73,3 +75,52 @@ def collect(runtime: Runtime, waiting: int, restart: bool) -> list[Item]:
             )
         )
     return sorted(items, key=lambda item: _ORDER[item.level])
+
+
+def guide(
+    runtime: Runtime, state: dict[str, Any], paired: int, uid: str, *, saved: list[str], restart: bool
+) -> list[dict[str, Any]]:
+    """The four steps from an empty bridge to a console that reads the library, each ticked by what the bridge sees."""
+    has_source = bool(saved)  # the settings file: a source just added is there before the restart
+    read = state["total"] > 0
+    served = state["titles"] > 0
+    open_access = runtime.config.public
+    steps: list[dict[str, Any]] = [
+        {
+            "title": "Add a source",
+            "text": "A folder of games on this machine, or a Tinfoil, Ownfoil or AeroFoil shop.",
+            "detail": ", ".join(saved),
+            "done": has_source,
+        },
+        {
+            "title": "Let the bridge read the files",
+            "text": "Restart the bridge to apply the source you added."
+            if restart
+            else "It reads them in place and never changes them.",
+            "detail": f"{state['hashed']} / {state['total']}" if read else "",
+            "done": has_source and not restart and read and state["pending"] == 0,
+            "scan": has_source and not restart,
+        },
+        {
+            "title": "Check the library",
+            "text": "The titles the bridge found, with the problems it noticed.",
+            "detail": f"{state['apps']} / {state['titles']}" if served else "",
+            "done": served,
+            "href": "/admin/library" if served else "",
+            "link": "Open the library",
+        },
+        {
+            "title": "Pair a device",
+            "text": "Open Lantern on the console, add this server, then accept its request here."
+            if not open_access
+            else "The access is public: the console only needs the address of this server.",
+            "detail": uid,
+            "done": paired > 0 or open_access,
+            "href": "/admin/pairings",
+            "link": "Pairings",
+        },
+    ]
+    first = next((n for n, step in enumerate(steps) if not step["done"]), None)
+    if first is not None:
+        steps[first]["current"] = True
+    return steps

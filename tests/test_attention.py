@@ -24,7 +24,9 @@ def _runtime(client: TestClient) -> Runtime:
 def test_a_quiet_bridge_has_nothing_to_deal_with(tmp_path: Path) -> None:
     client = _admin(_client(tmp_path, sources=True))
     _runtime(client).cycle(batch=1)
-    assert attention.collect(_runtime(client), 0, False) == []
+    assert attention.collect(_runtime(client), 0, False, paired=None) == []
+    _runtime(client).config.public = True  # nobody needs to be paired
+    assert attention.collect(_runtime(client), 0, False, paired=0) == []
     assert "Needs your attention" not in client.get("/admin/").text
 
 
@@ -98,6 +100,7 @@ def test_the_overview_blocks_come_alone_to_follow_the_server(tmp_path: Path) -> 
     client = _admin(_client(tmp_path, sources=True))
     runtime = _runtime(client)
     runtime.cycle(batch=1)
+    runtime.config.public = True  # nobody needs to be paired
     page = client.get("/admin/").text
     assert 'data-live="/admin/?fragment=todo"' in page and 'data-live="/admin/?fragment=sources"' in page
     quiet = client.get("/admin/?fragment=todo")

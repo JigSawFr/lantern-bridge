@@ -194,3 +194,10 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 .todo li.wait{border-left-color:var(--warn)}
 .todo li .what{flex:1 1 16rem}
 .todo form{margin:0}
+
+.steps{list-style:none;margin:1rem 0;padding:0;display:grid;gap:.6rem;counter-reset:step}
+.steps li{display:flex;gap:1rem;align-items:flex-start;padding:.8rem 1rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.steps li[aria-current]{border-color:var(--accent,var(--warn))}
+.steps li.done{opacity:.8}
+.steps .what{flex:1}
+.steps p{margin:.2rem 0 .6rem}
