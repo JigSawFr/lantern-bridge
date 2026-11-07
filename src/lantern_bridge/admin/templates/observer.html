@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Read-only account") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Read-only account") }}</h1>
+<p class="lede">{{ _("This account looks at the overview, the library and the activity. It cannot open this page or change anything.") }}</p>
+<p><a href="/admin/">{{ _("Overview") }}</a></p>
+{% endblock %}

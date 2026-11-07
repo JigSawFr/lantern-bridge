@@ -16,7 +16,7 @@
   <a class="brand" href="/admin/"><img src="/admin/static/bridge.svg" alt="" width="34" height="34"><span>{{ name }}<small>lantern-bridge</small></span></a>
   {% if session %}
   <nav aria-label="{{ _('Pages') }}">
-    {% for key, label, href in [("overview", _("Overview"), "/admin/"), ("library", _("Library"), "/admin/library"), ("activity", _("Activity"), "/admin/activity"), ("pairings", _("Pairings"), "/admin/pairings"), ("devices", _("Devices"), "/admin/devices"), ("accounts", _("Accounts"), "/admin/accounts"), ("invitations", _("Invitations"), "/admin/invitations"), ("config", _("Settings"), "/admin/config"), ("logs", _("Logs"), "/admin/logs")] + ([("developer", _("Developer"), "/admin/developer")] if developer else []) %}
+    {% for key, label, href in [("overview", _("Overview"), "/admin/"), ("library", _("Library"), "/admin/library"), ("activity", _("Activity"), "/admin/activity")] + ([] if session and session.role == "observer" else [("pairings", _("Pairings"), "/admin/pairings"), ("devices", _("Devices"), "/admin/devices"), ("accounts", _("Accounts"), "/admin/accounts"), ("invitations", _("Invitations"), "/admin/invitations"), ("config", _("Settings"), "/admin/config"), ("logs", _("Logs"), "/admin/logs")]) + ([("developer", _("Developer"), "/admin/developer")] if developer and not (session and session.role == "observer") else []) %}
     <a href="{{ href }}"{% if active == key %} aria-current="page"{% endif %}>{{ label }}</a>
     {% endfor %}
   </nav>

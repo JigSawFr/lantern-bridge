@@ -31,6 +31,19 @@
   <button>{{ _("Save") }}</button>
 </form>
 
+<form method="post" action="/admin/config/observer" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Read-only account") }}</h2>
+  <p class="muted">{{ _("An account that signs in to the overview, the library and the activity and changes nothing: for someone who only looks. It cannot open the settings, the pairings, the logs or the developer page.") }}</p>
+  {% if observer %}<p><span class="pill ok">{{ _("set") }}</span> <code>{{ observer }}</code></p>{% endif %}
+  <div class="form-grid">
+    <label>{{ _("Name") }} <input name="name" value="{{ observer or '' }}" maxlength="64" autocomplete="off" required></label>
+    <label>{{ _("Password") }} <input name="password" type="password" minlength="10" autocomplete="new-password" required></label>
+  </div>
+  <button>{{ _("Save") }}</button>
+  {% if observer %}<button class="danger" name="action" value="remove" formnovalidate data-confirm="{{ _('Remove the read-only account?') }}">{{ _("Remove") }}</button>{% endif %}
+</form>
+
 <form method="post" action="/admin/config/mqtt" class="card">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
   <h2>{{ _("MQTT broker") }}</h2>
