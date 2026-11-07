@@ -59,10 +59,22 @@ jobs:
           submodules: true
       - name: Build
         run: docker build --tag lantern-bridge:audit .
-      # Fixed vulnerabilities only, high and critical: what an update can remove
-      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: lantern-bridge:audit
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: "1"
+      # Trivy is run from its image, pinned by digest (v0.76.2, raised by hand):
+      # no binary is fetched while the job runs, and after the March 2026 incident
+      # (GHSA-69fq-xp46-6x23) no action of Aqua's is used. The image is handed to
+      # it as a file, so it gets no access to the Docker socket.
+      - name: Save the image
+        run: docker save --output "$RUNNER_TEMP/image.tar" lantern-bridge:audit
+      # Fixed vulnerabilities only, high and critical: what an update can remove;
+      # and secrets left in a layer
+      - name: Trivy, the image
+        run: |
+          docker run --rm --volume "$RUNNER_TEMP/image.tar:/image.tar:ro" \
+            ghcr.io/aquasecurity/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
+            image --input /image.tar --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1
+      # The Dockerfile's own mistakes (root user, no health check, a secret in an ENV...)
+      - name: Trivy, the Dockerfile
+        run: |
+          docker run --rm --volume "$PWD/Dockerfile:/work/Dockerfile:ro" \
+            ghcr.io/aquasecurity/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
+            config --severity HIGH,CRITICAL --exit-code 1 /work

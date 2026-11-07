@@ -23,8 +23,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca
 # The run needs neither pip nor the GUI and teaching modules
-RUN adduser -S -u 10001 -h /config -H bridge \
-    && mkdir /config && chown bridge /config \
+RUN addgroup -S -g 10001 bridge \
+    && adduser -S -u 10001 -G bridge -h /config -H bridge \
+    && mkdir /config && chown bridge:bridge /config \
     && rm -rf /usr/local/bin/pip* /usr/local/lib/python3.13/ensurepip \
         /usr/local/lib/python3.13/site-packages/pip* /usr/local/lib/python3.13/idlelib \
         /usr/local/lib/python3.13/tkinter /usr/local/lib/python3.13/turtledemo
@@ -32,7 +33,8 @@ COPY --from=build /opt/venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     LANTERN_BRIDGE_CONFIG=/config/config.toml
-USER bridge
+# Numeric, so that a platform can check it is not root (Kubernetes' runAsNonRoot)
+USER 10001:10001
 WORKDIR /config
 VOLUME /config
 EXPOSE 8080

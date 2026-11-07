@@ -36,7 +36,10 @@ jobs:
         run: |
           set -eu
           # The image's own HEALTHCHECK, probed every 2 s instead of every 30 s
+          # Hardened as the README says to run it: it must still work, writing
+          # nowhere but /config
           docker run --detach --name bridge --publish 8080:8080 \
+            --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
             --health-interval=2s --health-start-period=0s lantern-bridge:ci
           for _ in $(seq 1 30); do
             if curl --fail --silent --show-error http://127.0.0.1:8080/.well-known/lantern; then break; fi
@@ -44,6 +47,8 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:8080/.well-known/lantern | grep -q '"uid"'
           test "$(docker exec bridge id -u)" != 0
+          # A number, not a name: a platform that checks runAsNonRoot can read it
+          test "$(docker image inspect --format '{{.Config.User}}' lantern-bridge:ci)" = 10001:10001
           docker exec bridge lantern-bridge --version
           for _ in $(seq 1 30); do
             status="$(docker inspect --format '{{.State.Health.Status}}' bridge)"

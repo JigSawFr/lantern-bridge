@@ -3,7 +3,8 @@
 # jobs, runner labels with .github/actionlint.yaml), and checks their shell
 # scripts with shellcheck (the runner's); and zizmor, which looks for what
 # makes a workflow unsafe (injections, permissions too wide, credentials left
-# in a checkout, tokens that are not limited).
+# in a checkout, tokens that are not limited); and hadolint, which lints the
+# Dockerfile.
 name: workflows
 
 # Called by ci.yml
@@ -55,3 +56,18 @@ jobs:
           python -m venv "$RUNNER_TEMP/zizmor"
           "$RUNNER_TEMP/zizmor/bin/pip" install --quiet --require-hashes -r tools/zizmor-requirements.txt
           "$RUNNER_TEMP/zizmor/bin/zizmor" --config .github/zizmor.yml --format github .github/workflows
+
+  hadolint:
+    name: hadolint
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The image, by digest (v2.14 of hadolint): raised by hand, Dependabot does not read workflows for images
+      - name: hadolint
+        run: |
+          docker run --rm --interactive \
+            ghcr.io/hadolint/hadolint@sha256:a1d49ae1a4e83c1dbad26b8c1ad7588c8bd1e04f4866b34ad3cac50335198552 \
+            < Dockerfile
