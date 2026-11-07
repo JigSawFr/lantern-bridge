@@ -416,8 +416,10 @@ class Admin:
         )
 
     def allowed(self, request: Request) -> bool:
-        if not self.config.admin_lan_only:
-            return True
+        return not self.config.admin_lan_only or self.reachable(request)
+
+    def reachable(self, request: Request) -> bool:
+        """Whether the client is on the local network (or in `admin_allow`), behind a trusted proxy included."""
         address = self.client(request)
         if self.networks:
             return is_loopback(address) or netguard.within(address, self.networks)

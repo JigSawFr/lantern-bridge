@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 from lantern.uid import new_uid
@@ -11,10 +12,10 @@ from lantern_bridge.app import make_app
 from lantern_bridge.config import Config, FolderSource, load, save
 
 
-def _metrics(tmp_path: Path, *, on: bool = True, host: str = "127.0.0.1") -> TestClient:
+def _metrics(tmp_path: Path, *, on: bool = True, host: str = "127.0.0.1", **more: Any) -> TestClient:
     games = tmp_path / "games"
     games.mkdir(exist_ok=True)
-    config = Config(uid=new_uid(), name="Shelf", metrics=on, sources=[FolderSource("games", games)])
+    config = Config(uid=new_uid(), name="Shelf", metrics=on, sources=[FolderSource("games", games)], **more)
     return TestClient(make_app(config, tmp_path / "state", run=False), client=(host, 50000))
 
 
@@ -28,6 +29,17 @@ def test_metrics_is_off_unless_asked_for(tmp_path: Path) -> None:
 def test_metrics_answers_the_local_network_only(tmp_path: Path) -> None:
     assert _metrics(tmp_path, host="8.8.8.8").get("/metrics").status_code == 403
     assert _metrics(tmp_path, host="192.168.1.20").get("/metrics").status_code == 200
+
+
+def test_metrics_follows_the_trusted_proxy_and_the_allowed_networks(tmp_path: Path) -> None:
+    behind = _metrics(tmp_path, host="172.18.0.2", trusted_proxies=["172.18.0.2"])
+    assert behind.get("/metrics", headers={"x-forwarded-for": "8.8.8.8"}).status_code == 403
+    assert behind.get("/metrics", headers={"x-forwarded-for": "192.168.1.20"}).status_code == 200
+    assert (
+        _metrics(tmp_path, host="172.18.0.2").get("/metrics", headers={"x-forwarded-for": "8.8.8.8"}).status_code == 200
+    )
+    narrow = _metrics(tmp_path, host="192.168.1.20", admin_allow=["10.0.0.0/8"])
+    assert narrow.get("/metrics").status_code == 403
 
 
 def test_metrics_gives_the_figures_without_names_or_paths(tmp_path: Path) -> None:
