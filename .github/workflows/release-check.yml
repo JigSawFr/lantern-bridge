@@ -1,7 +1,9 @@
 # What a release will be, checked before there is one (RELEASING.md): the
 # Python package built twice from the commit, in two folders, with
 # tools/reproduce.sh: the same bytes, or the job fails; its SBOM checked
-# against the CycloneDX schema. Nothing is published or attested here.
+# against the CycloneDX schema; and the container image (amd64) built twice
+# from the commit, with no cache: the same digest, or the job fails. Nothing is
+# published or attested here.
 name: release-check
 
 # Called by ci.yml
@@ -60,3 +62,35 @@ jobs:
               status |= error is not None
           sys.exit(status)
           PY
+
+  reproducible-image:
+    name: reproducible (image)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: true
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # As release.yml builds it: the commit's date for SOURCE_DATE_EPOCH, the
+      # timestamps rewritten, no cache; the digest of each build is compared
+      - name: Built twice, compared
+        run: |
+          set -eu
+          export SOURCE_DATE_EPOCH
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          for n in 1 2; do
+            docker buildx build --no-cache --platform linux/amd64 --build-arg SOURCE_DATE_EPOCH \
+              --output "type=oci,dest=$RUNNER_TEMP/image-$n.tar,rewrite-timestamp=true" .
+            digest=$(tar -xOf "$RUNNER_TEMP/image-$n.tar" index.json | jq -r '.manifests[0].digest')
+            echo "$n: $digest"
+            echo "$digest" > "$RUNNER_TEMP/digest-$n"
+            # Different clocks between the two builds
+            sleep 2
+          done
+          if ! cmp "$RUNNER_TEMP/digest-1" "$RUNNER_TEMP/digest-2"; then
+            echo "::error::the image is not the same bytes when built again"
+            exit 1
+          fi
+          { echo '```'; echo "image (linux/amd64): $(cat "$RUNNER_TEMP/digest-1")"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
