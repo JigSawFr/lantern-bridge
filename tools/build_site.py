@@ -152,6 +152,7 @@ def page_html(template: str, language: str, catalog: dict, lost: bool = False) -
             "footer": page_footer(language, catalog, root),
             "audience": BRIDGE.audience(root),
             "compat": compat(catalog),
+            "faq": faq(catalog),
             "repo": REPO,
             "sdk": SDK_URL,
             "hero": (
@@ -192,6 +193,18 @@ def page_html(template: str, language: str, catalog: dict, lost: bool = False) -
     return BRIDGE.links_out(fill(template, values))
 
 
+FAQ = tuple((f"faq_{n}_q", f"faq_{n}_a") for n in range(1, 6))
+
+
+def faq(catalog: dict) -> str:
+    """The questions about trust, one fold each: native <details>, no script."""
+    items = "".join(
+        f'<details class="faq-item"><summary>{html.escape(catalog[q])}</summary><p>{html.escape(catalog[a])}</p></details>'
+        for q, a in FAQ
+    )
+    return f'<div class="faq">{items}</div>'
+
+
 def structured_data(language: str, catalog: dict) -> str:
     """What the page is, for search engines: schema.org's SoftwareApplication, in the page's language. A data block,
     which the Content-Security-Policy leaves alone."""
@@ -208,10 +221,24 @@ def structured_data(language: str, catalog: dict) -> str:
         "inLanguage": boreale.html_lang(language),
         "isPartOf": {"@type": "SoftwareSourceCode", "name": "Lantern", "url": LANTERN_URL},
     }
-    return (
+    questions = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "inLanguage": boreale.html_lang(language),
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": catalog[q],
+                "acceptedAnswer": {"@type": "Answer", "text": catalog[a]},
+            }
+            for q, a in FAQ
+        ],
+    }
+    return "".join(
         '<script type="application/ld+json">'
-        + json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+        + json.dumps(block, ensure_ascii=False).replace("<", "\\u003c")
         + "</script>"
+        for block in (data, questions)
     )
 
 

@@ -110,5 +110,16 @@
   "shots_lede": "Le pont a ses propres pages, en anglais et en français, en thème sombre ou clair. En voici trois, sur une bibliothèque inventée : rien ci-dessous n'est une vraie collection.",
   "shots_overview": "Vue d'ensemble : ce qui est servi, la santé, et l'avancement du hachage.",
   "shots_library": "Bibliothèque : chaque titre de chaque source, avec recherche, filtres et export.",
-  "shots_sources": "Sources : d'où le pont lit, dans quel ordre, avec un test pour chacune."
+  "shots_sources": "Sources : d'où le pont lit, dans quel ordre, avec un test pour chacune.",
+  "faq_title": "Questions de confiance",
+  "faq_1_q": "Le pont modifie-t-il ma bibliothèque ?",
+  "faq_1_a": "Vos jeux sont seulement lus, là où ils sont : montez les dossiers en lecture seule. La seule chose qu'il réécrit, ce sont les sauvegardes et les cheats d'AeroFoil, quand un client Lantern les envoie. Tout le reste qu'il garde, ce sont ses réglages, son index et son historique, dans son dossier de configuration.",
+  "faq_2_q": "Où vont les mots de passe de mes boutiques ?",
+  "faq_2_a": "Pas dans le fichier de configuration : il ne contient que le nom d'une variable d'environnement, et le pont lit le mot de passe dans l'environnement. Une sauvegarde ne contient aucun secret.",
+  "faq_3_q": "Qui peut ouvrir l'administration ?",
+  "faq_3_a": "Un administrateur que vous créez avec un code d'installation à usage unique. Par défaut, seul le réseau local atteint les pages, les mots de passe erronés sont comptés par adresse et par nom, une session se termine après 30 minutes d'inactivité, et les pages ne chargent rien d'ailleurs.",
+  "faq_4_q": "Contacte-t-il quelque chose hors de mon réseau ?",
+  "faq_4_a": "Deux vérifications sont actives par défaut et chacune se désactive : le téléchargement quotidien de la liste publique de jeux d'Atlas, et un coup d'œil quotidien à la dernière version sur GitHub. Ce sont de simples requêtes : rien sur votre bibliothèque n'est envoyé et rien n'est installé.",
+  "faq_5_q": "Qui peut lire ma bibliothèque ?",
+  "faq_5_a": "Seulement les appareils que vous avez appairés : un nouvel appareil saisit un code créé avec la commande invite, et d'ici là seule la poignée de main est ouverte. Laisser n'importe qui la lire est un réglage, déconseillé hors d'un réseau de confiance."
 }

@@ -110,5 +110,16 @@
   "shots_lede": "The bridge comes with its own pages, in English and French, in a dark or a light theme. Here are three of them, over a made-up library: nothing below is a real collection.",
   "shots_overview": "Overview: what is served, health, and how far the hashing has come.",
   "shots_library": "Library: every title from every source, with search, filters and export.",
-  "shots_sources": "Sources: where the bridge reads from, in what order, with a test for each."
+  "shots_sources": "Sources: where the bridge reads from, in what order, with a test for each.",
+  "faq_title": "Questions about trust",
+  "faq_1_q": "Does the bridge change my library?",
+  "faq_1_a": "Your games are only read, where they are: mount the folders read-only. The one thing it writes back is AeroFoil's saves and cheats, when a Lantern client sends them. Everything else it keeps is its own settings, index and history, in its configuration folder.",
+  "faq_2_q": "Where do my shop passwords go?",
+  "faq_2_a": "Not into the configuration file: it holds only the name of an environment variable, and the bridge reads the password from the environment. A backup contains no secret.",
+  "faq_3_q": "Who can open the administration?",
+  "faq_3_a": "An administrator you create with a one-time setup code. By default only the local network can reach the pages, wrong passwords are counted per address and per name, a session ends after 30 idle minutes, and the pages load nothing from elsewhere.",
+  "faq_4_q": "Does it contact anything outside my network?",
+  "faq_4_a": "Two checks are on by default and each can be turned off: a daily download of Atlas's public list of games, and a daily look at GitHub's latest release. Both are plain requests: nothing about your library is sent and nothing is installed.",
+  "faq_5_q": "Who can read my library?",
+  "faq_5_a": "Only devices you have paired: a new device enters a code made with the invite command, and until then only the handshake is open. Letting anyone read it is a setting, not recommended outside a network you trust."
 }

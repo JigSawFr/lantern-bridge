@@ -110,5 +110,16 @@
   "shots_lede": "Il bridge ha le sue pagine, in inglese e francese, con tema scuro o chiaro. Eccone tre, su una libreria inventata: nulla di ciò che vedi è una collezione reale.",
   "shots_overview": "Panoramica: cosa viene servito, lo stato di salute e a che punto è l'hashing.",
   "shots_library": "Libreria: ogni titolo di ogni sorgente, con ricerca, filtri ed esportazione.",
-  "shots_sources": "Sorgenti: da dove legge il bridge, in che ordine, con una prova per ciascuna."
+  "shots_sources": "Sorgenti: da dove legge il bridge, in che ordine, con una prova per ciascuna.",
+  "faq_title": "Domande sulla fiducia",
+  "faq_1_q": "Il bridge modifica la mia libreria?",
+  "faq_1_a": "I tuoi giochi vengono solo letti, dove si trovano: monta le cartelle in sola lettura. L'unica cosa che riscrive sono i salvataggi e i trucchi di AeroFoil, quando un client Lantern li invia. Tutto il resto che conserva sono le sue impostazioni, il suo indice e il suo storico, nella sua cartella di configurazione.",
+  "faq_2_q": "Dove vanno le password dei miei negozi?",
+  "faq_2_a": "Non nel file di configurazione: contiene solo il nome di una variabile d'ambiente e il bridge legge la password dall'ambiente. Un backup non contiene alcun segreto.",
+  "faq_3_q": "Chi può aprire l'amministrazione?",
+  "faq_3_a": "Un amministratore che crei con un codice di configurazione monouso. Per impostazione predefinita solo la rete locale raggiunge le pagine, le password errate sono contate per indirizzo e per nome, una sessione termina dopo 30 minuti di inattività e le pagine non caricano nulla da fuori.",
+  "faq_4_q": "Contatta qualcosa fuori dalla mia rete?",
+  "faq_4_a": "Due controlli sono attivi per impostazione predefinita e ognuno si può disattivare: un download giornaliero dell'elenco pubblico di giochi di Atlas e uno sguardo giornaliero all'ultima versione su GitHub. Sono semplici richieste: non viene inviato nulla sulla tua libreria e non viene installato nulla.",
+  "faq_5_q": "Chi può leggere la mia libreria?",
+  "faq_5_a": "Solo i dispositivi che hai associato: un nuovo dispositivo inserisce un codice creato con il comando invite e fino ad allora è aperto solo l'handshake. Lasciare che chiunque la legga è un'impostazione, sconsigliata fuori da una rete fidata."
 }

@@ -110,5 +110,16 @@
   "shots_lede": "De bridge heeft eigen pagina's, in het Engels en Frans, in een donker of licht thema. Hier zijn er drie, boven een verzonnen bibliotheek: niets hieronder is een echte collectie.",
   "shots_overview": "Overzicht: wat wordt aangeboden, de gezondheid en hoever het hashen is.",
   "shots_library": "Bibliotheek: elke titel uit elke bron, met zoeken, filters en export.",
-  "shots_sources": "Bronnen: waaruit de bridge leest, in welke volgorde, met een test voor elke bron."
+  "shots_sources": "Bronnen: waaruit de bridge leest, in welke volgorde, met een test voor elke bron.",
+  "faq_title": "Vragen over vertrouwen",
+  "faq_1_q": "Verandert de bridge mijn bibliotheek?",
+  "faq_1_a": "Je games worden alleen gelezen, waar ze staan: koppel de mappen alleen-lezen. Het enige wat ze terugschrijft zijn de savegames en cheats van AeroFoil, wanneer een Lantern-client die stuurt. Al het andere dat ze bewaart zijn haar eigen instellingen, index en geschiedenis, in haar configuratiemap.",
+  "faq_2_q": "Waar gaan de wachtwoorden van mijn shops heen?",
+  "faq_2_a": "Niet naar het configuratiebestand: dat bevat alleen de naam van een omgevingsvariabele, en de bridge leest het wachtwoord uit de omgeving. Een back-up bevat geen geheimen.",
+  "faq_3_q": "Wie kan de beheerpagina's openen?",
+  "faq_3_a": "Een beheerder die je aanmaakt met een eenmalige installatiecode. Standaard bereikt alleen het lokale netwerk de pagina's, foute wachtwoorden worden per adres en per naam geteld, een sessie eindigt na 30 minuten inactiviteit en de pagina's laden niets van elders.",
+  "faq_4_q": "Neemt ze contact op met iets buiten mijn netwerk?",
+  "faq_4_a": "Twee controles staan standaard aan en elk kan worden uitgezet: een dagelijkse download van de openbare gamelijst van Atlas en een dagelijkse blik op de nieuwste release op GitHub. Het zijn gewone verzoeken: er wordt niets over je bibliotheek verstuurd en er wordt niets geïnstalleerd.",
+  "faq_5_q": "Wie kan mijn bibliotheek lezen?",
+  "faq_5_a": "Alleen apparaten die je hebt gekoppeld: een nieuw apparaat voert een code in die met het commando invite is gemaakt, en tot dan staat alleen de handshake open. Iedereen laten lezen is een instelling, niet aanbevolen buiten een vertrouwd netwerk."
 }
