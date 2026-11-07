@@ -81,6 +81,15 @@
         {% if f.sha256 %}<span class="pill ok">{{ _("hashed") }}</span>{% else %}<span class="pill wait">{{ _("waiting") }}</span>{% endif %}
       </div>
       {% if f.source in open_folders %}<div class="factions">
+        {% set conv = conversions.get(f.format) %}
+        {% if conv and compress_status == "ready" %}<details class="convert"><summary>{{ _("Convert…") }}</summary>
+          <form method="post" action="/admin/library/{{ title.title_id }}/convert" class="stack">
+            <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}">
+            {% if conv[1] == "compress" %}<label>{{ _("Compression level") }} <select name="level">{% for n in (3, 10, 18, 22) %}<option value="{{ n }}"{% if n == 18 %} selected{% endif %}>{{ n }}{% if n == 3 %} · {{ _("fast") }}{% elif n == 18 %} · {{ _("default") }}{% elif n == 22 %} · {{ _("smallest") }}{% endif %}</option>{% endfor %}</select></label>
+            <label>{{ _("Mode") }} <select name="mode"><option value="solid">{{ _("Solid: the smallest file") }}</option><option value="block">{{ _("Block: can be read without decompressing") }}</option></select></label>{% endif %}
+            <label class="check"><input type="checkbox" name="delete"> {{ _("Delete the original afterwards, once the result is checked") }}</label>
+            <button>{{ _("Compress to {format}", format=conv[0] | upper) if conv[1] == "compress" else _("Decompress to {format}", format=conv[0] | upper) }}</button>
+          </form></details>{% endif %}
         <form method="post" action="/admin/library/{{ title.title_id }}/delete"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}"><button class="danger small" data-confirm="{{ _('Delete this file from the disk? This cannot be undone.') }}">{{ _("Delete") }}</button></form>
       </div>{% endif %}
     </li>
@@ -103,6 +112,8 @@
   </ul>
 </section>
 {% endif %}
+
+{% if open_folders and compress_status != "ready" %}<p class="dim small" id="compress-note">{{ _("Compression needs the nsz tool and your own prod.keys in the configuration folder.") }} {{ _("The nsz tool is not installed.") if compress_status == "no_tool" else _("No prod.keys in the configuration folder.") }}</p>{% endif %}
 
 <details class="fold" id="files">
 <summary>{{ _("Files") }} <span class="pill">{{ title.files | length }}</span></summary>

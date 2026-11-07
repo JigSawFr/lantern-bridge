@@ -21,6 +21,7 @@ from lantern.server.file_index import Entry, SqliteIndex, SyncResult, hash_pendi
 from lantern_bridge import __version__
 from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
+from lantern_bridge.compress import Compressor
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import scan_packages
 from lantern_bridge.history import History
@@ -104,6 +105,7 @@ class Runtime:
         self.notifier = Notifier(config.notify, config.name) if config.notify else None
         if self.notifier is not None:
             self.history.listeners.append(self.notifier.on_event)
+        self.compressor: Compressor | None = None  # set by the application: it outlives a reload
         self.pulse = Pulse()  # what the pages' live blocks wait on
         self.history.listeners.append(lambda _event: self.pulse.bump())
         self.traffic = Traffic(history=self.history, pulse=self.pulse)

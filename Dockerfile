@@ -12,7 +12,10 @@ WORKDIR /src
 COPY pyproject.toml uv.lock README.md ./
 COPY sdk/python ./sdk/python
 COPY src ./src
-RUN uv sync --frozen --no-dev --no-editable
+# `--build-arg WITH_NSZ=1` adds the nsz tool (compress and decompress from the title page; you bring your own keys)
+ARG WITH_NSZ=0
+RUN if [ "$WITH_NSZ" = "1" ]; then uv sync --frozen --no-dev --no-editable --extra compress; \
+    else uv sync --frozen --no-dev --no-editable; fi
 
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 --no-create-home --home-dir /config bridge \

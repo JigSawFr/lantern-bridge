@@ -48,6 +48,7 @@ from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
 from lantern_bridge.catalog import FIRST_DOWN, KINDS, SORTS, Catalog, TitleInfo, search
+from lantern_bridge.compress import CONVERSIONS
 from lantern_bridge.config import (
     AerofoilSource,
     Config,
@@ -104,6 +105,7 @@ _DONE = {
     "untied": "Login removed.",
     "queued": "Hashing again: these files go first.",
     "deleted": "The file was deleted from the disk.",
+    "converting": "Queued: the conversion starts when the ones before it are done.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -140,13 +142,17 @@ def _csv_safe(value: str) -> str:
 #: Live streams one session may keep open at once (a page opens one per block it follows).
 _STREAMS_PER_SESSION = 8
 _BULK = 200  # titles one bulk action or one selection export takes
+_NOT_READY = {
+    "no_tool": "The nsz tool is not installed.",
+    "no_keys": "No prod.keys in the configuration folder.",
+}
 _BUSY, _IDLE, _SETTLE, _BEAT = (
     1.0,
     5.0,
     0.25,
     15.0,
 )  # seconds: look again while busy, while idle, after a change; keep-alive
-_FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state")
+_FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state", "/admin/tasks")
 
 
 async def _ask(request: Request, target: str) -> str | None:
@@ -978,6 +984,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             cheats=cheats,
             timings=admin.runtime.stats.timings,
             open_folders={x.id for x in admin.config.sources if isinstance(x, FolderSource) and x.writable},
+            conversions=CONVERSIONS,
+            compress_status=admin.runtime.compressor.status() if admin.runtime.compressor is not None else "no_tool",
             atlas=admin.runtime.atlas.get(title.title_id) if admin.runtime.atlas is not None else None,
             message=admin.tr(request)(_DONE[done]) if done else None,
         )
@@ -1055,6 +1063,65 @@ def mount(app: FastAPI, admin: Admin) -> None:
         last = len(title.files) == 1  # nothing of the title is left: back to the library
         where = "/admin/library?m=deleted" if last else f"/admin/library/{title.title_id}?m=deleted"
         return RedirectResponse(where, status_code=303, headers=_HEADERS)
+
+    @router.post("/library/{title_id}/convert")
+    async def title_convert(title_id: str, request: Request) -> Response:
+        """Queues the compression (or the decompression) of one file of a title, in a folder open to changes."""
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        title = admin.runtime.browser.catalog().titles.get(title_id.upper())
+        if title is None:
+            return admin.page(request, "missing.html", session, status=404, active="library")
+        target, why = writable_file(title, fields.get("source", ""), fields.get("path", ""))
+        if target is None:
+            return Response(t(why or ""), 403, headers=_HEADERS)
+        compressor = admin.runtime.compressor
+        if compressor is None or compressor.status() != "ready":
+            return Response(t(_NOT_READY[compressor.status() if compressor else "no_tool"]), 409, headers=_HEADERS)
+        level = fields.get("level", "")
+        try:
+            job = compressor.submit(
+                fields["source"],
+                fields["path"],
+                title.title_id,
+                level=int(level) if level.isdigit() else 18,
+                block=fields.get("mode") == "block",
+                delete_original=fields.get("delete") == "on",
+            )
+        except ValueError as error:
+            return Response(t(str(error)), 400, headers=_HEADERS)
+        log.info("a conversion of %s was queued from the pages (job %d, %s)", title.title_id, job.id, job.action)
+        return RedirectResponse("/admin/tasks?m=converting", status_code=303, headers=_HEADERS)
+
+    def tasks_data(request: Request) -> dict[str, Any]:
+        compressor = admin.runtime.compressor
+        done = _DONE.get(request.query_params.get("m", ""))
+        return {
+            "jobs": compressor.jobs() if compressor is not None else [],
+            "compress_status": compressor.status() if compressor is not None else "no_tool",
+            "message": admin.tr(request)(done) if done else None,
+            "now": time.time(),
+        }
+
+    @router.get("/tasks")
+    async def tasks(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        template = "_tasks.html" if request.query_params.get("fragment") else "tasks.html"
+        return admin.page(request, template, session, active="tasks", **tasks_data(request))
+
+    @router.post("/tasks/{job_id}/cancel")
+    async def task_cancel(job_id: int, request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        compressor = admin.runtime.compressor
+        if compressor is None or not compressor.cancel(job_id):
+            return Response("No such running task.", 404, headers=_HEADERS)
+        return RedirectResponse("/admin/tasks", status_code=303, headers=_HEADERS)
 
     def activity_data() -> dict[str, Any]:
         traffic = admin.runtime.traffic

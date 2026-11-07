@@ -39,6 +39,11 @@ dependencies = [
     "websockets>=13",
 ]
 
+[project.optional-dependencies]
+# The nsz tool, to compress and decompress packages from the title page (a folder open to changes, and the
+# user's own prod.keys). The image has it with `--build-arg WITH_NSZ=1`.
+compress = ["nsz>=5.0"]
+
 [project.scripts]
 lantern-bridge = "lantern_bridge.__main__:main"
 

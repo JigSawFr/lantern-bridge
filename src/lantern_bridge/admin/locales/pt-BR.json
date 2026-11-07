@@ -170,5 +170,18 @@
  "This folder is not open to changes: allow it in the sources.": "Esta pasta não está aberta a alterações: permita nas fontes.",
  "The file is not there any more, or is not a plain file of the folder.": "O arquivo não existe mais ou não é um arquivo normal da pasta.",
  "The file could not be deleted: the folder may be mounted read-only.": "Não foi possível excluir o arquivo: a pasta pode estar montada somente leitura.",
- "No such file in this title.": "Não há esse arquivo neste título."
+ "No such file in this title.": "Não há esse arquivo neste título.",
+ "A file of that name is already there: nothing was replaced.": "Já existe um arquivo com esse nome: nada foi substituído.",
+ "Block: can be read without decompressing": "Bloco: pode ser lido sem descompactar",
+ "Compress to {format}": "Compactar para {format}",
+ "Compression level": "Nível de compactação",
+ "Compression needs the nsz tool and your own prod.keys in the configuration folder.": "A compactação precisa da ferramenta nsz e das suas próprias prod.keys na pasta de configuração.",
+ "Decompress to {format}": "Descompactar para {format}",
+ "Delete the original afterwards, once the result is checked": "Excluir depois o original, quando o resultado estiver verificado",
+ "Solid: the smallest file": "Sólido: o menor arquivo",
+ "The file is not there any more.": "O arquivo não existe mais.",
+ "The original could not be deleted.": "Não foi possível excluir o original.",
+ "The tool made no file.": "A ferramenta não gerou nenhum arquivo.",
+ "smallest": "menor",
+ "then the original is deleted": "depois o original é excluído"
 }

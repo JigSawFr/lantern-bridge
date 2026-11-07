@@ -330,3 +330,11 @@ pre.report{margin:1rem 0;padding:1rem;overflow:auto;background:var(--night);bord
 .filerow .fname code{word-break:break-all}
 .filerow .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem}
 .filerow .factions{display:flex;gap:.5rem;flex-wrap:wrap}.filerow .factions form{margin:0}
+.filerow .factions{position:relative;align-items:center}
+details.convert{position:relative}
+details.convert summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;min-height:32px;padding:0 .8rem;border:1px solid var(--line);border-radius:999px;background:none;color:var(--snow);font:500 .85rem var(--body)}
+details.convert summary::-webkit-details-marker{display:none}
+details.convert summary:hover,details.convert[open] summary{border-color:var(--aurora);color:var(--aurora)}
+details.convert form{position:absolute;right:0;top:calc(100% + .4rem);z-index:10;width:min(22rem,80vw);padding:1rem;background:var(--night);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px -16px rgb(0 0 0 / .6)}
+:root[data-theme="light"] details.convert form{box-shadow:0 18px 40px -16px rgb(15 27 48 / .35)}
+:root[data-theme="light"] details.convert summary{color:var(--snow)}
