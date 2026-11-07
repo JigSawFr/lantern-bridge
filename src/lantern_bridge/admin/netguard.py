@@ -63,3 +63,19 @@ def host_ok(header: str | None, allowed: Sequence[str]) -> bool:
     if allowed:
         return host in {name.strip().lower().rstrip(".") for name in allowed}
     return _address(host) is not None or "." not in host or host.endswith(_PRIVATE_SUFFIXES)
+
+
+def same_site_request(fetch_site: str | None, origin: str | None, host: str | None, forwarded_host: str | None) -> bool:
+    """Whether a form was sent by one of our own pages (a page of another site cannot sign in, or set a preference).
+
+    A modern browser says it in `Sec-Fetch-Site`; an older one gives an `Origin` to compare with the `Host` (or the
+    one a trusted proxy forwards). A request with neither (a script, a test) is not a browser form and passes.
+    """
+    if fetch_site:
+        return fetch_site.strip().lower() in ("same-origin", "none")
+    if not origin:
+        return True
+    if origin == "null":
+        return False
+    name = origin.split("://", 1)[-1].lower()
+    return name in {(host or "").lower(), (forwarded_host or "").lower()} - {""}

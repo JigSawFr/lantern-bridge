@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from lantern.uid import new_uid
 
-from lantern_bridge.admin.netguard import client_address, host_ok, is_https, parse_networks
+from lantern_bridge.admin.netguard import client_address, host_ok, is_https, parse_networks, same_site_request
 from lantern_bridge.app import make_app
 from lantern_bridge.config import Config, ConfigError, FolderSource, load, parse_list, save
 from test_admin import PASSWORD
@@ -133,3 +133,27 @@ def test_the_lists_are_checked_kept_and_written_back(tmp_path: Path) -> None:
         with pytest.raises(ConfigError):
             parse_list(bad, "admin_allow", networks=True)
     assert parse_list(None, "k") == [] and parse_list([" a "], "k") == ["a"]
+
+
+def test_a_form_from_another_site_cannot_sign_in_or_set_a_preference(tmp_path: Path) -> None:
+    assert same_site_request("same-origin", None, "bridge.lan", None)
+    assert same_site_request(None, None, "bridge.lan", None)  # not a browser form: a script, a test
+    assert same_site_request(None, "http://bridge.lan", "bridge.lan", None)
+    assert same_site_request(None, "https://bridge.example.org", "bridge:80", "bridge.example.org")
+    assert not same_site_request("cross-site", None, "bridge.lan", None)
+    assert not same_site_request("same-site", None, "bridge.lan", None)
+    assert not same_site_request(None, "https://evil.example.org", "bridge.lan", None)
+    assert not same_site_request(None, "null", "bridge.lan", None)
+    client = _app(tmp_path)
+    for path in ("/admin/login", "/admin/setup", "/admin/lang", "/admin/theme"):
+        assert client.post(path, data={}, headers={"sec-fetch-site": "cross-site"}).status_code == 403
+        assert client.post(path, data={}, headers={"origin": "https://evil.example.org"}).status_code == 403
+    assert (
+        client.post("/admin/theme", data={"theme": "light"}, headers={"sec-fetch-site": "same-origin"}).status_code
+        == 303
+    )
+    # the forwarded host counts only from a trusted proxy
+    behind = _app(tmp_path / "b", trusted_proxies=["172.18.0.2"])
+    forwarded = {"origin": "https://bridge.example.org", "x-forwarded-host": "bridge.example.org"}
+    assert behind.post("/admin/theme", data={}, headers=forwarded).status_code == 303
+    assert client.post("/admin/theme", data={}, headers=forwarded).status_code == 403
