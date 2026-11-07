@@ -114,7 +114,7 @@ def compat(catalog: dict) -> str:
     rows = []
     for key, marks in COMPAT_ROWS:
         cells = "".join(
-            f'<td class="cmp-{"yes" if m else "no"}"><span aria-hidden="true">{"✓" if m else "–"}</span>'
+            f'<td class="cmp-{"yes" if m else "no"}"><span aria-hidden="true">{"✓" if m else "&ndash;"}</span>'
             f'<span class="sr">{catalog["cmp_yes" if m else "cmp_no"]}</span></td>'
             for m in marks
         )
@@ -122,7 +122,7 @@ def compat(catalog: dict) -> str:
     return (
         f'<div class="table compat" tabindex="0" role="region" aria-label="{title}"><table>'
         f'<caption class="sr">{title}</caption><thead><tr><td></td>{head}</tr></thead>'
-        f'<tbody>{"".join(rows)}</tbody></table></div>'
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
     )
 
 
