@@ -321,3 +321,11 @@ td.pick,th.pick{width:2.2rem;padding-right:0}
 .bulkbar span{flex:1}
 pre.report{margin:1rem 0;padding:1rem;overflow:auto;background:var(--night);border:1px solid var(--line);border-radius:var(--radius);font:.85rem/1.5 var(--mono);white-space:pre-wrap;word-break:break-word}
 :root[data-theme="light"] pre.report{background:#fff}
+.kindbox{margin-top:1rem}
+.kindbox h2{display:flex;align-items:center;gap:.6rem;margin:0 0 .7rem}
+.kind-base h2{color:var(--aurora)}.kind-update h2{color:var(--ice)}.kind-dlc h2{color:var(--violet)}.kind-cheats h2{color:var(--warn)}
+.filelist{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.filerow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.4rem 1rem;padding:.6rem .8rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.filerow .fmain{display:grid;gap:.1rem;min-width:0}
+.filerow .fname code{word-break:break-all}
+.filerow .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem}

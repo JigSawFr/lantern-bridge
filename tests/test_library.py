@@ -326,3 +326,18 @@ def test_the_library_can_be_narrowed_to_the_titles_that_have_cheats(tmp_path: Pa
     assert [t["title_id"] for t in exported] == ["0100AAAA00000000"]
     client.post("/admin/lang", data={"lang": "fr", "next": "/admin/library"})
     assert "2 cheats" in client.get("/admin/library").text
+
+
+def test_the_title_page_is_a_sheet_with_a_box_for_the_game_its_updates_dlc_and_cheats(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    client.app.state.runtime.projection.library.add_cheat(  # type: ignore[attr-defined]
+        platform="switch", title_id="0100AAAA00000000", build_id="AB12", text="[Lives]\n04000000 0 1", source="aero"
+    )
+    page = client.get("/admin/library/0100AAAA00000000").text
+    for box in ("base", "update", "dlc", "cheats"):
+        assert f'id="{box}"' in page, box
+    assert page.index('id="base"') < page.index('id="update"') < page.index('id="dlc"') < page.index('id="cheats"')
+    assert "v65536" in page and "<code>0100AAAA00001001</code>" in page and "AB12" in page
+    assert '<details class="fold" id="files">' in page and "SHA-256" in page  # the technical table stays, folded
+    zebra = client.get("/admin/library/0100BBBB00000000").text
+    assert 'id="base"' in zebra and 'id="update"' not in zebra and 'id="cheats"' not in zebra  # no empty box
