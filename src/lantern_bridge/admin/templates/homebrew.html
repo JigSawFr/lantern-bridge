@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Homebrew") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Homebrew") }}</h1>
+<p class="lede">{{ _("The releases of GitHub repositories, served to devices as homebrew: the bridge reads the latest release of each, keeps its .nro or .zip, and serves it again by itself when a newer one comes out. Only public repositories are read.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if rows %}
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Repository") }}</th><th>{{ _("Served") }}</th><th>{{ _("Asset") }}</th><th>{{ _("Read") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td><a href="https://github.com/{{ r.repo }}" rel="noreferrer">{{ r.repo }}</a>{% if r.kind %} <span class="pill">{{ r.kind }}</span>{% endif %}{% if r.prerelease %} <span class="pill">{{ _("pre-releases") }}</span>{% endif %}</td>
+    <td>{% if r.served %}<span class="pill ok">{{ r.tag }}</span>{% else %}<span class="dim">{{ _("not yet") }}</span>{% endif %}{% if r.error %}<br><span class="error small">{{ r.error }}</span>{% endif %}</td>
+    <td>{% if r.asset %}<code>{{ r.asset }}</code>{% if r.size %} <span class="dim small">{{ r.size | filesizeformat }}</span>{% endif %}{% else %}<span class="dim">–</span>{% endif %}</td>
+    <td>{% if r.checked %}{{ r.checked | when }}{% else %}<span class="dim">–</span>{% endif %}</td>
+    <td class="row">
+      <form method="post" action="/admin/homebrew/check"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="repo" value="{{ r.repo }}"><button class="ghost small">{{ _("Read now") }}</button></form>
+      <form method="post" action="/admin/homebrew/remove"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="back" value="homebrew"><input type="hidden" name="repo" value="{{ r.repo }}"><button class="ghost small" data-confirm="{{ _('Stop serving this repository?') }}">{{ _("Remove") }}</button></form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="empty">{{ _("No repository yet: add the address of one below, such as https://github.com/owner/name.") }}</p>
+{% endif %}
+<form method="post" action="/admin/homebrew/add" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="back" value="homebrew">
+  <h2>{{ _("Add a repository") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("GitHub address or owner/name") }} <input name="repo" required maxlength="200" autocomplete="off" placeholder="https://github.com/owner/name"></label>
+    <label>{{ _("Asset to serve (optional)") }} <input name="asset" maxlength="200" autocomplete="off" placeholder="*.nro" aria-describedby="h-asset"><small class="hint" id="h-asset" aria-hidden="true">{{ _("A name or a pattern, when the release has several files: by default its only .nro, else its only .zip.") }}</small></label>
+    <label>{{ _("Kind (optional)") }} <select name="kind"><option value="">{{ _("as the project says, else app") }}</option>{% for k in kinds %}<option value="{{ k }}">{{ k }}</option>{% endfor %}</select></label>
+  </div>
+  <p><label class="check"><input type="checkbox" name="prerelease"> {{ _("Serve a pre-release too, when it is the latest") }}</label></p>
+  <button>{{ _("Add") }}</button>
+</form>
+<p class="muted small">{{ _("GitHub allows 60 reads an hour without a token and 5 000 with one; a repository is read every six hours, and an unchanged release costs one light read. A project can describe itself with a lantern.json file among the assets of its release (id, name, kind, summary, description, author, license, tags, genres, language). A zip may only write under /switch/ in a folder named like the id, under /atmosphere/ or under /switch/.overlays/.") }}{% if token_set %} {{ _("A GitHub token is set.") }}{% endif %}</p>
+{% endblock %}
