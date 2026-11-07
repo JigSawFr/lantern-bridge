@@ -144,6 +144,8 @@ class Config:
     # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
     metrics: bool = False
     mqtt: Mqtt | None = None
+    # Megabytes free on the volume of the state below which the health says to look (it fails below 20).
+    low_disk_mb: int = 500
     # True: the bridge reads GitHub's latest release once a day and says on the overview when newer. Off by default.
     update_check: bool = False
     # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
@@ -165,6 +167,7 @@ class Config:
         data["atlas"] = self.atlas
         data["metrics"] = self.metrics
         data["update_check"] = self.update_check
+        data["low_disk_mb"] = self.low_disk_mb
         if self.mqtt is not None:
             data["mqtt"] = self.mqtt.table()
         if self.webhook is not None:
@@ -282,6 +285,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "atlas",
         "metrics",
         "update_check",
+        "low_disk_mb",
         "mqtt",
         "webhook",
         "sources",
@@ -309,6 +313,9 @@ def _parse(data: dict[str, Any]) -> Config:
     metrics = data.get("metrics", False)
     if not isinstance(metrics, bool):
         raise ConfigError("`metrics` must be true or false")
+    low_disk = data.get("low_disk_mb", 500)
+    if isinstance(low_disk, bool) or not isinstance(low_disk, int) or not 20 <= low_disk <= 10_000_000:
+        raise ConfigError("`low_disk_mb` must be a number of megabytes, 20 or more")
     update_check = data.get("update_check", False)
     if not isinstance(update_check, bool):
         raise ConfigError("`update_check` must be true or false")
@@ -365,6 +372,7 @@ def _parse(data: dict[str, Any]) -> Config:
         metrics=metrics,
         mqtt=mqtt,
         update_check=update_check,
+        low_disk_mb=low_disk,
         webhook=webhook,
         sources=sources,
         _extra=extra,

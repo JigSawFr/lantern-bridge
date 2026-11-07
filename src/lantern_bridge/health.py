@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 OK, WARN, FAIL = "ok", "warn", "fail"
 _ORDER = {OK: 0, WARN: 1, FAIL: 2}
-LOW_DISK = 500 << 20  # below this, a warning
+LOW_DISK = 500 << 20  # below this, a warning (the default: the settings say `low_disk_mb`)
 EMPTY_DISK = 20 << 20  # below this, the index cannot be written any more
 STALE_SCAN = 1800.0  # seconds without a read of a source (a shop is read every 5 minutes)
 OLD_ATLAS = 21 * 86400.0
@@ -53,7 +53,7 @@ def run(runtime: Runtime, now: float | None = None) -> list[Check]:
         checks.append(Check("index", FAIL, str(error)))
     try:
         free = shutil.disk_usage(runtime.state_dir).free
-        status = FAIL if free < EMPTY_DISK else WARN if free < LOW_DISK else OK
+        status = FAIL if free < EMPTY_DISK else WARN if free < runtime.config.low_disk_mb << 20 else OK
         checks.append(Check("disk", status, f"{free >> 20} MB free"))
     except OSError as error:
         checks.append(Check("disk", WARN, str(error)))

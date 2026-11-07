@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import shutil
 import threading
 import time
 from collections import deque
@@ -51,6 +52,7 @@ class SourceState:
     reachable: bool | None = None
     scanned: float | None = None  # unix time of the last read
     error: str | None = None
+    free: int | None = None  # bytes free on the volume of a folder, as of the last read
 
 
 @dataclass(slots=True)
@@ -242,6 +244,10 @@ class Runtime:
                 state.reachable, state.error = False, str(error)
                 continue
             state.reachable, state.scanned, state.error = True, time.time(), None
+            try:  # read here, in the scanning thread: a stalled network volume must not stall the pages
+                state.free = shutil.disk_usage(root).free
+            except OSError:
+                state.free = None
             self._note(source, result)
         sizes = {(row.source, row.path): row.size for row in self.index.pending(batch)}
         began = time.monotonic()

@@ -165,6 +165,7 @@ class Admin:
                     "reachable": seen.reachable if seen else None,
                     "scanned": seen.scanned if seen else None,
                     "error": seen.error if seen else None,
+                    "free": seen.free if seen else None,
                     "hashed": c["hashed"],
                     "pending": c["pending"],
                 }
@@ -928,6 +929,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.atlas = "atlas" in f
             config.metrics = "metrics" in f
             config.update_check = "update_check" in f
+            try:
+                config.low_disk_mb = int(f.get("low_disk_mb", "500") or 500)
+            except ValueError as error:
+                raise ConfigError("the disk limit is a number of megabytes") from error
             config.webhook = parse_webhook(f.get("webhook", "").strip())
             return None
 

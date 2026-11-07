@@ -44,7 +44,7 @@
   {% for s in state.sources %}
   <tr>
     <td><strong>{{ s.id }}</strong></td><td><code>{{ s.path }}</code></td>
-    <td>{% if s.reachable is none %}<span class="pill wait">{{ _("waiting") }}</span>{% elif s.reachable %}<span class="pill ok">{{ _("reachable") }}</span>{% else %}<span class="pill bad">{{ _("unreachable") }}</span><br><span class="error">{{ s.error }}</span>{% endif %}</td>
+    <td>{% if s.reachable is none %}<span class="pill wait">{{ _("waiting") }}</span>{% elif s.reachable %}<span class="pill ok">{{ _("reachable") }}</span>{% else %}<span class="pill bad">{{ _("unreachable") }}</span><br><span class="error">{{ s.error }}</span>{% endif %}{% if s.free is not none %}<br><span class="dim small">{{ s.free | size }} {{ _("free") }}</span>{% endif %}</td>
     <td>{{ s.scanned | when }}</td><td>{{ s.hashed }}</td><td>{{ s.pending }}</td>
     <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button class="ghost small" name="action" value="rehash" data-confirm="{{ _('Hash every file of this source again?') }}">{{ _("Rehash") }}</button></form></td>
   </tr>
