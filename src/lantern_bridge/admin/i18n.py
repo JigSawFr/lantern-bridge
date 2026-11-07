@@ -366,6 +366,8 @@ FR: dict[str, str] = {
     "yes": "oui",
     "Hash every file of this source again?": "Hacher de nouveau tous les fichiers de cette source ?",
     "Language": "Langue",
+    "Light theme": "Thème clair",
+    "Dark theme": "Thème sombre",
     "Move down": "Descendre",
     "Move up": "Monter",
     "Pages": "Pages",

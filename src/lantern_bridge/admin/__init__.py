@@ -69,6 +69,7 @@ log = logging.getLogger("lantern_bridge.admin")
 
 _BODY_LIMIT = 8192
 _COOKIE = "lb_session"
+_THEME_COOKIE = "lb_theme"
 _HEADERS = {
     "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
     "img-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
@@ -323,6 +324,7 @@ class Admin:
             name=self.config.name,
             developer=self.config.developer,
             lang=lang,
+            theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
             languages=LANGUAGES,
             here=request.url.path if request.url.path.startswith("/admin") else "/admin/",
             _=translator(lang),
@@ -440,6 +442,27 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 httponly=True,
                 secure=request.url.scheme == "https",
             )
+        return response
+
+    @router.post("/theme")
+    async def theme(request: Request) -> Response:
+        """Dark is the look of the pages; light is a choice of this browser, kept in a cookie."""
+        fields = await admin.form(request)
+        target = fields.get("next", "")
+        back = target if target.startswith("/admin") and "//" not in target and "\\" not in target else "/admin/"
+        response = RedirectResponse(back, status_code=303, headers=_HEADERS)
+        if fields.get("theme") == "light":
+            response.set_cookie(
+                _THEME_COOKIE,
+                "light",
+                max_age=365 * 86400,
+                path="/admin",
+                samesite="strict",
+                httponly=True,
+                secure=request.url.scheme == "https",
+            )
+        else:
+            response.delete_cookie(_THEME_COOKIE, path="/admin")
         return response
 
     @router.get("/setup")

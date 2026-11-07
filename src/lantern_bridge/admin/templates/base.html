@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}">
+<html lang="{{ lang }}" data-theme="{{ theme }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,6 +25,10 @@
     <form method="post" action="/admin/lang" class="lang" aria-label="{{ _('Language') }}">
       <input type="hidden" name="next" value="{{ here }}">
       {% for code in languages %}<button name="lang" value="{{ code }}"{% if code == lang %} aria-current="true"{% endif %}>{{ code }}</button>{% endfor %}
+    </form>
+    <form method="post" action="/admin/theme" class="theme">
+      <input type="hidden" name="next" value="{{ here }}">
+      <button name="theme" value="{{ 'dark' if theme == 'light' else 'light' }}" class="link">{{ _("Dark theme") if theme == "light" else _("Light theme") }}</button>
     </form>
     {% if session %}<form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="link">{{ _("Sign out") }}</button></form>{% endif %}
   </div>
