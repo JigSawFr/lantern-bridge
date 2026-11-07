@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 JigSawFr
+# SPDX-License-Identifier: MIT
+
+# What workflows.yml audits the workflows with. tools/zizmor-requirements.txt
+# pins it and its dependencies by hash; regenerate it after a change here:
+#   uv pip compile tools/zizmor-requirements.in --universal --generate-hashes \
+#     --python-version 3.11 --exclude-newer <a date two weeks ago> -o tools/zizmor-requirements.txt
+zizmor==1.31.1
