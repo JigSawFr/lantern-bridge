@@ -90,6 +90,26 @@ await test("phone: a table row becomes a labelled card", { width: 390, height: 8
   assert.ok((await page.locator("td[data-label]").count()) > 0, "cells carry their column's name");
 });
 
+await test("desktop: the settings pages sit under Manage, open with a click, close with Escape", { width: 1280, height: 800 }, async (page) => {
+  const button = page.locator(".more-btn");
+  const list = page.locator("#more-list");
+  assert.ok(await button.isVisible() && !(await list.isVisible()), "closed to start with");
+  await button.click();
+  assert.equal(await button.getAttribute("aria-expanded"), "true");
+  assert.ok(await list.getByRole("link", { name: "Settings" }).isVisible());
+  await page.keyboard.press("Escape");
+  assert.ok(!(await list.isVisible()), "Escape closes it");
+  assert.ok(await button.evaluate((el) => el === document.activeElement), "and gives the focus back");
+  await button.click();
+  await page.mouse.click(5, 400);
+  assert.ok(!(await list.isVisible()), "a click elsewhere closes it");
+});
+
+await test("phone: the settings pages are in the scrolling row, no Manage button", { width: 390, height: 800 }, async (page) => {
+  assert.ok(!(await page.locator(".more-btn").isVisible()));
+  assert.ok(await page.locator("#more-list").getByRole("link", { name: "Logs" }).isVisible());
+});
+
 await test("desktop: the search shortcut", { width: 1280, height: 800 }, async (page) => {
   await page.goto(`${BASE}/library`);
   await page.keyboard.press("/");
