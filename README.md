@@ -171,7 +171,25 @@ docker build -t lantern-bridge .
 docker run -p 8080:8080 -v ./config:/config -v /srv/games:/games:ro lantern-bridge
 ```
 
-To pair a device: `docker exec <container> lantern-bridge invite`. The image runs as an unprivileged user (uid 10001), so `./config` must be writable by it. For now it is built by the CI, not published.
+To pair a device: `docker exec <container> lantern-bridge invite`. The image runs as an unprivileged user (uid and gid 10001), so `./config` must be writable by it. For now it is built by the CI, not published.
+
+The bridge writes nowhere but `/config`, so the container can be locked down; the CI runs the image this way on every change:
+
+```yaml
+# compose.yaml
+services:
+  bridge:
+    image: lantern-bridge
+    ports: [ "8080:8080" ]
+    volumes:
+      - ./config:/config
+      - /srv/games:/games:ro
+    read_only: true
+    tmpfs: [ /tmp ]
+    cap_drop: [ ALL ]
+    security_opt: [ "no-new-privileges:true" ]
+    restart: unless-stopped
+```
 
 ## 📦 Releases
 

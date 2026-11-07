@@ -135,6 +135,24 @@ jobs:
             echo "$IMAGE:latest"
             echo EOF
           } >> "$GITHUB_OUTPUT"
+      # One platform, loaded, scanned before anything is pushed: a fixed high or
+      # critical vulnerability stops the release (the build is cached for the push)
+      - name: Build, to scan
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          tags: lantern-bridge:release
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: lantern-bridge:release
+          scanners: vuln,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
       - name: Build and push
         id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -159,6 +177,21 @@ jobs:
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+      # The image's own bill of materials (what Trivy finds in it), attested
+      #   gh attestation verify oci://ghcr.io/jigsawfr/lantern-bridge:X.Y.Z -R JigSawFr/lantern-bridge --predicate-type https://cyclonedx.org/bom
+      - name: SBOM of the image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          format: cyclonedx
+          output: image.cdx.json
+      - name: Image SBOM attestation
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: image.cdx.json
           push-to-registry: true
 
   # Every file attested, listed and attached
