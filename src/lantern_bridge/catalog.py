@@ -40,6 +40,7 @@ class TitleInfo:
     title_id: str
     name: str
     files: list[FileInfo] = field(default_factory=list)
+    genres: list[str] = field(default_factory=list)
 
     @property
     def types(self) -> set[str]:
@@ -87,6 +88,10 @@ class TitleInfo:
 class Catalog:
     titles: dict[str, TitleInfo]
 
+    def genres(self) -> list[str]:
+        """Every genre a title of the library has, in alphabetical order."""
+        return sorted({g for t in self.titles.values() for g in t.genres})
+
     def counts(self) -> dict[str, int]:
         out = {"all": len(self.titles), **dict.fromkeys(TYPES, 0)}
         for title in self.titles.values():
@@ -122,6 +127,7 @@ def build(index: Index, projection: Projection) -> Catalog:
     for title_id, title in titles.items():
         sheet = projection.title(title_id)
         title.name = (sheet.name if sheet is not None and sheet.name else None) or bases.get(title_id) or title.name
+        title.genres = list(sheet.genres or []) if sheet is not None else []
         title.files.sort(key=lambda f: (TYPES.index(f.type), f.version, f.source, f.path))
     return Catalog(titles)
 
@@ -167,6 +173,7 @@ def search(
     kind: str = "",
     source: str = "",
     state: str = "",
+    genre: str = "",
     sort: str = "name",
     page: int = 1,
     per_page: int = PAGE,
@@ -180,6 +187,8 @@ def search(
         if kind in TYPES and kind not in title.types:
             return False
         if source and source not in title.sources:
+            return False
+        if genre and genre not in title.genres:
             return False
         if state == "pending" and not title.pending:
             return False

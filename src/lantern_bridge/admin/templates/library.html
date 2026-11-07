@@ -6,8 +6,9 @@
 <p class="lede">{{ _("Everything the bridge knows, from every source: games, their updates and their DLC.") }}</p>
 
 <form class="toolbar" method="get" action="/admin/library" role="search" data-autosubmit>
-  <label class="grow">{{ _("Search") }} <input type="search" name="q" value="{{ f.q }}" placeholder="{{ _('A name or a title id') }}" maxlength="100"></label>
+  <label class="grow">{{ _("Search") }} <input type="search" name="q" id="q" value="{{ f.q }}" placeholder="{{ _('A name or a title id') }} ( / )" maxlength="100"></label>
   <label>{{ _("Source") }} <select name="source"><option value="">{{ _("All sources") }}</option>{% for s in sources %}<option value="{{ s }}"{% if f.source == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+  {% if genres %}<label>{{ _("Genre") }} <select name="genre"><option value="">{{ _("All genres") }}</option>{% for g in genres %}<option value="{{ g }}"{% if f.genre == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label>{% endif %}
   <label>{{ _("State") }} <select name="state">
     <option value="">{{ _("Any") }}</option>
     <option value="hashed"{% if f.state == "hashed" %} selected{% endif %}>{{ _("Hashed") }}</option>
@@ -22,7 +23,7 @@
 
 <nav class="chips" aria-label="{{ _('Kind') }}">
   {% for key, label in [("", _("All")), ("base", _("Games")), ("update", _("Updates")), ("dlc", _("DLC"))] %}
-  <a href="/admin/library?type={{ key }}{% if f.q %}&amp;q={{ f.q | urlencode }}{% endif %}{% if f.source %}&amp;source={{ f.source | urlencode }}{% endif %}{% if f.state %}&amp;state={{ f.state }}{% endif %}{% if f.sort %}&amp;sort={{ f.sort }}{% endif %}"{% if f.type == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key or "all"] }}</b></a>
+  <a href="/admin/library?type={{ key }}{% if f.q %}&amp;q={{ f.q | urlencode }}{% endif %}{% if f.source %}&amp;source={{ f.source | urlencode }}{% endif %}{% if f.state %}&amp;state={{ f.state }}{% endif %}{% if f.genre %}&amp;genre={{ f.genre | urlencode }}{% endif %}{% if f.sort %}&amp;sort={{ f.sort }}{% endif %}"{% if f.type == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key or "all"] }}</b></a>
   {% endfor %}
 </nav>
 
@@ -38,6 +39,7 @@
         {% if t.count("base") %}<span class="badge">{{ _("game") }}{% if t.latest %} v{{ t.latest }}{% endif %}</span>{% endif %}
         {% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span>{% endif %}
         {% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}
+        {% for g in t.genres[:2] %}<span class="badge genre">{{ g }}</span>{% endfor %}
         {% if t.pending %}<span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}
       </span>
       <span class="dim small">{{ t.size | size }} · {{ t.sources | join(", ") }}</span>

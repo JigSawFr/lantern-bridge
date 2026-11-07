@@ -142,3 +142,12 @@ def test_wikidatas_genre_labels_become_lanterns_genres() -> None:
     assert genres_of(("action-adventure game", "post-apocalyptic video game")) == ["adventure", "action"]
     assert genres_of(("farming simulator", "party video game")) == ["simulation", "party"]
     assert genres_of(("something nobody mapped",)) == []
+
+
+def test_the_library_filters_by_genre_from_the_sheets(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    shelf = client.get("/admin/library")
+    assert 'name="genre"' in shelf.text and "platformer" in shelf.text
+    assert "Aurora Quest" in client.get("/admin/library?genre=platformer").text
+    assert "Aurora Quest" not in client.get("/admin/library?genre=rpg").text
+    assert 'href="/admin/library"' in client.get("/admin/").text  # the tiles of the overview lead to the shelf

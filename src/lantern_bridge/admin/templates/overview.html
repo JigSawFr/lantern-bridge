@@ -5,9 +5,9 @@
 <p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
 {% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }} <a href="/admin/config">{{ _("Settings") }}</a></p>{% endif %}
 <section class="cards">
-  <div class="tile"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></div>
-  <div class="tile"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></div>
-  <div class="tile"><span class="n" data-bind="waiting">{{ state.waiting }}</span><a class="what" href="/admin/pairings">{{ _("pairings waiting") }}</a></div>
+  <a class="tile" href="/admin/library"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></a>
+  <a class="tile" href="/admin/library"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></a>
+  <a class="tile" href="/admin/pairings"><span class="n" data-bind="waiting">{{ state.waiting }}</span><span class="what">{{ _("pairings waiting") }}</span></a>
 </section>
 
 <h2>{{ _("Hashing") }}</h2>

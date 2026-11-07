@@ -31,12 +31,12 @@ code{background:rgb(255 255 255 / .06);border-radius:6px;padding:.05em .4em;font
 
 .top{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);background:rgb(11 20 36 / .78);border-bottom:1px solid var(--line)}
 .top::after{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:var(--grad);opacity:.7}
-.bar{max-width:72rem;margin:0 auto;padding:.6rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;align-items:center}
+.bar{max-width:76rem;margin:0 auto;padding:.6rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center}
 .brand{display:flex;align-items:center;gap:.65rem;font:600 1.05rem var(--display);color:var(--snow);text-decoration:none}
 .brand img{width:34px;height:34px}
 .brand small{display:block;font:500 .7rem var(--mono);color:var(--dusk);letter-spacing:.04em}
 nav{display:flex;flex-wrap:wrap;gap:.15rem;flex:1}
-nav a{color:var(--mist);text-decoration:none;padding:.45rem .62rem;border-radius:999px;font-weight:500;font-size:.95rem;border:1px solid transparent}
+nav a{color:var(--mist);text-decoration:none;padding:.4rem .5rem;border-radius:999px;font-weight:500;font-size:.9rem;border:1px solid transparent}
 nav a:hover{color:var(--snow);background:rgb(255 255 255 / .05)}
 nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 .tools{display:flex;gap:.5rem;align-items:center}
@@ -173,3 +173,11 @@ td[colspan]{color:var(--mist);text-align:center;padding:1.6rem 1rem}
 @media (max-width:40rem){.hero{flex-direction:column}.shelf{grid-template-columns:1fr}}
 .tone-0{--h:150;--h2:210}.tone-1{--h:162;--h2:222}.tone-2{--h:174;--h2:234}.tone-3{--h:186;--h2:246}.tone-4{--h:198;--h2:258}.tone-5{--h:210;--h2:270}.tone-6{--h:222;--h2:282}.tone-7{--h:234;--h2:294}.tone-8{--h:246;--h2:306}.tone-9{--h:258;--h2:318}.tone-10{--h:270;--h2:330}.tone-11{--h:282;--h2:342}
 /* The pages' CSP forbids inline styles: a title's colour is one of these twelve classes. */
+
+/* -- finishing: tiles that are links, genre badges, a focused live block ------------------------------------ */
+a.tile{display:block;color:inherit;text-decoration:none}
+a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204 / .12)}
+.badge.genre{color:var(--ice);border-color:rgb(51 187 255 / .35)}
+.card.atlas dl{background:none;border:0;padding:0;margin:.5rem 0}
+.actions{margin:1rem 0}
+[data-live]{min-height:12rem}

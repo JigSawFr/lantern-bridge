@@ -12,6 +12,8 @@ COOKIE = "lb_lang"
 FR: dict[str, str] = {
     "Library": "Bibliothèque",
     "DLC": "DLC",
+    "Genre": "Genre",
+    "All genres": "Tous les genres",
     "From Atlas": "D'après Atlas",
     "Series": "Série",
     "Developers": "Développeurs",
