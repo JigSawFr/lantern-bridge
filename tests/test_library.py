@@ -179,3 +179,24 @@ def test_a_package_the_name_does_not_identify_is_listed_as_ignored(tmp_path: Pat
     assert "files ignored" not in client.get("/admin/library").text
     assert "Every package" in client.get("/admin/library/ignored").text
     assert _client(tmp_path).get("/admin/library/ignored").status_code == 303  # signed out: sent to the login
+
+
+def test_duplicates_and_orphans_are_pointed_out(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    games = tmp_path / "games"
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    (games / "Aurora copy [0100AAAA00000000][v0].nsp").write_bytes(b"base")  # the same bytes
+    (games / "Aurora Quest [0100AAAA00000800][v65536].nsp").write_bytes(b"one")
+    (games / "Aurora Quest up [0100AAAA00000800][v65536].nsp").write_bytes(b"two")  # the same version, other bytes
+    (games / "Night [0100BBBB00000800][v1].nsp").write_bytes(b"orphan")  # an update, no game
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    runtime.cycle(batch=20)
+    kinds = [(i.kind, i.title_id) for i in runtime.browser.catalog().issues()]
+    assert kinds == [
+        ("same_content", "0100AAAA00000000"),
+        ("same_version", "0100AAAA00000000"),
+        ("no_base", "0100BBBB00000000"),
+    ]
+    page = client.get("/admin/library/checks")
+    assert page.status_code == 200 and "The same file twice" in page.text and "without its game" in page.text
+    assert "3 things to check" in client.get("/admin/library").text

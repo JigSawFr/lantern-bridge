@@ -444,6 +444,16 @@ def mount(app: FastAPI, admin: Admin) -> None:
         projection = admin.runtime.projection
         return {i for i in title_ids if (sheet := projection.title(i)) is not None and sheet.icon is not None}
 
+    @router.get("/library/checks")
+    async def library_checks(request: Request) -> Response:
+        """Duplicates and updates without their game."""
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        return admin.page(
+            request, "checks.html", session, active="library", issues=admin.runtime.browser.catalog().issues()
+        )
+
     @router.get("/library/ignored")
     async def ignored_files(request: Request) -> Response:
         """The packages of the folders that the library leaves out, and why."""
@@ -503,6 +513,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             genres=catalog.genres(),
             icons=icons_of(t.title_id for t in found.titles),
             ignored=sum(len(v) for v in admin.runtime.stats.ignored.values()),
+            issues=len(catalog.issues()),
             sources=[s.id for s in admin.config.sources],
             f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
         )
