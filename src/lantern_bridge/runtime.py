@@ -26,6 +26,7 @@ from lantern_bridge.hashing import scan_packages
 from lantern_bridge.history import History
 from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
+from lantern_bridge.notify import Notifier
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
@@ -95,6 +96,9 @@ class Runtime:
         self.atlas = Atlas(state_dir / "atlas.json") if config.atlas else None
         self.projection.atlas = self.atlas
         self.history = History(state_dir / "activity.sqlite3")
+        self.notifier = Notifier(config.notify, config.name) if config.notify else None
+        if self.notifier is not None:
+            self.history.listeners.append(self.notifier.on_event)
         self.traffic = Traffic(history=self.history)
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
@@ -363,6 +367,8 @@ class Runtime:
             self.publisher.stop()
         if self.webhook is not None:
             self.webhook.close()
+        if self.notifier is not None:
+            self.notifier.close()
         if self.updates is not None:
             self.updates.close()
         self._stop.set()

@@ -20,6 +20,9 @@
   <div class="form-grid">
     <label>{{ _("Address called when scans find changes (optional)") }} <input name="webhook" type="url" value="{{ file.webhook or '' }}" maxlength="512" autocomplete="off" placeholder="https://"></label>
   </div>
+  <div class="form-grid">
+    <label>{{ _("Address that gets a text when a source stops or a new version is out (optional)") }} <input name="notify" type="url" value="{{ file.notify or '' }}" maxlength="512" autocomplete="off" placeholder="https://ntfy.sh/…" aria-describedby="h-notify"><small class="hint" id="h-notify" aria-hidden="true">{{ _("A plain-text POST with a title and a priority, as ntfy reads it. No path and no title of your library is in it. A failed call is not repeated.") }}</small></label>
+  </div>
   <p class="dim small">{{ _("The bridge sends one POST of JSON with how many files were added, changed or removed per source (no path, no title), at most every ten seconds. A failed call is not repeated.") }}</p>
   <p><label class="check"><input type="checkbox" name="public"{% if file.public %} checked{% endif %}> {{ _("Public: anyone who reaches the server reads the library") }}</label></p>
   <p><label class="check"><input type="checkbox" name="atlas"{% if file.atlas %} checked{% endif %}> {{ _("Atlas: fill in genres, developer and publisher (the bridge fetches one public file from GitHub once a day)") }}</label></p>

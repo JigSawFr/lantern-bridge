@@ -78,8 +78,8 @@ def today(now: float | None = None) -> str:
 class History:
     def __init__(self, path: Path) -> None:
         self._lock = threading.Lock()
-        #: Called with each line written to the journal (the MQTT publisher sets it); never raises into the caller.
-        self.listener: Callable[[Event], None] | None = None
+        #: Called with each line written to the journal (MQTT, the notifier); one that fails never reaches the caller.
+        self.listeners: list[Callable[[Event], None]] = []
         self._db: sqlite3.Connection | None = None
         try:
             db = sqlite3.connect(path, check_same_thread=False)
@@ -184,9 +184,10 @@ class History:
         except sqlite3.Error as error:
             log.warning("the journal could not be written: %s", error)
             return
-        if self.listener is not None:
+        line = Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:120])
+        for listener in list(self.listeners):
             try:
-                self.listener(Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:120]))
+                listener(line)
             except Exception:
                 log.exception("a journal listener failed")
 

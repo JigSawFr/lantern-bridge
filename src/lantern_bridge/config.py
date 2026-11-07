@@ -150,6 +150,9 @@ class Config:
     update_check: bool = True
     # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
     webhook: str | None = None
+    # An address that gets a short text when something needs a person (a source down or back, a newer release): an
+    # ntfy topic, a Gotify or Home Assistant notify hook, any tool that takes a POST. None: no call.
+    notify: str | None = None
     sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -172,6 +175,8 @@ class Config:
             data["mqtt"] = self.mqtt.table()
         if self.webhook is not None:
             data["webhook"] = self.webhook
+        if self.notify is not None:
+            data["notify"] = self.notify
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -192,17 +197,17 @@ def _source_table(source: Source) -> dict[str, Any]:
     return table
 
 
-def parse_webhook(raw: object) -> str | None:
+def parse_webhook(raw: object, key: str = "webhook") -> str | None:
     """The address that gets a POST, or None (an empty text is none)."""
     if raw is None or raw == "":
         return None
     if not isinstance(raw, str):
-        raise ConfigError("`webhook` must be an address")
+        raise ConfigError(f"`{key}` must be an address")
     parsed = urlsplit(raw.strip())
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        raise ConfigError("`webhook` must be an http or https address")
+        raise ConfigError(f"`{key}` must be an http or https address")
     if parsed.username or parsed.password:
-        raise ConfigError("no credentials in the `webhook` address: put a secret in its path if the service wants one")
+        raise ConfigError(f"no credentials in the `{key}` address: put a secret in its path if the service wants one")
     return raw.strip()
 
 
@@ -288,6 +293,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "low_disk_mb",
         "mqtt",
         "webhook",
+        "notify",
         "sources",
     }
     extra = {k: v for k, v in data.items() if k not in known}
@@ -321,6 +327,7 @@ def _parse(data: dict[str, Any]) -> Config:
         raise ConfigError("`update_check` must be true or false")
     mqtt = parse_mqtt(data.get("mqtt"))
     webhook = parse_webhook(data.get("webhook"))
+    notify = parse_webhook(data.get("notify"), "notify")
     sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -374,6 +381,7 @@ def _parse(data: dict[str, Any]) -> Config:
         update_check=update_check,
         low_disk_mb=low_disk,
         webhook=webhook,
+        notify=notify,
         sources=sources,
         _extra=extra,
         _extra_sources=extra_sources,

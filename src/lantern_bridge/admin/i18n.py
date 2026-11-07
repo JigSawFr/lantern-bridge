@@ -24,6 +24,8 @@ FR: dict[str, str] = {
     "Leave empty for a broker that asks for no login.": "Laissez vide pour un courtier qui ne demande pas d'identifiant.",
     "The name of an environment variable that holds the password, never the password itself.": "Le nom d'une variable d'environnement qui contient le mot de passe, jamais le mot de passe lui-même.",
     "Topics start with this, then the bridge's id. Change it only to keep several bridges apart.": "Les sujets commencent par ceci, puis l'identifiant du pont. À changer seulement pour séparer plusieurs ponts.",
+    "Address that gets a text when a source stops or a new version is out (optional)": "Adresse qui reçoit un texte quand une source s'arrête ou qu'une nouvelle version sort (facultatif)",
+    "A plain-text POST with a title and a priority, as ntfy reads it. No path and no title of your library is in it. A failed call is not repeated.": "Un POST en texte brut avec un titre et une priorité, comme ntfy le lit. Aucun chemin ni titre de votre bibliothèque n'y figure. Un appel qui échoue n'est pas répété.",
     "Backup restored": "Sauvegarde restaurée",
     "Download as CSV": "Télécharger en CSV",
     "Download as JSON": "Télécharger en JSON",
