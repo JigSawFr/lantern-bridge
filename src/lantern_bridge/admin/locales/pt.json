@@ -530,5 +530,18 @@
  "See what would change": "Ver o que mudaria",
  "The settings were imported.": "As definições foram importadas.",
  "The file cannot be used:": "Não é possível utilizar o ficheiro:",
- "This file changes nothing.": "Este ficheiro não altera nada."
+ "This file changes nothing.": "Este ficheiro não altera nada.",
+ "Lantern Bridge": "Lantern Bridge",
+ "Something needs a look.": "Há algo que precisa de atenção.",
+ "A device is waiting to pair.": "Um dispositivo está à espera de emparelhar.",
+ "A source does not answer.": "Uma fonte não responde.",
+ "A conversion failed.": "Uma conversão falhou.",
+ "Turn alerts off": "Desativar os alertas",
+ "Alerts are on for this browser.": "Os alertas estão ativados neste navegador.",
+ "Alerts are off for this browser.": "Os alertas estão desativados neste navegador.",
+ "This browser refuses alerts from this page: allow them in its site settings.": "Este navegador recusa os alertas desta página: permita-os nas definições do site.",
+ "This browser cannot show alerts.": "Este navegador não consegue mostrar alertas.",
+ "Alerts on this device": "Alertas neste dispositivo",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "As páginas podem ser instaladas como aplicação (a partir do menu do navegador) e mostram um alerta quando algo precisa de atenção: uma fonte que não responde, um dispositivo à espera de emparelhar, uma conversão falhada. Os alertas chegam enquanto as páginas estão abertas, num separador ou na aplicação; nada é enviado através de terceiros.",
+ "Turn alerts on": "Ativar os alertas"
 }

@@ -78,7 +78,8 @@ _COOKIE = "lb_session"
 _THEME_COOKIE = "lb_theme"
 _HEADERS = {
     "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
-    "img-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    "img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; form-action 'self'; base-uri 'none'; "
+    "frame-ancestors 'none'",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -92,6 +93,9 @@ _STATIC = {
     "app.js": "text/javascript",
     "theme.js": "text/javascript",
     "bridge.svg": "image/svg+xml",
+    "icon-192.png": "image/png",
+    "icon-512.png": "image/png",
+    "manifest.webmanifest": "application/manifest+json",
     "sora.woff2": "font/woff2",
     "figtree.woff2": "font/woff2",
     "jetbrains-mono.woff2": "font/woff2",
@@ -680,6 +684,15 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return Response(status_code=404)
         return Response(
             (static / name).read_bytes(), media_type=kind, headers={**_HEADERS, "Cache-Control": "max-age=3600"}
+        )
+
+    @router.get("/sw.js")
+    async def worker() -> Response:
+        """The service worker, at the root of the pages so that it covers them all (it caches nothing)."""
+        return Response(
+            (static / "sw.js").read_bytes(),
+            media_type="text/javascript",
+            headers={**_HEADERS, "Cache-Control": "no-cache"},
         )
 
     @router.post("/lang")

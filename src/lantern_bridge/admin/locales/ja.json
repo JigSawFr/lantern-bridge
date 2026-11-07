@@ -530,5 +530,18 @@
  "See what would change": "変更内容を確認",
  "The settings were imported.": "設定をインポートしました。",
  "The file cannot be used:": "このファイルは使用できません:",
- "This file changes nothing.": "このファイルによる変更はありません。"
+ "This file changes nothing.": "このファイルによる変更はありません。",
+ "Lantern Bridge": "Lantern Bridge",
+ "Something needs a look.": "確認が必要なものがあります。",
+ "A device is waiting to pair.": "ペアリング待ちのデバイスがあります。",
+ "A source does not answer.": "応答しないソースがあります。",
+ "A conversion failed.": "変換に失敗しました。",
+ "Turn alerts off": "通知をオフにする",
+ "Alerts are on for this browser.": "このブラウザーでは通知がオンです。",
+ "Alerts are off for this browser.": "このブラウザーでは通知がオフです。",
+ "This browser refuses alerts from this page: allow them in its site settings.": "このブラウザーはこのページからの通知を拒否しています。サイトの設定で許可してください。",
+ "This browser cannot show alerts.": "このブラウザーは通知を表示できません。",
+ "Alerts on this device": "このデバイスの通知",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "ページはアプリとしてインストールでき（ブラウザーのメニューから）、確認が必要なこと（応答しないソース、ペアリング待ちのデバイス、失敗した変換）があると通知を表示します。通知はページが開いている間（タブまたはアプリ内）に届きます。第三者を介して何かが送信されることはありません。",
+ "Turn alerts on": "通知をオンにする"
 }
