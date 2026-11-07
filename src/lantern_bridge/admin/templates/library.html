@@ -3,7 +3,7 @@
 {% macro link(page) %}/admin/library?{% for k, v in f.items() if v %}{{ k }}={{ v | urlencode }}&amp;{% endfor %}page={{ page }}{% endmacro %}
 {% block body %}
 <h1>{{ _("Library") }}</h1>
-<p class="lede">{{ _("Everything the bridge knows, from every source: games, their updates and their DLC.") }}</p>
+<p class="lede">{{ _("Everything the bridge knows, from every source: games, their updates and their DLC.") }}{% if ignored %} <a href="/admin/library/ignored">{{ ignored }} {{ _("files ignored") }}</a>{% endif %}</p>
 
 <form class="toolbar" method="get" action="/admin/library" role="search" data-autosubmit>
   <label class="grow">{{ _("Search") }} <input type="search" name="q" id="q" value="{{ f.q }}" placeholder="{{ _('A name or a title id') }} ( / )" maxlength="100"></label>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Ignored files") }}{% endblock %}
+{% block body %}
+<p class="crumb"><a href="/admin/library">← {{ _("Library") }}</a></p>
+<h1>{{ _("Ignored files") }}</h1>
+<p class="lede">{{ _("Packages in the folders that the library leaves out: the title id is missing from their name. Rename them as Name [0100ABCD00010000][v0].nsp and they join the library at the next scan.") }}</p>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th></tr></thead>
+  <tbody>
+  {% for source, path, size in files %}
+  <tr><td><code>{{ path }}</code></td><td>{{ source }}</td><td>{{ size | size }}</td></tr>
+  {% else %}
+  <tr><td colspan="3">{{ _("Every package of the folders is in the library.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

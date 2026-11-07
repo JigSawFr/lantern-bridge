@@ -162,3 +162,20 @@ def test_the_covers_come_from_the_sheet_when_the_bridge_holds_them(tmp_path: Pat
     assert image.status_code == 200 and image.content == png and image.headers["content-type"] == "image/png"
     assert client.get("/admin/library/0100AAAA00000000/image/shot-3").status_code == 404
     assert client.get("/admin/library/0100AAAA00000000/image/..%2Fx").status_code == 404
+
+
+def test_a_package_the_name_does_not_identify_is_listed_as_ignored(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    games = tmp_path / "games"
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    (games / "mystery game.nsp").write_bytes(b"1234")
+    (games / "notes.txt").write_bytes(b"not a package")
+    client.app.state.runtime.cycle(batch=5)  # type: ignore[attr-defined]
+    assert "1 files ignored" in client.get("/admin/library").text
+    page = client.get("/admin/library/ignored")
+    assert page.status_code == 200 and "mystery game.nsp" in page.text and "notes.txt" not in page.text
+    (games / "mystery game.nsp").rename(games / "Mystery [0100BBBB00000000][v0].nsp")
+    client.app.state.runtime.cycle(batch=5)  # type: ignore[attr-defined]
+    assert "files ignored" not in client.get("/admin/library").text
+    assert "Every package" in client.get("/admin/library/ignored").text
+    assert _client(tmp_path).get("/admin/library/ignored").status_code == 303  # signed out: sent to the login

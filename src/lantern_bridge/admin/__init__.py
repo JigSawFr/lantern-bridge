@@ -444,6 +444,15 @@ def mount(app: FastAPI, admin: Admin) -> None:
         projection = admin.runtime.projection
         return {i for i in title_ids if (sheet := projection.title(i)) is not None and sheet.icon is not None}
 
+    @router.get("/library/ignored")
+    async def ignored_files(request: Request) -> Response:
+        """The packages of the folders that the library leaves out, and why."""
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        files = [(source, path, size) for source, found in admin.runtime.stats.ignored.items() for path, size in found]
+        return admin.page(request, "ignored.html", session, active="library", files=sorted(files))
+
     @router.get("/library/{title_id}/image/{kind}")
     async def title_image(title_id: str, kind: str, request: Request) -> Response:
         """An image of a title's sheet (icon, banner or shot-N), read from what the library serves."""
@@ -493,6 +502,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             counts=catalog.counts(),
             genres=catalog.genres(),
             icons=icons_of(t.title_id for t in found.titles),
+            ignored=sum(len(v) for v in admin.runtime.stats.ignored.values()),
             sources=[s.id for s in admin.config.sources],
             f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
         )
