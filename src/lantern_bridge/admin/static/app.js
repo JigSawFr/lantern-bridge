@@ -124,6 +124,14 @@
     });
   }
 
+  // -- a settings card that was edited says so, and its Save sticks to the bottom of the screen -------------
+  for (const form of document.querySelectorAll("form[data-dirty]")) {
+    const note = form.querySelector("[data-dirty-note]");
+    const mark = () => { form.classList.add("dirty"); if (note) note.hidden = false; };
+    form.addEventListener("input", mark);
+    form.addEventListener("change", mark);
+  }
+
   // -- a title with files waiting to be hashed refreshes itself until they are done ---------------------
   if (document.querySelector("[data-watch-pending]")) {
     setTimeout(() => { if (!document.querySelector("dialog[open]")) location.reload(); }, 3000);
