@@ -6,7 +6,7 @@
   <tr>
     <td><a href="/admin/library/{{ j.title_id }}"><code>{{ j.name }}</code></a><br><span class="dim small">{{ j.source }}</span></td>
     <td>{{ _("Compress to {format}", format=j.target | upper) if j.action == "compress" else _("Decompress to {format}", format=j.target | upper) }}{% if j.delete_original %}<br><span class="dim small">{{ _("then the original is deleted") }}</span>{% endif %}</td>
-    <td><span class="pill {{ 'ok' if j.state == 'done' else 'wait' if j.state in ('queued', 'running') else 'bad' }}">{{ {"queued": _("queued"), "running": _("running"), "done": _("done"), "failed": _("failed"), "cancelled": _("cancelled")}[j.state] }}</span>{% if j.message %}<br><span class="dim small">{{ _(j.message) }}</span>{% endif %}</td>
+    <td><span class="pill {{ 'ok' if j.state == 'done' else 'wait' if j.state in ('queued', 'running') else 'bad' }}{{ ' live' if j.state == 'running' }}">{{ {"queued": _("queued"), "running": _("running"), "done": _("done"), "failed": _("failed"), "cancelled": _("cancelled")}[j.state] }}</span>{% if j.message %}<br><span class="dim small">{{ _(j.message) }}</span>{% endif %}</td>
     <td>{% include "_jobprogress.html" %}</td>
     <td>{% if j.state in ("queued", "running") %}<form method="post" action="/admin/tasks/{{ j.id }}/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" data-confirm="{{ _('Cancel this task?') }}">{{ _("Cancel") }}</button></form>{% endif %}</td>
   </tr>

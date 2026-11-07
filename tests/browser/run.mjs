@@ -228,6 +228,28 @@ await test("the live block shows a server event at once, not at the next tick", 
   assert.ok(Date.now() - began < 1800, "the block changed well before the idle wait of five seconds");
 });
 
+await test("a changed figure of a live block lights up once, and the header says the pages are live", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/activity`);
+  await page.waitForSelector("[data-livestate]:not([hidden]):not(.down)", { timeout: 4000 });
+  assert.equal((await page.locator("[data-livestate]").innerText()).trim(), "live");
+  await page.waitForFunction(() => document.querySelector("[data-live]").dataset.html !== undefined, null, { timeout: 4000 });
+  await page.waitForTimeout(1500);
+  await page.request.get(`${BASE.replace("/admin", "")}/api/lantern/v1/apps`); // the counters of the tiles change
+  await page.waitForSelector("[data-live] .flash, [data-live] .pop", { timeout: 4000 });
+  await page.context().setOffline(true);
+  await page.waitForSelector("[data-livestate].down", { timeout: 4000 });
+  assert.equal((await page.locator("[data-livestate]").getAttribute("aria-label")), "reconnecting…");
+  await page.context().setOffline(false);
+  await page.waitForSelector("[data-livestate]:not(.down)", { timeout: 8000 });
+});
+
+await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`${BASE}/`);
+  const moving = await page.evaluate(() => [...document.querySelectorAll("main *, .livestate")].filter((el) => getComputedStyle(el).animationName !== "none").length);
+  assert.equal(moving, 0);
+});
+
 for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone", { width: 390, height: 800 }]]) {
   await test(`${label}: the library list can be ticked, and the bar follows`, size, async (page) => {
     await page.goto(`${BASE}/library?view=list`);

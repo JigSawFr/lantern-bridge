@@ -13,11 +13,46 @@
     input.files[0].text().then((text) => { if (box) box.value = text; }).catch(() => {});
   });
 
-  // -- overview ---------------------------------------------------------------------------------------
+  // -- motion: numbers count, bars glide, a changed value lights up once; nothing moves for who asked for less ------
+  const calm = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const tween = (el, from, to, step, ms = 650) => {
+    const id = (el.lbTween || 0) + 1;
+    el.lbTween = id;
+    if (calm || from === to || !Number.isFinite(from)) return step(to, true);
+    const start = performance.now();
+    const frame = (now) => {
+      if (el.lbTween !== id) return; // a newer value took over
+      const t = Math.min(1, (now - start) / ms);
+      step(from + (to - from) * (1 - (1 - t) ** 3), t === 1);
+      if (t < 1) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  };
+  const flash = (el, name = "flash") => {
+    if (calm) return;
+    el.classList.remove(name);
+    void el.offsetWidth; // the animation starts again
+    el.classList.add(name);
+  };
+  const WHOLE = /^\d+$/;
+  const count = (el, text) => {
+    const old = el.textContent;
+    if (old === text) return;
+    if (WHOLE.test(old) && WHOLE.test(text)) tween(el, Number(old), Number(text), (v, end) => { el.textContent = end ? text : String(Math.round(v)); });
+    else el.textContent = text;
+    flash(el, "pop");
+  };
+  const glide = (bar, max, value) => {
+    const from = Number(bar.value);
+    bar.max = max;
+    tween(bar, from, value, (v) => { bar.value = v; });
+  };
+
+  // -- overview -----------------------------------------------------------------------------------------
   const bind = (state) => {
     for (const el of document.querySelectorAll("[data-bind]")) {
       const value = state[el.dataset.bind];
-      if (value !== undefined && value !== null) el.textContent = value;
+      if (value !== undefined && value !== null) count(el, String(value));
     }
     const total = Number(state.total) > 0;
     const working = Number(state.pending) > 0;
@@ -25,8 +60,36 @@
     for (const el of document.querySelectorAll("[data-done]")) el.hidden = !total || working;
     for (const el of document.querySelectorAll("[data-idle]")) el.hidden = total;
     const bar = document.getElementById("progress");
-    if (bar) { bar.max = state.total || 1; bar.value = state.hashed; }
+    if (bar) {
+      glide(bar, state.total || 1, Number(state.hashed) || 0);
+      bar.classList.toggle("working", working);
+      const card = bar.closest(".card");
+      if (card) card.classList.toggle("working", working);
+    }
   };
+  // -- the live state in the header: every stream says whether it is up; one down reads "reconnecting…" -------
+  const status = (() => {
+    const el = document.querySelector("[data-livestate]");
+    const down = new Set();
+    let seen = false;
+    const show = () => {
+      if (!el || !seen) return;
+      const up = down.size === 0, text = up ? el.dataset.on : el.dataset.off;
+      el.hidden = false;
+      el.classList.toggle("down", !up);
+      el.title = text;
+      el.setAttribute("aria-label", text);
+      const txt = el.querySelector(".txt");
+      if (txt) txt.textContent = text;
+    };
+    window.addEventListener("offline", () => { down.add("network"); show(); });
+    window.addEventListener("online", () => { down.delete("network"); show(); });
+    return (key, up) => {
+      seen = true;
+      if (up) down.delete(key); else down.add(key);
+      show();
+    };
+  })();
   // One server-sent stream per followed address: the server sends the body when it changes. Without
   // EventSource (or when the stream cannot open) the same address is asked again every two seconds.
   const follow = (url, apply) => {
@@ -34,13 +97,18 @@
     const poll = () => {
       if (timer) return;
       timer = setInterval(() => {
-        if (!document.hidden) fetch(url, { credentials: "same-origin" }).then((r) => (r.ok ? r.text() : Promise.reject(r.status))).then(apply).catch(() => {});
+        if (document.hidden) return;
+        fetch(url, { credentials: "same-origin" })
+          .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+          .then((text) => { status(url, true); apply(text); })
+          .catch(() => status(url, false));
       }, 2000);
     };
     if (!window.EventSource) return poll();
     const source = new EventSource(`/admin/live?u=${encodeURIComponent(url)}`);
-    source.onmessage = (e) => { try { apply(JSON.parse(e.data)); } catch (_) { /* a broken line is skipped */ } };
-    source.onerror = () => { if (source.readyState === EventSource.CLOSED) { source.close(); poll(); } };
+    source.onopen = () => status(url, true);
+    source.onmessage = (e) => { status(url, true); try { apply(JSON.parse(e.data)); } catch (_) { /* a broken line is skipped */ } };
+    source.onerror = () => { status(url, false); if (source.readyState === EventSource.CLOSED) { source.close(); poll(); } };
   };
 
   // -- Convert…: the result's expected size follows the level and the mode ---------------------------------------
@@ -146,15 +214,43 @@
   setInterval(() => { if (!document.hidden) ago(document); }, 30000);
 
   // -- blocks that follow the server: their HTML arrives when it changes ------------------------------------
+  // The new HTML takes the block's place; what changed in it is shown: a cell or a figure lights up once, a
+  // number counts to its new value, a bar glides, a row that was not there slides in.
+  const PICK = "td, .tile .n, .pill, progress";
+  const swap = (live, html) => {
+    const next = document.createElement("div");
+    next.innerHTML = html;
+    ago(next);
+    const was = [...live.querySelectorAll(PICK)], now = [...next.querySelectorAll(PICK)];
+    const rows = new Set([...live.querySelectorAll("tbody tr")].map((tr) => tr.textContent.trim()));
+    const changes = [];
+    if (was.length === now.length) {
+      now.forEach((el, i) => {
+        const old = was[i];
+        if (el.tagName === "PROGRESS") { if (old.tagName === "PROGRESS") changes.push(["bar", el, Number(old.value)]); return; }
+        if (el.querySelector(PICK) || el.querySelector("time.ago")) return; // its parts speak for it; a moment ages by itself
+        const before = old.textContent.trim(), after = el.textContent.trim();
+        if (before !== after) changes.push([el.matches(".tile .n") ? "count" : "flash", el, before]);
+      });
+    }
+    live.replaceChildren(...next.childNodes);
+    for (const [kind, el, before] of changes) {
+      if (kind === "bar") { const to = Number(el.value); el.value = before; glide(el, Number(el.max), to); }
+      else if (kind === "count") { const text = el.textContent; el.textContent = before; count(el, text); }
+      else flash(el);
+    }
+    if (!changes.length && rows.size) {
+      for (const tr of live.querySelectorAll("tbody tr")) if (!rows.has(tr.textContent.trim())) flash(tr, "enter");
+    }
+  };
   for (const live of document.querySelectorAll("[data-live]")) {
     if (!live.dataset.live.startsWith("/")) continue;
     follow(live.dataset.live, (html) => {
       if (document.hidden || html === live.dataset.html) return;
       if (live.contains(document.activeElement) && document.activeElement !== document.body) return; // not under a click or a keyboard
-      live.innerHTML = html;
+      swap(live, html);
       live.dataset.html = html;
       labelTables(live);
-      ago(live);
     });
   }
 
@@ -426,6 +522,7 @@
     setTimeout(() => {
       for (const button of form.querySelectorAll("button:not([type=button])")) {
         button.disabled = true;
+        button.setAttribute("aria-busy", "true");
         if (!button.classList.contains("link")) button.textContent = say("working");
       }
     }, 0);
