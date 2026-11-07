@@ -28,6 +28,7 @@ from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 from lantern_bridge.traffic import Traffic
+from lantern_bridge.updates import Updates
 from lantern_bridge.upstream import AeroRequests, AeroSaves, BridgeLibrary, Cheats, Ledger, Logins
 from lantern_bridge.webhook import Webhook
 
@@ -77,6 +78,8 @@ class Runtime:
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
         self.publisher: Publisher | None = None
+        self.updates = Updates() if config.update_check else None
+        self._updates_thread: threading.Thread | None = None
         self.webhook = Webhook(config.webhook, config.uid, config.name) if config.webhook else None
         self._shop_scanned: dict[str, float] = {}
         self._changed: set[str] = set()  # shops that said something changed
@@ -301,6 +304,11 @@ class Runtime:
         self._wake.set()
 
     def start(self) -> None:
+        if self.updates is not None:
+            self._updates_thread = threading.Thread(
+                target=self.updates.run, args=(self._stop,), name="lantern-bridge-updates", daemon=True
+            )
+            self._updates_thread.start()
         if self.config.mqtt is not None:
             self.publisher = Publisher(self, self.config.mqtt)
             self.publisher.start()
@@ -330,9 +338,11 @@ class Runtime:
             self.publisher.stop()
         if self.webhook is not None:
             self.webhook.close()
+        if self.updates is not None:
+            self.updates.close()
         self._stop.set()
         self._wake.set()
-        for thread in (self._thread, self._remote_thread, self._atlas_thread, *self._watchers):
+        for thread in (self._thread, self._remote_thread, self._atlas_thread, self._updates_thread, *self._watchers):
             if thread is not None:
                 thread.join(timeout=10)
         for shop in self.shops.values():

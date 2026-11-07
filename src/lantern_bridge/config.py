@@ -144,6 +144,8 @@ class Config:
     # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
     metrics: bool = False
     mqtt: Mqtt | None = None
+    # True: the bridge reads GitHub's latest release once a day and says on the overview when newer. Off by default.
+    update_check: bool = False
     # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
     webhook: str | None = None
     sources: list[Source] = field(default_factory=list)
@@ -162,6 +164,7 @@ class Config:
         data["developer"] = self.developer
         data["atlas"] = self.atlas
         data["metrics"] = self.metrics
+        data["update_check"] = self.update_check
         if self.mqtt is not None:
             data["mqtt"] = self.mqtt.table()
         if self.webhook is not None:
@@ -278,6 +281,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "developer",
         "atlas",
         "metrics",
+        "update_check",
         "mqtt",
         "webhook",
         "sources",
@@ -305,6 +309,9 @@ def _parse(data: dict[str, Any]) -> Config:
     metrics = data.get("metrics", False)
     if not isinstance(metrics, bool):
         raise ConfigError("`metrics` must be true or false")
+    update_check = data.get("update_check", False)
+    if not isinstance(update_check, bool):
+        raise ConfigError("`update_check` must be true or false")
     mqtt = parse_mqtt(data.get("mqtt"))
     webhook = parse_webhook(data.get("webhook"))
     sources: list[Source] = []
@@ -357,6 +364,7 @@ def _parse(data: dict[str, Any]) -> Config:
         atlas=atlas,
         metrics=metrics,
         mqtt=mqtt,
+        update_check=update_check,
         webhook=webhook,
         sources=sources,
         _extra=extra,

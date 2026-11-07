@@ -23,6 +23,8 @@
   <p><label class="check"><input type="checkbox" name="atlas"{% if file.atlas %} checked{% endif %}> {{ _("Atlas: fill in genres, developer and publisher (the bridge fetches one public file from GitHub once a day)") }}</label></p>
   {% if atlas_info is not none %}<p class="dim small">{% if atlas_info.fetched %}{{ atlas_info | length }} {{ _("games") }} · {{ _("fetched") }} {{ atlas_info.fetched | when }}{% else %}{{ _("Not fetched yet.") }}{% endif %}{% if atlas_info.error %} · {{ _("last attempt failed") }}: {{ atlas_info.error }}{% endif %}</p>{% endif %}
   <p><label class="check"><input type="checkbox" name="metrics"{% if file.metrics %} checked{% endif %}> {{ _("Metrics: answer /metrics (Prometheus format) to the local network") }}</label></p>
+  <p><label class="check"><input type="checkbox" name="update_check"{% if file.update_check %} checked{% endif %}> {{ _("Updates: read GitHub's latest release once a day and say here when it is newer (nothing is downloaded)") }}</label></p>
+  {% if updates is not none %}<p class="dim small">{% if updates.checked %}{{ _("latest release") }}: {{ updates.latest or _("none yet") }} · {{ _("checked") }} {{ updates.checked | when }}{% else %}{{ _("Not checked yet.") }}{% endif %}{% if updates.error %} · {{ _("last attempt failed") }}: {{ updates.error }}{% endif %}</p>{% endif %}
   <p><label class="check"><input type="checkbox" name="developer"{% if file.developer %} checked{% endif %}> {{ _("Developer mode: add a page with the requests, the raw JSON and the timings") }}</label></p>
   <p><label class="check"><input type="checkbox" name="admin_lan_only"{% if file.admin_lan_only %} checked{% endif %}> {{ _("These pages answer on the local network only") }}</label></p>
   <button>{{ _("Save") }}</button>
