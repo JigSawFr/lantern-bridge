@@ -45,6 +45,12 @@ KEEP = 50  # jobs remembered
 LEVEL = 18  # nsz's own default
 
 
+def argv(tool: str) -> list[str]:
+    """The command for a tool: a Python script (a stand-in for tests, or a tool run with the same Python) runs with
+    this interpreter, anything else is run as it is."""
+    return [sys.executable, tool] if tool.endswith(".py") else [tool]
+
+
 def find_tool() -> str | None:
     """The ``nsz`` command, if it is installed (on the path, or next to this Python)."""
     return shutil.which("nsz") or shutil.which("nsz", path=str(Path(sys.executable).parent))
@@ -262,13 +268,8 @@ class Compressor:
 
     def _tool(self, job: Job, tool: str, source: Path, work: Path) -> tuple[bool, str]:
         """Runs nsz; (True, "") when it finished well, else (False, why)."""
-        command = [
-            tool,
-            "-C" if job.action == "compress" else "-D",
-            "--machine-readable",
-            "--keys",
-            str(self.state_dir),
-        ]
+        command = [*argv(tool), "-C" if job.action == "compress" else "-D", "--machine-readable"]
+        command += ["--keys", str(self.state_dir)]
         command += ["-o", str(work), "-m", "1"]
         if job.action == "compress":
             command += ["-l", str(job.level), "-B" if job.block else "-S"]
@@ -280,6 +281,8 @@ class Compressor:
         )
         with self._lock:
             self._process = process
+            if job.cancel:  # asked to stop while the tool was being started: the request found no process yet
+                process.terminate()
         summary: dict[str, Any] = {}
         errors: list[str] = []
 
@@ -298,6 +301,8 @@ class Compressor:
         reader = threading.Thread(target=read, daemon=True)
         reader.start()
         while process.poll() is None:
+            if job.cancel:
+                process.terminate()
             job.size_out = sum(p.stat().st_size for p in work.iterdir() if p.is_file())  # the progress
             time.sleep(0.5)
         reader.join(timeout=5)

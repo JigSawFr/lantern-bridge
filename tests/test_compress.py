@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import stat
 import sys
 import time
 from pathlib import Path
@@ -42,10 +41,9 @@ print(json.dumps({{"type": "summary", "success": True, "errorCount": 0, "errors"
 
 @pytest.fixture
 def tool(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    path = tmp_path / "bin" / "nsz"
+    path = tmp_path / "bin" / "nsz.py"  # run with this Python, so it works where a shebang does not (Windows)
     path.parent.mkdir()
     path.write_text(FAKE.format(python=sys.executable))
-    path.chmod(path.stat().st_mode | stat.S_IEXEC)
     monkeypatch.setattr(compress, "find_tool", lambda: str(path))
     monkeypatch.setenv("FAKE_NSZ_LOG", str(tmp_path / "args.json"))
     return path
