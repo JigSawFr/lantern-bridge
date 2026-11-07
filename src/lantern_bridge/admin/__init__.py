@@ -38,6 +38,7 @@ from lantern.server.pairing import Limiter
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
+from lantern_bridge.admin import attention
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -431,17 +432,17 @@ def mount(app: FastAPI, admin: Admin) -> None:
         session, _, refused = await authed(request)
         if refused is not None:
             return refused
+        state = admin.state()
         return admin.page(
             request,
             "overview.html",
             session,
             active="overview",
             checks=health.run(admin.runtime),
-            updates=admin.runtime.updates,
-            state=admin.state(),
+            todo=attention.collect(admin.runtime, state["waiting"], admin.restart_needed()),
+            state=state,
             uid=admin.config.uid,
             public=admin.config.public,
-            restart=admin.restart_needed(),
         )
 
     @router.get("/api/state")
