@@ -52,7 +52,8 @@ def test_metrics_gives_the_figures_without_names_or_paths(tmp_path: Path) -> Non
     text = reply.text
     assert 'lantern_bridge_files{state="hashed"} 1' in text
     assert 'lantern_bridge_source_up{source="games"} 1' in text
-    assert "lantern_bridge_requests_total 1" in text  # the metrics request itself is not counted
+    # the metrics request itself is not counted, and the discovery document is a simple request, counted apart
+    assert "lantern_bridge_requests_total 0" in text and "lantern_bridge_simple_requests_total 1" in text
     assert 'lantern_bridge_health{status="ok"} 1' in text
     assert "Aurora" not in text and "games/" not in text and "127.0.0.1" not in text
     assert text.endswith("\n") and "# TYPE lantern_bridge_requests_total counter" in text

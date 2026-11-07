@@ -55,7 +55,7 @@
   <thead><tr><th>{{ _("When") }}</th><th>{{ _("Machine") }}</th><th>{{ _("Request") }}</th><th>{{ _("Status") }}</th><th>{{ _("Time") }}</th><th>{{ _("Sent") }}</th></tr></thead>
   <tbody>
   {% for r in recent %}
-  <tr><td>{{ r.time | when }}</td><td>{{ r.client }}</td><td><code>{{ r.method }} {{ r.path[-60:] }}</code></td><td>{{ r.status }}</td><td>{{ "%.0f"|format(r.seconds * 1000) }} ms</td><td>{{ r.sent | size }}</td></tr>
+  <tr><td>{{ r.time | when }}</td><td>{{ r.client }}</td><td><code>{{ r.method }} {{ r.path[-60:] }}</code>{% if r.simple %} <span class="pill wait" title="{{ _('Health checks, browsers and scanners: not counted in the activity.') }}">{{ _("simple") }}</span>{% endif %}</td><td>{{ r.status }}</td><td>{{ "%.0f"|format(r.seconds * 1000) }} ms</td><td>{{ r.sent | size }}</td></tr>
   {% else %}
   <tr><td colspan="6">{{ _("No request yet.") }}</td></tr>
   {% endfor %}

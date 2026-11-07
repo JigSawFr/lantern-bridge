@@ -433,6 +433,10 @@ FR: dict[str, str] = {
     "The shop answers; it lists no file.": "Le shop répond ; il ne liste aucun fichier.",
     "The shop did not answer": "Le shop n'a pas répondu",
     "Choose a number of devices from 1 to 20.": "Choisissez un nombre d'appareils de 1 à 20.",
+    "simple requests, apart": "requêtes simples, à part",
+    "Health checks, browsers and scanners: not counted above.": "Contrôles de santé, navigateurs et scanners : non comptés ci-dessus.",
+    "Health checks, browsers and scanners: not counted in the activity.": "Contrôles de santé, navigateurs et scanners : non comptés dans l'activité.",
+    "simple": "simple",
 }
 
 

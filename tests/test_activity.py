@@ -22,17 +22,25 @@ def _dev(tmp_path: Path) -> TestClient:
     )
 
 
+def _public(tmp_path: Path, host: str = "127.0.0.1") -> TestClient:
+    """A bridge whose library answers without a token, so a test can make a request that counts."""
+    games = tmp_path / "games"
+    games.mkdir(parents=True, exist_ok=True)
+    config = Config(uid=new_uid(), name="Test shelf", public=True, sources=[FolderSource("games", games)])
+    return TestClient(make_app(config, tmp_path / "state", run=False), client=(host, 50000), follow_redirects=False)
+
+
 def test_the_server_counts_what_it_answers_and_who_asked(tmp_path: Path) -> None:
-    client = _admin(_client(tmp_path))
+    client = _admin(_public(tmp_path))
     traffic: Traffic = client.app.state.runtime.traffic  # type: ignore[attr-defined]
     assert traffic.totals.requests == 0  # the administration pages are not the library's traffic
-    reply = client.get("/.well-known/lantern", headers={"User-Agent": "TestSwitch/1.0"})
+    reply = client.get("/api/lantern/v1/apps", headers={"User-Agent": "TestSwitch/1.0"})
     assert reply.status_code == 200
     assert traffic.totals.requests == 1 and traffic.totals.sent >= len(reply.content)
     transfers, clients, recent = traffic.snapshot()
     assert not transfers  # nothing is left running
     assert [c.agent for c in clients] == ["TestSwitch/1.0"] and clients[0].requests == 1
-    assert recent[0].path == "/.well-known/lantern" and recent[0].status == 200
+    assert recent[0].path == "/api/lantern/v1/apps" and recent[0].status == 200
     assert traffic.rates()["requests"] > 0
 
 
@@ -44,8 +52,8 @@ def test_the_table_of_machines_does_not_grow_without_end() -> None:
 
 
 def test_the_activity_page_and_its_live_block(tmp_path: Path) -> None:
-    client = _admin(_client(tmp_path))
-    client.get("/.well-known/lantern", headers={"User-Agent": "TestSwitch/1.0"})
+    client = _admin(_public(tmp_path))
+    client.get("/api/lantern/v1/apps", headers={"User-Agent": "TestSwitch/1.0"})
     page = client.get("/admin/activity")
     assert (
         page.status_code == 200
@@ -103,10 +111,10 @@ def test_the_developer_setting_is_saved_and_off_by_default(tmp_path: Path) -> No
 def test_the_days_and_the_machines_survive_a_restart(tmp_path: Path) -> None:
     games = tmp_path / "games"
     games.mkdir()
-    config = Config(uid=new_uid(), name="Test shelf", sources=[FolderSource("games", games)])
+    config = Config(uid=new_uid(), name="Test shelf", public=True, sources=[FolderSource("games", games)])
     app = make_app(config, tmp_path / "state", run=False)
     with TestClient(app, client=("10.0.0.7", 50000)) as client:
-        client.get("/.well-known/lantern", headers={"User-Agent": "TestSwitch/1.0"})
+        client.get("/api/lantern/v1/apps", headers={"User-Agent": "TestSwitch/1.0"})
     again = make_app(config, tmp_path / "state", run=False).state.runtime
     assert [m.address for m in again.history.machines()] == ["10.0.0.7"]
     assert again.traffic.clients["addr:10.0.0.7"].requests == 1  # the table starts from what was kept
@@ -182,3 +190,33 @@ def test_the_check_of_a_title_tells_what_a_console_would_meet(tmp_path: Path) ->
     (games / "Aurora Quest [0100AAAA00000000][v0].nsp").unlink()
     assert any("cannot be read" in s.detail for s in selfcheck.check(runtime, "0100AAAA00000000"))
     assert client.get("/admin/developer/check?id=nonsense").status_code == 404
+
+
+def test_a_health_check_and_a_browser_are_noise_not_traffic(tmp_path: Path) -> None:
+    client = _admin(_public(tmp_path))
+    traffic: Traffic = client.app.state.runtime.traffic  # type: ignore[attr-defined]
+    client.get("/.well-known/lantern", headers={"User-Agent": "Python-urllib/3.13"})  # the container's health check
+    client.get("/", headers={"accept": "text/html", "User-Agent": "Firefox"})
+    client.get("/favicon.ico")
+    assert traffic.totals.requests == 0 and traffic.totals.simple == 3
+    transfers, clients, recent = traffic.snapshot()
+    assert not clients and not transfers and traffic.rates()["requests"] == 0  # no "machine" for a health check
+    assert [r.simple for r in recent] == [True, True, True]
+    client.get("/api/lantern/v1/apps")
+    assert traffic.totals.requests == 1 and traffic.totals.simple == 3
+
+
+def test_a_token_makes_any_request_the_librarys(tmp_path: Path) -> None:
+    traffic = Traffic()
+    assert Traffic.simple("/", None) and Traffic.simple("/.well-known/lantern", None)
+    assert not Traffic.simple("/", "Bearer abc") and not Traffic.simple("/api/lantern/v1/apps", None)
+    traffic.note_simple("10.0.0.2", "GET", "/", 200, "")
+    assert traffic.totals.requests == 0 and traffic.totals.simple == 1
+
+
+def test_the_activity_page_and_the_metrics_say_how_many_are_apart(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path))
+    client.get("/.well-known/lantern")
+    assert "1 simple requests, apart" in client.get("/admin/activity").text
+    client.post("/admin/lang", data={"lang": "fr", "next": "/admin/activity"})
+    assert "1 requêtes simples, à part" in client.get("/admin/activity").text
