@@ -420,3 +420,16 @@ def test_every_call_names_the_bridge_as_a_tinfoil_client() -> None:
     list(shop.stream("a.nsp"))
     assert seen
     assert all("tinfoil" in agent.lower() for agent in seen)
+
+
+def test_the_host_verification_value_is_sent_when_the_shop_has_one() -> None:
+    seen: list[str | None] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers.get("hauth"))
+        return httpx.Response(200, content=b"{}")
+
+    client = httpx.Client(transport=httpx.MockTransport(handle))
+    Shop("http://shop.example.org/", client=client, hauth="abc").get("http://shop.example.org/")
+    Shop("http://shop.example.org/", client=client).get("http://shop.example.org/")
+    assert seen == ["abc", None]

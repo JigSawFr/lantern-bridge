@@ -57,6 +57,9 @@ class ShopSource:
     url: str
     user: str | None = None
     password_env: str | None = None
+    #: The environment variable that holds the shop's host-verification value (the `Hauth` header Tinfoil
+    #: sends); only a shop that checks its host (behind HTTPS) needs it.
+    hauth_env: str | None = None
 
     @property
     def location(self) -> str:
@@ -241,6 +244,8 @@ def _source_table(source: Source) -> dict[str, Any]:
         table["user"] = source.user
     if source.password_env is not None:
         table["password_env"] = source.password_env
+    if source.hauth_env is not None:
+        table["hauth_env"] = source.hauth_env
     if isinstance(source, AerofoilSource) and source.logins:
         table["logins"] = [
             {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
@@ -445,14 +450,21 @@ def _parse(data: dict[str, Any]) -> Config:
                     raise ConfigError(f"source {sid!r}: `{key}` must be a non-empty string")
             if (user is None) != (env is None):
                 raise ConfigError(f"source {sid!r}: `user` and `password_env` go together")
+            hauth = raw.get("hauth_env")
+            if hauth is not None and (not isinstance(hauth, str) or not hauth):
+                raise ConfigError(f"source {sid!r}: `hauth_env` must be a non-empty string")
             url = _parse_url(sid, raw.get("url"))
             if kind == "aerofoil":
-                sources.append(AerofoilSource(id=sid, url=url, user=user, password_env=env, logins=_logins(sid, raw)))
-                own = {"id", "kind", "url", "user", "password_env", "logins"}
+                sources.append(
+                    AerofoilSource(
+                        id=sid, url=url, user=user, password_env=env, hauth_env=hauth, logins=_logins(sid, raw)
+                    )
+                )
+                own = {"id", "kind", "url", "user", "password_env", "hauth_env", "logins"}
             else:
                 shop = OwnfoilSource if kind == "ownfoil" else TinfoilSource
-                sources.append(shop(id=sid, url=url, user=user, password_env=env))
-                own = {"id", "kind", "url", "user", "password_env"}
+                sources.append(shop(id=sid, url=url, user=user, password_env=env, hauth_env=hauth))
+                own = {"id", "kind", "url", "user", "password_env", "hauth_env"}
         else:
             raise ConfigError(f"source {sid!r}: kind {kind!r} is not supported by this version")
         extra_sources[sid] = {k: v for k, v in raw.items() if k not in own}
