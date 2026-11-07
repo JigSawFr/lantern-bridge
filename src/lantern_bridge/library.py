@@ -15,12 +15,12 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 from lantern._generated.models import App, Image, Title
+from lantern.server.file_index import Row, SqliteIndex
 from lantern.server.files import FileRef
 from lantern.server.library import MemoryLibrary
 
 from lantern_bridge.atlas import Atlas, genres_of
 from lantern_bridge.identify import Identity, identify
-from lantern_bridge.index import Index, Row
 from lantern_bridge.sources.ownfoil import Ownfoil, Picture, Sheet
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 
@@ -37,7 +37,7 @@ def _tags(labels: Sequence[str]) -> list[str]:
 
 
 class Projection:
-    """Keeps a ``MemoryLibrary`` equal to the hashed rows of an ``Index``.
+    """Keeps a ``MemoryLibrary`` equal to the hashed rows of an ``SqliteIndex``.
 
     The same bytes (the same SHA-256) under several paths or sources are one app, served by the best source:
     a folder before a shop, then the order of the configuration, then the path. A file of a shop is relayed.
@@ -46,7 +46,7 @@ class Projection:
     def __init__(
         self,
         library: MemoryLibrary,
-        index: Index,
+        index: SqliteIndex,
         roots: dict[str, Path],
         shops: dict[str, Shop] | None = None,
         order: Sequence[str] = (),

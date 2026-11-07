@@ -46,8 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _inspect(args: argparse.Namespace) -> int:
+    from lantern.server.file_index import SqliteIndex
+
     from lantern_bridge.config import load
-    from lantern_bridge.index import Index
 
     state = args.config.resolve().parent
     index_file = state / "index.sqlite3"
@@ -59,7 +60,7 @@ def _inspect(args: argparse.Namespace) -> int:
     if not index_file.exists():
         print("No index yet: start the server first.", file=sys.stderr)
         return 1
-    with Index(index_file) as index:
+    with SqliteIndex(index_file) as index:
         if args.command == "rehash":
             known = {source.id for source in config.sources}
             if args.source is not None and args.source not in known:

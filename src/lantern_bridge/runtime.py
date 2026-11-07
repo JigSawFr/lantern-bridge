@@ -16,13 +16,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from lantern.server import MemoryLibrary
+from lantern.server.file_index import SqliteIndex, SyncResult, hash_pending
 
 from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
-from lantern_bridge.hashing import hash_pending, scan_packages
+from lantern_bridge.hashing import scan_packages
 from lantern_bridge.history import History
-from lantern_bridge.index import Index, SyncResult
 from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
 from lantern_bridge.sources.aerofoil import AeroFoil
@@ -76,7 +76,7 @@ class Runtime:
     def __init__(self, config: Config, state_dir: Path, library: MemoryLibrary) -> None:
         self.config = config
         self.state_dir = state_dir
-        self.index = Index(state_dir / "index.sqlite3")
+        self.index = SqliteIndex(state_dir / "index.sqlite3")
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
         self.publisher: Publisher | None = None

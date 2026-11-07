@@ -16,8 +16,9 @@ import time
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from lantern.server.file_index import SqliteIndex
+
 from lantern_bridge.identify import identify
-from lantern_bridge.index import Index
 from lantern_bridge.library import Projection
 
 TYPES = ("base", "update", "dlc")
@@ -200,7 +201,7 @@ def _cell(value: object) -> str:
     return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
-def build(index: Index, projection: Projection) -> Catalog:
+def build(index: SqliteIndex, projection: Projection) -> Catalog:
     titles: dict[str, TitleInfo] = {}
     bases: dict[str, str] = {}
     for row in index.rows():
@@ -235,7 +236,7 @@ def build(index: Index, projection: Projection) -> Catalog:
 class Browser:
     """A short-lived cache of the catalogue: the pages ask for it often, the files change slowly."""
 
-    def __init__(self, index: Index, projection: Projection, ttl: float = 3.0) -> None:
+    def __init__(self, index: SqliteIndex, projection: Projection, ttl: float = 3.0) -> None:
         self.index, self.projection, self.ttl = index, projection, ttl
         self._lock = threading.Lock()
         self._built = 0.0

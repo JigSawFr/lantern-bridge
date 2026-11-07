@@ -9,9 +9,9 @@ from pathlib import Path
 
 import httpx
 import pytest
+from lantern.server.file_index import SyncResult
 
 from lantern_bridge.config import Config, ConfigError, load, parse_webhook, save
-from lantern_bridge.index import SyncResult
 from lantern_bridge.webhook import SCHEMA, Webhook
 from test_admin import _admin, _client
 
