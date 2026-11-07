@@ -95,3 +95,25 @@ def test_every_new_text_has_its_french() -> None:
         "this kind of source is not supported",
     ):
         assert text in FR
+
+
+def test_each_setting_explains_itself_to_the_eye_and_to_a_screen_reader(tmp_path: Path) -> None:
+    import re
+
+    client = _admin(_client(tmp_path, sources=True))
+    page = client.get("/admin/config").text
+    described = re.findall(r'aria-describedby="(h-[a-z_]+)"', page)
+    assert {
+        "h-name",
+        "h-remote_rate",
+        "h-low_disk_mb",
+        "h-host",
+        "h-port",
+        "h-user",
+        "h-password_env",
+        "h-prefix",
+    } <= set(described)
+    for hint in described:
+        assert f'id="{hint}"' in page
+    fr = client.get("/admin/config", headers={"Accept-Language": "fr"}).text
+    assert "Ralentit la lecture" in fr

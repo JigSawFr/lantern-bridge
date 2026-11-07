@@ -13,9 +13,9 @@
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
   <h2>{{ _("Server") }}</h2>
   <div class="form-grid">
-    <label>{{ _("Name shown to devices") }} <input name="name" value="{{ file.name }}" maxlength="64" required></label>
-    <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}"></label>
-    <label>{{ _("Warn below this free space for the index (MiB)") }} <input name="low_disk_mb" type="number" min="20" max="10000000" step="10" value="{{ file.low_disk_mb }}"></label>
+    <label>{{ _("Name shown to devices") }} <input name="name" value="{{ file.name }}" maxlength="64" required aria-describedby="h-name"><small class="hint" id="h-name" aria-hidden="true">{{ _("Shown in the library list of the Lantern apps.") }}</small></label>
+    <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}" aria-describedby="h-remote_rate"><small class="hint" id="h-remote_rate" aria-hidden="true">{{ _("Slows down the reading of files on network shares so they are not saturated. 0 reads at full speed.") }}</small></label>
+    <label>{{ _("Warn below this free space for the index (MiB)") }} <input name="low_disk_mb" type="number" min="20" max="10000000" step="10" value="{{ file.low_disk_mb }}" aria-describedby="h-low_disk_mb"><small class="hint" id="h-low_disk_mb" aria-hidden="true">{{ _("Where the index lives: the overview warns when less than this is left.") }}</small></label>
   </div>
   <div class="form-grid">
     <label>{{ _("Address called when scans find changes (optional)") }} <input name="webhook" type="url" value="{{ file.webhook or '' }}" maxlength="512" autocomplete="off" placeholder="https://"></label>
@@ -50,11 +50,11 @@
   <h2>{{ _("MQTT broker") }}</h2>
   <p class="muted">{{ _("The bridge publishes its state on an MQTT broker, where Home Assistant reads it. Leave the host empty to publish nothing. The password is read from the environment variable named below.") }}</p>
   <div class="form-grid">
-    <label>{{ _("Host") }} <input name="host" value="{{ file.mqtt.host if file.mqtt else '' }}" maxlength="253"></label>
-    <label>{{ _("Port") }} <input name="port" type="number" min="1" max="65535" value="{{ file.mqtt.port if file.mqtt else 1883 }}"></label>
-    <label>{{ _("User") }} <input name="user" value="{{ file.mqtt.user or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off"></label>
-    <label>{{ _("Password variable") }} <input name="password_env" value="{{ file.mqtt.password_env or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off"></label>
-    <label>{{ _("Topic prefix") }} <input name="prefix" value="{{ file.mqtt.prefix if file.mqtt else 'lantern-bridge' }}" maxlength="128"></label>
+    <label>{{ _("Host") }} <input name="host" value="{{ file.mqtt.host if file.mqtt else '' }}" maxlength="253" aria-describedby="h-host"><small class="hint" id="h-host" aria-hidden="true">{{ _("The name or address of the broker on your network.") }}</small></label>
+    <label>{{ _("Port") }} <input name="port" type="number" min="1" max="65535" value="{{ file.mqtt.port if file.mqtt else 1883 }}" aria-describedby="h-port"><small class="hint" id="h-port" aria-hidden="true">{{ _("Usually 1883, or 8883 with TLS.") }}</small></label>
+    <label>{{ _("User") }} <input name="user" value="{{ file.mqtt.user or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off" aria-describedby="h-user"><small class="hint" id="h-user" aria-hidden="true">{{ _("Leave empty for a broker that asks for no login.") }}</small></label>
+    <label>{{ _("Password variable") }} <input name="password_env" value="{{ file.mqtt.password_env or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off" aria-describedby="h-password_env"><small class="hint" id="h-password_env" aria-hidden="true">{{ _("The name of an environment variable that holds the password, never the password itself.") }}</small></label>
+    <label>{{ _("Topic prefix") }} <input name="prefix" value="{{ file.mqtt.prefix if file.mqtt else 'lantern-bridge' }}" maxlength="128" aria-describedby="h-prefix"><small class="hint" id="h-prefix" aria-hidden="true">{{ _("Topics start with this, then the bridge's id. Change it only to keep several bridges apart.") }}</small></label>
   </div>
   <p><label class="check"><input type="checkbox" name="tls"{% if file.mqtt and file.mqtt.tls %} checked{% endif %}> {{ _("Encrypt the connection (TLS)") }}</label></p>
   <button>{{ _("Save") }}</button>

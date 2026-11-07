@@ -75,6 +75,7 @@ progress::-moz-progress-bar{background:var(--grad);border-radius:999px}
 .stack{display:grid;gap:1rem;max-width:28rem}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;align-items:end}
 label{display:grid;gap:.3rem;font-size:.85rem;color:var(--mist)}
+.hint{font-size:.78rem;font-weight:400;color:var(--dusk)}
 label.check{display:flex;align-items:center;gap:.6rem;color:var(--snow);font-size:1rem}
 input,select{width:100%;min-width:0;font:inherit;color:var(--snow);padding:.6rem .75rem;min-height:44px;border:1px solid var(--line);border-radius:12px;background:rgb(11 20 36 / .8)}
 input[type=checkbox]{min-height:0;width:1.2rem;flex:none;height:1.2rem;accent-color:var(--aurora)}
