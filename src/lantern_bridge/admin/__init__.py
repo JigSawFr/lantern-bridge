@@ -130,6 +130,8 @@ def _csv_safe(value: str) -> str:
 
 
 #: What the live stream may follow: the pages' fragments and the state. Each is asked again as the same session.
+#: Live streams one session may keep open at once (a page opens one per block it follows).
+_STREAMS_PER_SESSION = 8
 _FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state")
 
 
@@ -141,7 +143,7 @@ async def _ask(request: Request, target: str) -> str | None:
         for key in ("type", "asgi", "http_version", "scheme", "server", "client", "root_path", "headers")
         if key in request.scope
     }
-    scope.update(method="GET", path=path, raw_path=path.encode(), query_string=query.encode())
+    scope.update(method="GET", path=path, raw_path=path.encode(), query_string=query.encode(), replay=True)
     answer: dict[str, Any] = {"body": b"", "status": 0}
 
     async def receive() -> dict[str, Any]:
@@ -213,7 +215,9 @@ class Admin:
     ) -> None:
         self.config, self.runtime, self.lantern, self.ring, self.store = config, runtime, lantern, ring, store
         self.config_path = config_path
-        self.attempts = Limiter(5, 300.0)
+        self.attempts = Limiter(5, 300.0)  # wrong passwords, per address
+        self.accounts = Limiter(30, 900.0)  # and per name, wide enough that a stranger cannot lock the real one out
+        self.streams: dict[str, int] = {}  # open /admin/live streams, per session
         self.env = Environment(
             loader=PackageLoader("lantern_bridge.admin", "templates"), autoescape=select_autoescape(["html"])
         )
@@ -401,7 +405,8 @@ class Admin:
         return {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()}
 
     def session(self, request: Request) -> Session | None:
-        return self.store.session(request.cookies.get(_COOKIE))
+        # a block asking again by itself (the replay of a live stream) is not someone using the page
+        return self.store.session(request.cookies.get(_COOKIE), touch=not request.scope.get("replay"))
 
 
 def mount(app: FastAPI, admin: Admin) -> None:
@@ -501,7 +506,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
     async def login_post(request: Request) -> Response:
         fields = await admin.form(request)
         key = request.client.host if request.client else "?"
-        if wait := admin.attempts.wait(key):
+        who = "name:" + fields.get("name", "").strip().lower()
+        if wait := max(admin.attempts.wait(key), admin.accounts.wait(who)):
             return admin.page(
                 request,
                 "login.html",
@@ -511,6 +517,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         role = admin.store.identify(fields.get("name", ""), fields.get("password", ""))
         if role is None:
             admin.attempts.record(key)
+            admin.accounts.record(who)
             log.warning("a sign-in failed from %s", key)
             return admin.page(request, "login.html", status=401, error=admin.tr(request)("Wrong name or password."))
         token, _ = admin.store.login(fields["name"].strip(), role)
@@ -1038,22 +1045,34 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if target.partition("?")[0] not in _FOLLOWED or "\n" in target or "\r" in target:
             raise HTTPException(404)
 
+        holder = request.cookies.get(_COOKIE, "")
+        if admin.streams.get(holder, 0) >= _STREAMS_PER_SESSION:
+            return Response("Too many open streams for this session.", status_code=429, headers=_HEADERS)
+        admin.streams[holder] = admin.streams.get(holder, 0) + 1
+
         async def events() -> AsyncIterator[str]:
             last: str | None = None
             beat = 0
-            while not await request.is_disconnected():
-                body = await _ask(request, target)
-                if body is None:  # the session ended or the page failed: the browser reconnects and is sent to sign in
-                    return
-                if body != last:
-                    last = body
-                    yield f"data: {json.dumps(body)}\n\n"
-                    beat = 0
-                beat += 1
-                if beat >= 15:
-                    yield ": keep-alive\n\n"
-                    beat = 0
-                await asyncio.sleep(1)
+            try:
+                while not await request.is_disconnected():
+                    body = await _ask(request, target)
+                    if body is None:  # the session ended or the page failed: the browser reconnects, is sent to sign in
+                        return
+                    if body != last:
+                        last = body
+                        yield f"data: {json.dumps(body)}\n\n"
+                        beat = 0
+                    beat += 1
+                    if beat >= 15:
+                        yield ": keep-alive\n\n"
+                        beat = 0
+                    await asyncio.sleep(1)
+            finally:
+                left = admin.streams.get(holder, 1) - 1
+                if left > 0:
+                    admin.streams[holder] = left
+                else:
+                    admin.streams.pop(holder, None)
 
         return StreamingResponse(events(), media_type="text/event-stream", headers=_HEADERS)
 

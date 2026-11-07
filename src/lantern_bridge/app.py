@@ -97,5 +97,7 @@ def make_app(
             raise HTTPException(403)
         return PlainTextResponse(render(runtime), media_type="text/plain; version=0.0.4; charset=utf-8")
 
-    mount(app, Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml"))
+    pages = Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml")
+    app.state.admin_pages = pages
+    mount(app, pages)
     return app
