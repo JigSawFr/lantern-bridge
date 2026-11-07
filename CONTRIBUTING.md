@@ -35,3 +35,7 @@ Pull requests are merged as one squashed commit.
 ## Code of conduct
 
 Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md).
+
+## Load test
+
+`uv run python tools/bench.py --titles 50000 --batch 10000` makes a fake library of tiny files in a temporary folder and prints how long the first scan, the hashing, a quiet pass, the catalog and a few searches take, with the size of the index and the peak memory. Run it before changing the scanner, the index or the catalog.
