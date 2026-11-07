@@ -1,16 +1,23 @@
 version: 2
 updates:
+  # One pull request a day for all the actions, not one each
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: daily
+    groups:
+      actions:
+        patterns: [ "*" ]
     commit-message:
       prefix: chore
       include: scope
+  # A version younger than 14 days waits, as pyproject.toml's exclude-newer does
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: daily
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: chore
       include: scope
