@@ -346,6 +346,8 @@ FR: dict[str, str] = {
     "days": "jours",
     "expires": "expire",
     "files hashed": "fichiers hachés",
+    "Everything is hashed:": "Tout est haché :",
+    "files": "fichiers",
     "folder: a folder of games on this machine": "folder : un dossier de jeux sur cette machine",
     "live": "en direct",
     "no": "non",
