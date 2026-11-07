@@ -42,7 +42,7 @@ def test_old_and_surplus_events_are_dropped_and_a_long_detail_is_cut(tmp_path: P
     history.close()
     again = History(path)  # opening prunes
     kept = again.events()
-    assert len(kept) == 1 and len(kept[0].subject) == 64 and len(kept[0].detail) == 120
+    assert len(kept) == 1 and len(kept[0].subject) == 64 and len(kept[0].detail) == 300
     for n in range(MAX_EVENTS + 5):
         again.event("scan", detail=str(n), now=time.time() - 1 + n * 1e-6)
     again.close()

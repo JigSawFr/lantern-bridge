@@ -48,7 +48,7 @@ class Event:
     ts: float
     kind: str  # started, scan, source_down, source_up, update, settings, paired, revoked
     subject: str  # a source id or an account, or empty
-    detail: str  # short; never a path or a title
+    detail: str  # short (300 characters at most); never a path or a title
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,12 +179,12 @@ class History:
             with self._lock, self._db:
                 self._db.execute(
                     "INSERT INTO events VALUES (?,?,?,?)",
-                    (time.time() if now is None else now, kind[:32], subject[:64], detail[:120]),
+                    (time.time() if now is None else now, kind[:32], subject[:64], detail[:300]),
                 )
         except sqlite3.Error as error:
             log.warning("the journal could not be written: %s", error)
             return
-        line = Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:120])
+        line = Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:300])
         for listener in list(self.listeners):
             try:
                 listener(line)

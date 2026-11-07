@@ -59,6 +59,7 @@ from lantern_bridge.config import (
     ShopSource,
     Source,
     TinfoilSource,
+    changes,
     check,
     load,
     parse_mqtt,
@@ -336,30 +337,42 @@ class Admin:
     def previous_path(self) -> Path:
         return self.config_path.with_name(self.config_path.name + ".previous")
 
-    def write(self, config: Config) -> None:
-        """Checks, then writes; ConfigError for what the reader would refuse.
+    def write(self, config: Config) -> list[str]:
+        """Checks, then writes and answers what changed (see `config.changes`); ConfigError for what the reader
+        would refuse.
 
         The file it replaces is kept beside it (`.previous`, one level) so that the pages can take the last change
         back. Writing the same settings again keeps nothing new.
         """
         checked = check(config)
+        done: list[str] = []
         if self.config_path.exists():
             try:
                 before = load(self.config_path)
             except ConfigError:
                 before = None  # a file the reader refuses is not worth keeping: save() says why
+            if before is not None:
+                done = changes(before, checked)
             if before is not None and before.to_toml() != checked.to_toml():
                 keep = self.previous_path
                 fd = os.open(keep, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
                 with os.fdopen(fd, "w", encoding="utf-8") as handle:
                     handle.write(before.to_toml())
         save(self.config_path, checked)
+        return done
 
-    def undo(self) -> None:
+    def audit(self, session: Any, done: list[str], how: str) -> None:
+        """Puts in the journal who changed the settings, from where, and what (never a value that may be private)."""
+        who = f"{session.name} ({session.role})"
+        where = f" from {session.address}" if session.address else ""
+        what = ", ".join(done) if done else how
+        self.runtime.history.event("settings", subject=who[:64], detail=f"{how}{where}: {what}")
+
+    def undo(self) -> list[str]:
         """Brings the settings from before the last change back (and that change becomes the one to take back)."""
         if not self.previous_path.exists():
             raise ConfigError("There is nothing to undo.")
-        self.write(load(self.previous_path))
+        return self.write(load(self.previous_path))
 
     async def apply(self) -> None:
         """Puts the settings file just written into effect, without a restart (see reload.py)."""
@@ -1661,8 +1674,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
         try:
             config = admin.file()
             problem = edit(config, fields)
+            done_keys: list[str] = []
             if problem is None:
-                admin.write(config)
+                done_keys = admin.write(config)
         except ConfigError as error:
             problem = str(error)
         except OSError as error:
@@ -1671,7 +1685,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             typed = {k: v for k, v in fields.items() if k != "csrf"}
             return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
         log.info("settings changed from the pages: %s", done)
-        admin.runtime.history.event("settings", detail=done)
+        admin.audit(session, done_keys, done)
         await admin.apply()
         back = fields.get("back")
         return redirect(f"/{back if back in ('start', 'sources') else 'config'}?m={done}", request)
@@ -1865,13 +1879,13 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return refused
         t = admin.tr(request)
         try:
-            admin.undo()
+            done_keys = admin.undo()
         except ConfigError as error:
             return settings_page(request, session, 400, error=t(str(error)))
         except OSError as error:
             return settings_page(request, session, 500, error=f"{error.strerror or error}")
         log.info("settings changed from the pages: the last change was taken back")
-        admin.runtime.history.event("settings", detail="undone")
+        admin.audit(session, done_keys, "undone")
         await admin.apply()
         return redirect(f"/{'sources' if fields.get('back') == 'sources' else 'config'}?m=undone", request)
 

@@ -480,3 +480,49 @@ def load_or_create(path: Path) -> Config:
     if "uid" not in tomllib.loads(path.read_text(encoding="utf-8")):
         save(path, config)  # a file written by hand without a uid gets one, once
     return config
+
+
+def _flat(config: Config) -> dict[str, Any]:
+    """The settings as `key: value` lines of one level, the sources under their id (`sources.shop.url`)."""
+    data = tomllib.loads(config.to_toml())
+    flat: dict[str, Any] = {}
+    for key, value in data.items():
+        if key == "sources":
+            for row in value:
+                for name, item in row.items():
+                    flat[f"sources.{row.get('id')}.{name}"] = item
+        elif isinstance(value, dict):
+            for name, item in value.items():
+                flat[f"{key}.{name}"] = item
+        else:
+            flat[key] = value
+    return flat
+
+
+def changes(before: Config, after: Config) -> list[str]:
+    """What differs between two settings, for the journal: the names of the settings that changed.
+
+    A switch or a number says what it went from and to (``public: false -> true``); a text (an address, a path, a
+    name) is only named, and so is a source that comes or goes, because a value may hold what is private.
+    """
+    old, new = _flat(before), _flat(after)
+    added = {k.split(".")[1] for k in new if k.startswith("sources.")} - {
+        k.split(".")[1] for k in old if k.startswith("sources.")
+    }
+    gone = {k.split(".")[1] for k in old if k.startswith("sources.")} - {
+        k.split(".")[1] for k in new if k.startswith("sources.")
+    }
+    lines = [f"sources.{sid} added" for sid in sorted(added)] + [f"sources.{sid} removed" for sid in sorted(gone)]
+    for key in sorted(old.keys() | new.keys()):
+        parts = key.split(".")
+        if key == "schema" or (parts[0] == "sources" and parts[1] in added | gone):
+            continue
+        if old.get(key) == new.get(key):
+            continue
+        a, b = old.get(key), new.get(key)
+        scalar = all(isinstance(x, bool | int | float) for x in (a, b) if x is not None)
+        if scalar and a is not None and b is not None:
+            lines.append(f"{key}: {str(a).lower()} -> {str(b).lower()}")
+        else:
+            lines.append(key)
+    return lines
