@@ -67,5 +67,9 @@
   "diag_sources": "내 소스",
   "diag_bridge": "해시·병합·제공",
   "diag_clients": "Lantern 클라이언트",
-  "diag_alt": "소스가 브리지로 들어가 해시와 병합을 거쳐 하나의 라이브러리로 Lantern 클라이언트에 제공됩니다."
+  "diag_alt": "소스가 브리지로 들어가 해시와 병합을 거쳐 하나의 라이브러리로 Lantern 클라이언트에 제공됩니다.",
+  "lost_title": "밤 속에서 길을 잃었습니다",
+  "lost_text": "이 페이지는 없거나 더 이상 없습니다.",
+  "lost_back": "홈페이지로 돌아가기",
+  "lost_page_title": "페이지를 찾을 수 없습니다 · Lantern Bridge"
 }

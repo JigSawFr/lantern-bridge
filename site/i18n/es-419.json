@@ -67,5 +67,9 @@
   "diag_sources": "Tus fuentes",
   "diag_bridge": "Calcula huellas, une, sirve",
   "diag_clients": "Clientes Lantern",
-  "diag_alt": "Tus fuentes entran en el puente, que calcula sus huellas, las une y sirve una sola biblioteca a los clientes Lantern."
+  "diag_alt": "Tus fuentes entran en el puente, que calcula sus huellas, las une y sirve una sola biblioteca a los clientes Lantern.",
+  "lost_title": "Perdido en la noche",
+  "lost_text": "Esta página no existe, o ya no.",
+  "lost_back": "Volver al inicio",
+  "lost_page_title": "Página no encontrada · Lantern Bridge"
 }

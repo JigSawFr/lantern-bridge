@@ -67,5 +67,9 @@
   "diag_sources": "Le tue fonti",
   "diag_bridge": "Calcola gli hash, unisce, serve",
   "diag_clients": "Client Lantern",
-  "diag_alt": "Le tue fonti entrano nel ponte, che ne calcola gli hash, le unisce e serve una sola libreria ai client Lantern."
+  "diag_alt": "Le tue fonti entrano nel ponte, che ne calcola gli hash, le unisce e serve una sola libreria ai client Lantern.",
+  "lost_title": "Persi nella notte",
+  "lost_text": "Questa pagina non esiste, o non più.",
+  "lost_back": "Torna alla pagina iniziale",
+  "lost_page_title": "Pagina non trovata · Lantern Bridge"
 }

@@ -67,5 +67,9 @@
   "diag_sources": "あなたのソース",
   "diag_bridge": "ハッシュ化・統合・配信",
   "diag_clients": "Lantern クライアント",
-  "diag_alt": "ソースはブリッジに入り、ハッシュ化と統合を経て、1 つのライブラリとして Lantern クライアントに配信されます。"
+  "diag_alt": "ソースはブリッジに入り、ハッシュ化と統合を経て、1 つのライブラリとして Lantern クライアントに配信されます。",
+  "lost_title": "夜の中で迷子に",
+  "lost_text": "このページは存在しないか、なくなりました。",
+  "lost_back": "ホームページに戻る",
+  "lost_page_title": "ページが見つかりません · Lantern Bridge"
 }

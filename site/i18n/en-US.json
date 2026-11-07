@@ -67,5 +67,9 @@
   "diag_sources": "Your sources",
   "diag_bridge": "Hashes, merges, serves",
   "diag_clients": "Lantern clients",
-  "diag_alt": "Your sources go into the Bridge, which hashes and merges them and serves one library to Lantern clients."
+  "diag_alt": "Your sources go into the Bridge, which hashes and merges them and serves one library to Lantern clients.",
+  "lost_title": "Lost in the night",
+  "lost_text": "This page does not exist, or not any more.",
+  "lost_back": "Back to the home page",
+  "lost_page_title": "Page not found · Lantern Bridge"
 }
