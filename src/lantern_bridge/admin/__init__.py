@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import csv
 import dataclasses
+import io
 import ipaddress
 import json
 import logging
@@ -59,6 +61,7 @@ from lantern_bridge.config import (
     parse_webhook,
     save,
 )
+from lantern_bridge.history import MAX_EVENTS
 from lantern_bridge.logs import LEVELS, LogRing
 from lantern_bridge.runtime import Runtime
 
@@ -108,7 +111,23 @@ _JOURNAL = (
     "paired",
     "pairing_refused",
     "revoked",
+    "restored",
 )
+
+
+def _attachment(extension: str) -> dict[str, str]:
+    return {"Content-Disposition": f'attachment; filename="lantern-bridge-journal.{extension}"'}
+
+
+def iso_time(ts: float) -> str:
+    return datetime.fromtimestamp(ts, UTC).isoformat(timespec="seconds")
+
+
+def _csv_safe(value: str) -> str:
+    """A spreadsheet runs a cell that starts with = + - @ as a formula: a quote in front keeps it text."""
+    return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
+
+
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
 
@@ -715,6 +734,32 @@ def mount(app: FastAPI, admin: Admin) -> None:
             kind=kind,
             usable=admin.runtime.history.usable,
         )
+
+    @router.get("/events/export")
+    async def events_export(request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        kind = request.query_params.get("kind", "")
+        kind = kind if kind in _JOURNAL else ""
+        rows = admin.runtime.history.events(MAX_EVENTS, kind)
+        if request.query_params.get("format") == "json":
+            body = json.dumps(
+                {
+                    "schema": 1,
+                    "events": [
+                        {"ts": iso_time(e.ts), "kind": e.kind, "subject": e.subject, "detail": e.detail} for e in rows
+                    ],
+                },
+                indent=2,
+            )
+            return Response(body, media_type="application/json", headers=_attachment("json"))
+        out = io.StringIO()
+        writer = csv.writer(out)
+        writer.writerow(("time", "kind", "subject", "detail"))
+        for e in rows:
+            writer.writerow([iso_time(e.ts), *(_csv_safe(v) for v in (e.kind, e.subject, e.detail))])
+        return Response(out.getvalue(), media_type="text/csv; charset=utf-8", headers=_attachment("csv"))
 
     @router.get("/activity")
     async def activity(request: Request) -> Response:
