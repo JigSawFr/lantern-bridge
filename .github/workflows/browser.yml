@@ -1,0 +1,42 @@
+# The admin pages in a real browser (Chromium through Playwright), at a desktop and a phone width.
+name: browser
+
+# Called by ci.yml
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+  UV_LOCKED: "1"
+  UV_VERSION: 0.13.6
+  # Playwright's version is fixed here, not floating: a new release cannot break the run by itself
+  PLAYWRIGHT_VERSION: 1.55.0
+
+jobs:
+  browser:
+    name: admin pages in Chromium
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: true
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.15"
+      - name: Install
+        run: uv sync
+      - name: Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pw" --no-save --ignore-scripts=false "playwright@${PLAYWRIGHT_VERSION}"
+          npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium
+      - name: The pages, in the browser
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+          PYTHON: .venv/bin/python
+        run: node tests/browser/run.mjs
