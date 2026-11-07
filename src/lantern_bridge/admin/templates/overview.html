@@ -3,23 +3,30 @@
 {% block body %}
 <h1>{{ _("Overview") }}</h1>
 <p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
-{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }} <a href="/admin/config">{{ _("Settings") }}</a></p>{% endif %}
-{% if updates and updates.available %}<p class="note" role="status">{{ _("A newer version is out:") }} <a href="{{ updates.page }}" rel="noreferrer">{{ updates.latest }}</a> ({{ _("you run") }} {{ updates.current }}).</p>{% endif %}
+{% if todo %}
+<section class="todo" aria-labelledby="todo-title">
+  <h2 id="todo-title">{{ _("Needs your attention") }} <span class="count">{{ todo | length }}</span></h2>
+  <ul>
+    {% for t in todo %}
+    <li class="{{ t.level }}">
+      <span class="pill {{ t.level if t.level != 'info' else 'ok' }}">{{ _("failing") if t.level == "bad" else _("to check") if t.level == "wait" else _("for your information") }}</span>
+      <span class="what">{{ _(t.text) }}{% if t.detail %} <span class="dim small">{{ t.detail }}</span>{% endif %}</span>
+      {% if t.scan and session.role != "observer" %}<form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ t.scan }}"><button class="ghost small" name="action" value="scan">{{ _("Read again") }}</button></form>{% endif %}
+      {% if t.href and (t.external or session.role != "observer") %}<a href="{{ t.href }}"{% if t.external %} rel="noreferrer"{% endif %}>{{ _(t.link) }}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 <section class="cards">
   <a class="tile" href="/admin/library"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></a>
   <a class="tile" href="/admin/library"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></a>
   <a class="tile" href="/admin/pairings"><span class="n" data-bind="waiting">{{ state.waiting }}</span><span class="what">{{ _("pairings waiting") }}</span></a>
 </section>
 
-{% set bad = checks | rejectattr("status", "equalto", "ok") | list %}
 <h2>{{ _("Health") }}</h2>
-{% if bad %}
-<ul class="assoc">
-  {% for c in bad %}<li><span class="pill {{ 'wait' if c.status == 'warn' else 'bad' }}">{{ _("to check") if c.status == "warn" else _("failing") }}</span> <span>{{ c.name }}</span> <span class="dim small">{{ c.detail }}</span></li>{% endfor %}
-</ul>
-{% else %}
-<p><span class="pill ok">{{ _("all good") }}</span> <span class="dim small">{{ checks | length }} {{ _("checks") }} · <code>/healthz</code></span></p>
-{% endif %}
+{% set bad = checks | rejectattr("status", "equalto", "ok") | list %}
+<p>{% if bad %}<span class="pill wait">{{ bad | length }} {{ _("to check") }}</span> <span class="dim small">{{ _("listed at the top of this page") }}{% else %}<span class="pill ok">{{ _("all good") }}</span> <span class="dim small">{{ checks | length }} {{ _("checks") }}{% endif %} · <code>/healthz</code></span></p>
 
 <h2>{{ _("Hashing") }}</h2>
 <div class="card glow">

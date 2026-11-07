@@ -10,6 +10,18 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "Needs your attention": "À traiter",
+    "for your information": "pour information",
+    "Read again": "Relire",
+    "listed at the top of this page": "listés en haut de cette page",
+    "A source does not answer": "Une source ne répond pas",
+    "A source has not been read for a while": "Une source n'a pas été lue depuis un moment",
+    "The disk of the bridge is nearly full": "Le disque du pont est presque plein",
+    "The index of hashes is broken": "L'index des empreintes est endommagé",
+    "Atlas data is missing or old": "Les données d'Atlas manquent ou sont anciennes",
+    "A check needs a look": "Un contrôle demande un coup d'œil",
+    "Devices are waiting to be paired": "Des appareils attendent d'être appairés",
+    "Release notes": "Notes de version",
     "Library": "Bibliothèque",
     "DLC": "DLC",
     "Genre": "Genre",
