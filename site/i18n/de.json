@@ -110,5 +110,16 @@
   "shots_lede": "Die Bridge bringt eigene Seiten mit, auf Englisch und Französisch, im dunklen oder hellen Design. Hier sind drei davon, über einer erfundenen Bibliothek: Nichts davon ist eine echte Sammlung.",
   "shots_overview": "Übersicht: was bereitgestellt wird, der Zustand und wie weit das Hashing ist.",
   "shots_library": "Bibliothek: jeder Titel aus jeder Quelle, mit Suche, Filtern und Export.",
-  "shots_sources": "Quellen: woher die Bridge liest, in welcher Reihenfolge, mit einem Test für jede."
+  "shots_sources": "Quellen: woher die Bridge liest, in welcher Reihenfolge, mit einem Test für jede.",
+  "faq_title": "Fragen zum Vertrauen",
+  "faq_1_q": "Verändert die Bridge meine Bibliothek?",
+  "faq_1_a": "Ihre Spiele werden nur gelesen, dort wo sie liegen: Binden Sie die Ordner schreibgeschützt ein. Das Einzige, was sie zurückschreibt, sind die Spielstände und Cheats von AeroFoil, wenn ein Lantern-Client sie sendet. Alles andere, was sie speichert, sind ihre eigenen Einstellungen, ihr Index und ihr Verlauf in ihrem Konfigurationsordner.",
+  "faq_2_q": "Wohin gehen die Passwörter meiner Shops?",
+  "faq_2_a": "Nicht in die Konfigurationsdatei: Sie enthält nur den Namen einer Umgebungsvariablen, und die Bridge liest das Passwort aus der Umgebung. Eine Sicherung enthält kein Geheimnis.",
+  "faq_3_q": "Wer kann die Verwaltung öffnen?",
+  "faq_3_a": "Ein Administrator, den Sie mit einem einmaligen Einrichtungscode anlegen. Standardmäßig erreicht nur das lokale Netz die Seiten, falsche Passwörter werden je Adresse und je Name gezählt, eine Sitzung endet nach 30 Minuten Inaktivität, und die Seiten laden nichts von anderswo.",
+  "faq_4_q": "Nimmt sie Kontakt nach außerhalb meines Netzes auf?",
+  "faq_4_a": "Zwei Prüfungen sind standardmäßig aktiv und lassen sich einzeln abschalten: ein täglicher Download der öffentlichen Spieleliste von Atlas und ein täglicher Blick auf die neueste Version bei GitHub. Beides sind einfache Anfragen: Nichts über Ihre Bibliothek wird gesendet und nichts installiert.",
+  "faq_5_q": "Wer kann meine Bibliothek lesen?",
+  "faq_5_a": "Nur Geräte, die Sie gekoppelt haben: Ein neues Gerät gibt einen mit dem Befehl invite erzeugten Code ein, und bis dahin ist nur der Handshake offen. Jeden lesen zu lassen ist eine Einstellung, außerhalb eines vertrauenswürdigen Netzes nicht empfohlen."
 }

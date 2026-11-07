@@ -110,5 +110,16 @@
   "shots_lede": "A ponte traz as suas próprias páginas, em inglês e francês, em tema escuro ou claro. Eis três, sobre uma biblioteca inventada: nada do que se vê é uma coleção real.",
   "shots_overview": "Resumo: o que é servido, o estado de saúde e o ponto em que vai o hash.",
   "shots_library": "Biblioteca: cada título de cada fonte, com pesquisa, filtros e exportação.",
-  "shots_sources": "Fontes: de onde a ponte lê, por que ordem, com um teste para cada uma."
+  "shots_sources": "Fontes: de onde a ponte lê, por que ordem, com um teste para cada uma.",
+  "faq_title": "Perguntas sobre confiança",
+  "faq_1_q": "A ponte altera a minha biblioteca?",
+  "faq_1_a": "Os seus jogos são apenas lidos, onde estão: monte as pastas só de leitura. A única coisa que ela reescreve são os jogos guardados e os cheats do AeroFoil, quando um cliente Lantern os envia. Tudo o resto que guarda são as suas próprias definições, o seu índice e o seu histórico, na sua pasta de configuração.",
+  "faq_2_q": "Para onde vão as palavras-passe das minhas lojas?",
+  "faq_2_a": "Não para o ficheiro de configuração: só contém o nome de uma variável de ambiente, e a ponte lê a palavra-passe do ambiente. Uma cópia de segurança não contém nenhum segredo.",
+  "faq_3_q": "Quem pode abrir a administração?",
+  "faq_3_a": "Um administrador que cria com um código de configuração de uso único. Por omissão só a rede local chega às páginas, as palavras-passe erradas são contadas por endereço e por nome, uma sessão termina após 30 minutos de inatividade e as páginas não carregam nada de fora.",
+  "faq_4_q": "Contacta algo fora da minha rede?",
+  "faq_4_a": "Duas verificações estão ativas por omissão e cada uma pode ser desativada: um descarregamento diário da lista pública de jogos do Atlas e uma consulta diária da última versão no GitHub. São pedidos simples: nada sobre a sua biblioteca é enviado e nada é instalado.",
+  "faq_5_q": "Quem pode ler a minha biblioteca?",
+  "faq_5_a": "Só os dispositivos que emparelhou: um dispositivo novo introduz um código criado com o comando invite, e até lá só o handshake está aberto. Deixar qualquer pessoa lê-la é uma definição, não recomendada fora de uma rede de confiança."
 }

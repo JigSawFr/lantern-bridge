@@ -110,5 +110,16 @@
   "shots_lede": "El puente trae sus propias páginas, en inglés y francés, con tema oscuro o claro. Aquí van tres, sobre una biblioteca inventada: nada de lo que se ve es una colección real.",
   "shots_overview": "Resumen: lo que se sirve, el estado de salud y cuánto lleva el hash.",
   "shots_library": "Biblioteca: cada título de cada fuente, con búsqueda, filtros y exportación.",
-  "shots_sources": "Fuentes: de dónde lee el puente, en qué orden, con una prueba para cada una."
+  "shots_sources": "Fuentes: de dónde lee el puente, en qué orden, con una prueba para cada una.",
+  "faq_title": "Preguntas sobre confianza",
+  "faq_1_q": "¿El puente modifica mi biblioteca?",
+  "faq_1_a": "Tus juegos solo se leen, donde están: monta las carpetas en solo lectura. Lo único que reescribe son las partidas guardadas y los trucos de AeroFoil, cuando un cliente Lantern los envía. Todo lo demás que guarda son sus propios ajustes, su índice y su historial, en su carpeta de configuración.",
+  "faq_2_q": "¿A dónde van las contraseñas de mis tiendas?",
+  "faq_2_a": "No al archivo de configuración: solo contiene el nombre de una variable de entorno y el puente lee la contraseña del entorno. Un respaldo no contiene ningún secreto.",
+  "faq_3_q": "¿Quién puede abrir la administración?",
+  "faq_3_a": "Un administrador que creas con un código de configuración de un solo uso. Por defecto solo la red local llega a las páginas, las contraseñas incorrectas se cuentan por dirección y por nombre, una sesión termina tras 30 minutos de inactividad y las páginas no cargan nada de fuera.",
+  "faq_4_q": "¿Contacta algo fuera de mi red?",
+  "faq_4_a": "Hay dos verificaciones activas por defecto y cada una se puede desactivar: una descarga diaria de la lista pública de juegos de Atlas y una consulta diaria de la última versión en GitHub. Son solicitudes simples: no se envía nada de tu biblioteca y no se instala nada.",
+  "faq_5_q": "¿Quién puede leer mi biblioteca?",
+  "faq_5_a": "Solo los dispositivos que emparejaste: un dispositivo nuevo ingresa un código creado con el comando invite, y hasta entonces solo está abierto el saludo inicial. Dejar que cualquiera la lea es un ajuste, no recomendado fuera de una red de confianza."
 }
