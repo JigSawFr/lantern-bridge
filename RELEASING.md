@@ -19,8 +19,14 @@ the tag, attested, listed in `SHA256SUMS` and attached to the GitHub release.
    - `python`: `tools/release_build.sh` builds the sdist, the wheel and the
      CycloneDX SBOM of the locked environment, with the tools pinned by hash in
      `tools/release-requirements.txt`;
-   - `image`: builds and pushes `ghcr.io/jigsawfr/lantern-bridge:X.Y.Z`, `:X.Y`
-     and `:latest`, and attests the image digest;
+   - `scan`: builds the image and scans it with Trivy (from its image, pinned
+     by digest, in a job with no token); a fixed high or critical
+     vulnerability, or a secret, stops the release before anything is pushed;
+   - `image`: builds each platform on a runner of its own architecture and
+     pushes it by digest; `manifest` puts them under
+     `ghcr.io/jigsawfr/lantern-bridge:X.Y.Z`, `:X.Y` and `:latest` and attests
+     the index digest; `sbom` writes the image's CycloneDX bill of materials
+     (a job that can only read packages), attested by `attest`;
    - `attest`: SLSA build provenance of every file (Sigstore, through GitHub's
      attestations), the SBOM linked to the package, `SHA256SUMS`, and the files
      attached to the release;
@@ -29,7 +35,9 @@ the tag, attested, listed in `SHA256SUMS` and attached to the GitHub release.
 
 `release-check.yml` (part of `ci.yml`) builds the Python files twice, in two
 folders, and fails if a byte differs; the SBOM is validated against the
-CycloneDX schema. A release cannot surprise the CI.
+CycloneDX schema; the amd64 image is built twice, with the commit's date as
+`SOURCE_DATE_EPOCH`, and fails if its digest differs. A release cannot
+surprise the CI.
 
 ## Verifying a release
 

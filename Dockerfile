@@ -9,6 +9,11 @@ FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338eb
 COPY --from=ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 /uv /usr/local/bin/uv
 # The environment is built where it will run: its scripts name their interpreter by path
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never UV_PROJECT_ENVIRONMENT=/opt/venv
+# The commit's date: the byte code is then compiled with the hash of its source
+# instead of its date, and the image is the same bytes whenever it is built
+# (release-check.yml builds it twice)
+ARG SOURCE_DATE_EPOCH=0
+ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
 WORKDIR /src
 # The dependencies first: a change to the code does not install them again
 COPY pyproject.toml uv.lock ./
@@ -19,7 +24,10 @@ COPY README.md ./
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable \
-    && rm -f /opt/venv/bin/activate* /opt/venv/bin/*.bat /opt/venv/bin/*.ps1
+    && rm -f /opt/venv/bin/activate* /opt/venv/bin/*.bat /opt/venv/bin/*.ps1 \
+    # uv's own cache notes for a local package (a date in them), and their line in RECORD
+    && find /opt/venv -name uv_cache.json -delete \
+    && find /opt/venv -name RECORD -exec sed -i '/uv_cache\.json/d' {} +
 
 FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca
 # The run needs neither pip nor the GUI and teaching modules

@@ -44,6 +44,8 @@ jobs:
     timeout-minutes: 5
     outputs:
       version: ${{ steps.version.outputs.version }}
+      # The tagged commit's date, for the image's timestamps (SOURCE_DATE_EPOCH)
+      epoch: ${{ steps.version.outputs.epoch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,6 +64,7 @@ jobs:
           found=$(sed -n 's/^__version__ = "\(.*\)"  # x-release-please-version$/\1/p' src/lantern_bridge/_version.py)
           [ "$found" = "${TAG#v}" ] || { echo "::error::src/lantern_bridge/_version.py says '$found', the tag ${TAG#v}"; exit 1; }
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "epoch=$(git log -1 --format=%ct)" >> "$GITHUB_OUTPUT"
 
   python:
     name: python (sdist, wheel, SBOM)
@@ -96,55 +99,47 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  # The image: amd64 and arm64, pushed to GHCR under the version, its minor
-  # and `latest`; its digest is attested below
+  # The image, one platform per job, each on a runner of its own architecture
+  # (no emulation), pushed to GHCR by digest with no tag. Dates in it are the
+  # commit's, so that building it again gives the same bytes (release-check.yml)
   image:
-    name: container image
+    name: container image (${{ matrix.platform }})
     needs: [ meta, scan ]
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     permissions:
       contents: read
       packages: write
-      id-token: write      # the attestation's Sigstore certificate
-      attestations: write
-    outputs:
-      digest: ${{ steps.push.outputs.digest }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { platform: linux/amd64, runner: ubuntu-26.04, arch: amd64 }
+          - { platform: linux/arm64, runner: ubuntu-24.04-arm, arch: arm64 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG }}
           persist-credentials: false
           submodules: true
-      - uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: The image's tags
-        id: tags
-        env:
-          VERSION: ${{ needs.meta.outputs.version }}
-        run: |
-          {
-            echo 'list<<EOF'
-            echo "$IMAGE:$VERSION"
-            echo "$IMAGE:${VERSION%.*}"
-            echo "$IMAGE:latest"
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
-      - name: Build and push
+      - name: Build and push by digest
         id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          SOURCE_DATE_EPOCH: ${{ needs.meta.outputs.epoch }}
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: ${{ steps.tags.outputs.list }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true,rewrite-timestamp=true
+          build-args: SOURCE_DATE_EPOCH
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
           # Attested below, signed by GitHub's Sigstore identity, not by buildx
           provenance: false
           sbom: false
@@ -153,12 +148,66 @@ jobs:
             org.opencontainers.image.version=${{ needs.meta.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=MIT
+      - name: The digest
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          mkdir digests
+          touch "digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-digest-${{ matrix.arch }}
+          path: digests/*
+          if-no-files-found: error
+
+  # The two images under one name: the version, its minor and `latest`; the
+  # index's digest is the one attested
+  manifest:
+    name: container image (index)
+    needs: [ meta, image ]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+      id-token: write      # the attestation's Sigstore certificate
+      attestations: write
+    outputs:
+      digest: ${{ steps.index.outputs.digest }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-digest-*
+          path: digests
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: The index and its tags
+        id: index
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -eu
+          [ "$(find digests -type f | wc -l)" = 2 ] || { echo "::error::expected two image digests"; find digests -type f; exit 1; }
+          refs=""
+          for d in digests/*; do refs="$refs $IMAGE@sha256:$(basename "$d")"; done
+          # shellcheck disable=SC2086
+          docker buildx imagetools create \
+            --tag "$IMAGE:$VERSION" --tag "$IMAGE:${VERSION%.*}" --tag "$IMAGE:latest" $refs
+          digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)
+          case "$digest" in sha256:*) ;; *) echo "::error::no digest for $IMAGE:$VERSION"; exit 1 ;; esac
+          docker buildx imagetools inspect "$IMAGE:$VERSION"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
       #   gh attestation verify oci://ghcr.io/jigsawfr/lantern-bridge:X.Y.Z -R JigSawFr/lantern-bridge
       - name: Image provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ${{ env.IMAGE }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.index.outputs.digest }}
           push-to-registry: true
 
   # The image, scanned before anything is pushed: a fixed high or critical
@@ -192,7 +241,7 @@ jobs:
   # the next job
   sbom:
     name: image SBOM
-    needs: [ meta, image ]
+    needs: [ meta, manifest ]
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
@@ -201,7 +250,7 @@ jobs:
     steps:
       - name: Trivy
         env:
-          DIGEST: ${{ needs.image.outputs.digest }}
+          DIGEST: ${{ needs.manifest.outputs.digest }}
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ github.token }}
         run: |
@@ -219,7 +268,7 @@ jobs:
   # Every file attested, listed and attached
   attest:
     name: attest and attach
-    needs: [ meta, python, image, sbom ]
+    needs: [ meta, python, manifest, sbom ]
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
@@ -266,7 +315,7 @@ jobs:
         uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
         with:
           subject-name: ${{ env.IMAGE }}
-          subject-digest: ${{ needs.image.outputs.digest }}
+          subject-digest: ${{ needs.manifest.outputs.digest }}
           sbom-path: image-sbom/image.cdx.json
           push-to-registry: true
       # The release exists (release-please made it with the tag): the files
@@ -275,7 +324,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          DIGEST: ${{ needs.image.outputs.digest }}
+          DIGEST: ${{ needs.manifest.outputs.digest }}
         run: |
           gh release upload "$TAG" --clobber dist/*
           {
