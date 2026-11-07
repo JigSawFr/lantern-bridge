@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 JigSawFr
+# SPDX-License-Identifier: MIT
+
+# What audit.yml checks the locked dependencies with. tools/audit-requirements.txt
+# pins it and its dependencies by hash; regenerate it after a change here:
+#   uv pip compile tools/audit-requirements.in --universal --generate-hashes \
+#     --python-version 3.11 --exclude-newer <a date two weeks ago> -o tools/audit-requirements.txt
+pip-audit==2.10.1

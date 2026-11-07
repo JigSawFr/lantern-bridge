@@ -1,7 +1,9 @@
 # The workflows themselves (.github/): actionlint, which reads each one and
 # each composite action's use (expressions, reusable workflows' inputs and
 # jobs, runner labels with .github/actionlint.yaml), and checks their shell
-# scripts with shellcheck (the runner's).
+# scripts with shellcheck (the runner's); and zizmor, which looks for what
+# makes a workflow unsafe (injections, permissions too wide, credentials left
+# in a checkout, tokens that are not limited).
 name: workflows
 
 # Called by ci.yml
@@ -33,3 +35,23 @@ jobs:
           tar -xzf "$archive" -C "$RUNNER_TEMP" actionlint
           shellcheck --version | head -n 2
           "$RUNNER_TEMP/actionlint" -color
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      # zizmor and what it needs, by hash (tools/zizmor-requirements.txt)
+      - name: zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --quiet --require-hashes -r tools/zizmor-requirements.txt
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --config .github/zizmor.yml --format github .github/workflows

@@ -142,6 +142,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: ${{ steps.tags.outputs.list }}
           # Attested below, signed by GitHub's Sigstore identity, not by buildx
           provenance: false

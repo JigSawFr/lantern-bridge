@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 JigSawFr
+# SPDX-License-Identifier: MIT
+
+# zizmor's rules (workflows.yml). Two of its stylistic ones are left off.
+rules:
+  # `./.github/workflows/x.yml` is what actionlint and the other tools read
+  self-repository:
+    disable: true
+  # browser.yml installs playwright-core at an exact version (PLAYWRIGHT_VERSION), on purpose
+  adhoc-packages:
+    disable: true
