@@ -200,6 +200,10 @@ def test_duplicates_and_orphans_are_pointed_out(tmp_path: Path) -> None:
     page = client.get("/admin/library/checks")
     assert page.status_code == 200 and "The same file twice" in page.text and "without its game" in page.text
     assert "3 things to check" in client.get("/admin/library").text
+    # Of the same bytes twice, the page says which file the library serves (the first path) and not the other.
+    twice = next(i for i in runtime.browser.catalog().issues() if i.kind == "same_content")
+    assert twice.served == "games: Aurora Quest [0100AAAA00000000][v0].nsp" and "Aurora copy" in twice.detail
+    assert "Served:" in page.text and "games: Aurora Quest [0100AAAA00000000][v0].nsp" in page.text.split("Served:")[1]
 
 
 def test_the_library_can_be_exported_as_json_and_as_csv(tmp_path: Path) -> None:

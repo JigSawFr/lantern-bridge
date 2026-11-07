@@ -94,6 +94,8 @@ class Issue:
     title_id: str
     name: str
     detail: str
+    #: For a duplicate: which of the files the library serves (the others are not offered), as in `detail`.
+    served: str = ""
 
 
 #: same_content: the same bytes twice; same_version: two different files for one version; no_base: an
@@ -160,12 +162,17 @@ class Catalog:
                     continue
                 hashes = {f.sha256 for f in same}
                 kind = "same_content" if len(hashes) == 1 and None not in hashes else "same_version"
+
+                def label(f: FileInfo) -> str:
+                    return f"{f.source}: {f.path.rsplit('#', 1)[-1]}"
+
                 found.append(
                     Issue(
                         kind,
                         title.title_id,
                         title.name,
-                        ", ".join(f"{f.source}: {f.path.rsplit('#', 1)[-1]}" for f in same),
+                        ", ".join(label(f) for f in same),
+                        ", ".join(label(f) for f in same if f.served),
                     )
                 )
         return sorted(found, key=lambda i: (KINDS.index(i.kind), i.name.lower()))
