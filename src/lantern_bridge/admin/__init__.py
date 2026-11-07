@@ -769,7 +769,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             issues=sum(len(v) for v in flagged.values()),
             flagged=flagged.keys(),
             sources=[s.id for s in admin.config.sources],
-            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
+            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort", "view")},
         )
 
     def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:
