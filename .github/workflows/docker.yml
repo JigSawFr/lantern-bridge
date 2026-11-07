@@ -1,6 +1,6 @@
-# The container image: built for amd64 and arm64, and the amd64 one is run and
-# checked (it answers the handshake, and does not run as root). Nothing is
-# published from here: the release workflow will do that.
+# The container image: built for amd64 and arm64, and each is run and
+# checked on its own architecture (it answers the handshake, and does not run as
+# root). Nothing is published from here: the release workflow will do that.
 name: docker
 
 on:
@@ -11,27 +11,26 @@ permissions: {}
 jobs:
   image:
     name: image (${{ matrix.platform }})
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        platform: [ linux/amd64, linux/arm64 ]
+        # Each platform is built on a machine of its own architecture: no emulation
+        include:
+          - { platform: linux/amd64, runner: ubuntu-26.04 }
+          - { platform: linux/arm64, runner: ubuntu-26.04-arm }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           # sdk/: the Lantern SDK, the dependency (not its own submodules)
           submodules: true
-      - name: Emulate arm64
-        if: matrix.platform == 'linux/arm64'
-        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
       - name: Build
         run: docker buildx build --platform "${{ matrix.platform }}" --load --tag lantern-bridge:ci .
       - name: Run it
-        if: matrix.platform == 'linux/amd64'
         run: |
           set -eu
           docker run --detach --name bridge --publish 8080:8080 lantern-bridge:ci
@@ -44,5 +43,5 @@ jobs:
           docker exec bridge lantern-bridge --version
           docker rm --force bridge
       - name: Container logs
-        if: failure() && matrix.platform == 'linux/amd64'
+        if: failure()
         run: docker logs bridge || true
