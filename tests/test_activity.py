@@ -98,3 +98,45 @@ def test_the_developer_setting_is_saved_and_off_by_default(tmp_path: Path) -> No
         data={"csrf": token, "name": "Shelf", "remote_rate": "10", "developer": "on", "admin_lan_only": "on"},
     )
     assert done.status_code in (200, 303) and load(path).developer is True
+
+
+def test_the_days_and_the_machines_survive_a_restart(tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    games.mkdir()
+    config = Config(uid=new_uid(), name="Test shelf", sources=[FolderSource("games", games)])
+    app = make_app(config, tmp_path / "state", run=False)
+    with TestClient(app, client=("10.0.0.7", 50000)) as client:
+        client.get("/.well-known/lantern", headers={"User-Agent": "TestSwitch/1.0"})
+    again = make_app(config, tmp_path / "state", run=False).state.runtime
+    assert [m.address for m in again.history.machines()] == ["10.0.0.7"]
+    assert again.traffic.clients["addr:10.0.0.7"].requests == 1  # the table starts from what was kept
+    today = again.history.days(3)[-1]
+    assert today.requests == 1 and today.sent > 0
+    assert again.traffic.totals.requests == 0  # "since the start" still means the start
+    again.stop()
+
+
+def test_a_paired_device_is_told_by_its_token_not_by_its_address(tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    games.mkdir()
+    config = Config(uid=new_uid(), name="Test shelf", sources=[FolderSource("games", games)])
+    app = make_app(config, tmp_path / "state", run=False)
+    traffic: Traffic = app.state.runtime.traffic
+    traffic.identify = lambda token: ("dev1", "Switch of Ana · ana") if token == "good" else None
+    assert traffic.who("10.0.0.7", "Bearer good") == ("device:dev1", "Switch of Ana · ana")
+    assert traffic.who("10.0.0.7", "Bearer other") == ("addr:10.0.0.7", "")
+    assert traffic.who("10.0.0.7", None) == ("addr:10.0.0.7", "")
+    assert "good" not in repr(traffic._who)  # the token itself is never kept
+
+
+def test_a_history_of_a_newer_version_is_left_alone(tmp_path: Path) -> None:
+    import sqlite3
+
+    from lantern_bridge.history import History
+
+    path = tmp_path / "activity.sqlite3"
+    db = sqlite3.connect(path)
+    db.execute("PRAGMA user_version = 99")
+    db.close()
+    history = History(path)
+    assert not history.usable and history.days(2) == [] and history.machines() == []
