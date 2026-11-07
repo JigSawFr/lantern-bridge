@@ -13,7 +13,7 @@
     <td><form method="post" action="/admin/devices/{{ d.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this device? It has to pair again.') }}">{{ _("Revoke") }}</button></form></td>
   </tr>
   {% else %}
-  <tr><td colspan="7">{{ _("No device is paired yet.") }}</td></tr>
+  <tr><td colspan="7">{{ _("No device is paired yet.") }} {{ _("Open Lantern on the console and pick this server, then accept its request in") }} <a href="/admin/pairings">{{ _("Pairings") }}</a>. <a href="/admin/start">{{ _("Setup guide") }}</a></td></tr>
   {% endfor %}
   </tbody>
 </table></div>

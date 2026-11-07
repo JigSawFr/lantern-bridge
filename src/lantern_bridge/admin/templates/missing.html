@@ -3,5 +3,6 @@
 {% block body %}
 <h1>{{ _("Not found") }}</h1>
 <p class="lede">{{ _("The bridge does not know this title (any more).") }}</p>
+{% if title_id %}<p class="muted">{{ _("It may have been renamed or removed from its folder.") }} <a href="/admin/library?q={{ title_id | urlencode }}">{{ _("Search the library for") }} <code>{{ title_id }}</code></a></p>{% endif %}
 <p><a class="button ghost" href="/admin/library">← {{ _("Library") }}</a></p>
 {% endblock %}

@@ -620,7 +620,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
     def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:
         title = admin.runtime.browser.catalog().titles.get(title_id.upper())
         if title is None:
-            return admin.page(request, "missing.html", session, status=404, active="library")
+            return admin.page(request, "missing.html", session, status=404, active="library", title_id=title_id[:32])
         cheats = [c for c in admin.runtime.projection.library.cheats() if c.title_id.upper() == title.title_id]
         sheet = admin.runtime.projection.title(title.title_id)
         return admin.page(
