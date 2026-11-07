@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -23,7 +24,8 @@ def test_the_last_change_can_be_taken_back_and_taken_again(tmp_path: Path) -> No
     assert _settings(client, csrf, name="First").status_code == 303
     assert _settings(client, csrf, name="Second").status_code == 303
     assert load(path).name == "Second" and "Undo the last change" in client.get("/admin/config").text
-    assert (path.with_name("config.toml.previous").stat().st_mode & 0o077) == 0  # not readable by others
+    if os.name == "posix":  # Windows has no such mode bits
+        assert (path.with_name("config.toml.previous").stat().st_mode & 0o077) == 0  # not readable by others
     undone = client.post("/admin/config/undo", data={"csrf": csrf})
     assert undone.status_code == 303 and undone.headers["location"].endswith("/config?m=undone")
     assert load(path).name == "First"
