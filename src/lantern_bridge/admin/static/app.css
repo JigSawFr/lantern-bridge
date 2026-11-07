@@ -276,3 +276,18 @@ details.fold[open]>summary::before{transform:rotate(90deg)}
 .views{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .views a{color:var(--mist);text-decoration:none;padding:.25rem .8rem;font-size:.85rem}.views a[aria-current]{background:var(--snow);color:var(--abyss)}
 table.dense td,table.dense th{padding:.45rem .7rem}
+
+/* -- settings: contents, groups, a save bar that appears when a form changed ---------------------------------- */
+.toc{position:sticky;top:0;z-index:5;display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none;margin:1rem 0;padding:.5rem 0;background:linear-gradient(var(--abyss) 70%,transparent)}
+.toc::-webkit-scrollbar{display:none}
+.toc a{flex:none;color:var(--mist);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:.25rem .8rem;font-size:.85rem}
+.toc a:hover{color:var(--snow);border-color:var(--mist)}
+[id]{scroll-margin-top:4.5rem}
+.card h3{font:600 1rem var(--display);margin:1.4rem 0 .6rem}
+fieldset.group{border:0;border-top:1px solid var(--line);margin:1.4rem 0 0;padding:0}
+fieldset.group legend{font:600 .8rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dusk);padding:0 .6rem 0 0}
+fieldset.group p{margin:.7rem 0}
+.card[data-dirty]{overflow:visible}
+.savebar{display:flex;align-items:center;gap:1rem;margin-top:1rem}
+.savebar [data-dirty-note]{flex:1}
+.card.dirty .savebar{position:sticky;bottom:0;margin:1rem -1.25rem -1.1rem;padding:.8rem 1.25rem;background:var(--night);border-top:1px solid var(--aurora);border-radius:0 0 var(--radius) var(--radius)}

@@ -1149,6 +1149,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         draft: dict[str, str] | None = None,
     ) -> Response:
         t = admin.tr(request)
+        sources_view = request.url.path.startswith(("/admin/sources", "/admin/config/sources"))
         try:
             file = admin.file()
         except ConfigError as problem:
@@ -1181,10 +1182,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
         done = _DONE.get(request.query_params.get("m", ""))
         return admin.page(
             request,
-            "config.html",
+            "sources.html" if sources_view else "config.html",
             session,
             status=status,
-            active="config",
+            active="sources" if sources_view else "config",
             file=file,
             sources=sources,
             restart=admin.restart_needed(),
@@ -1218,7 +1219,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
         log.info("settings changed from the pages: %s", done)
         admin.runtime.history.event("settings", detail=done)
-        return redirect(f"/{'start' if fields.get('back') == 'start' else 'config'}?m={done}", request)
+        back = fields.get("back")
+        return redirect(f"/{back if back in ('start', 'sources') else 'config'}?m={done}", request)
 
     _FIXED = {
         "No such source.",
@@ -1260,6 +1262,11 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.get("/config")
     async def config_page(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        return refused if refused is not None else settings_page(request, session)
+
+    @router.get("/sources")
+    async def sources_page(request: Request) -> Response:
         session, _, refused = await authed(request)
         return refused if refused is not None else settings_page(request, session)
 
@@ -1399,7 +1406,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/config/undo")
     async def config_undo(request: Request) -> Response:
-        session, _, refused = await authed(request)
+        session, fields, refused = await authed(request)
         if refused is not None:
             return refused
         t = admin.tr(request)
@@ -1411,7 +1418,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return settings_page(request, session, 500, error=f"{error.strerror or error}")
         log.info("settings changed from the pages: the last change was taken back")
         admin.runtime.history.event("settings", detail="undone")
-        return redirect("/config?m=undone", request)
+        return redirect(f"/{'sources' if fields.get('back') == 'sources' else 'config'}?m=undone", request)
 
     def find(config: Config, sid: str) -> int | None:
         return next((n for n, x in enumerate(config.sources) if x.id == sid), None)
