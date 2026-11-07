@@ -42,7 +42,7 @@ def test_the_most_urgent_comes_first_and_a_source_has_its_button(tmp_path: Path)
     assert "Needs your attention" in page and "A source does not answer" in page
     assert re.search(r'name="source" value="games"', page) and "Read again" in page
     texts = {i.text for i in items}
-    assert "Devices are waiting to be paired" in texts and any("restart the bridge" in t for t in texts)
+    assert "Devices are waiting to be paired" in texts and any("was not applied" in t for t in texts)
 
 
 def test_every_kind_of_check_has_its_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

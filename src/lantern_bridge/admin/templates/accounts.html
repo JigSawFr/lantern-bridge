@@ -5,7 +5,7 @@
 <p class="lede">{{ _("The accounts of this bridge. Saves and requests of an account are kept for it, and copied to an AeroFoil user when it has one.") }}</p>
 {% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed but was not applied: the bridge keeps running with the settings it has.") }}{% if reload_error %} <code>{{ reload_error }}</code>{% endif %}</p>{% endif %}
 {% if aero %}<p class="muted">{{ _("AeroFoil source") }}: <strong>{{ aero.id }}</strong> · {{ _("service account") }}: {% if aero.user %}<code>{{ aero.user }}</code>{% else %}<span class="dim">{{ _("none") }}</span>{% endif %}</p>{% endif %}
 <div class="scroll"><table>
   <thead><tr><th>{{ _("Account") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Devices") }}</th>{% if aero %}<th>{{ _("Acts on the AeroFoil as") }}</th>{% endif %}</tr></thead>
