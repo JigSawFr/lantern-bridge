@@ -18,7 +18,7 @@ from lantern.server import LanternApp, SqliteAccounts
 from lantern.server.fastapi import include
 
 from lantern_bridge import health
-from lantern_bridge.admin import Admin, is_local, mount
+from lantern_bridge.admin import Admin, mount
 from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
@@ -88,16 +88,17 @@ def make_app(
         status = health.overall(health.run(runtime))
         return JSONResponse({"status": status}, status_code=503 if status == health.FAIL else 200)
 
+    pages = Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml")
+    app.state.admin_pages = pages
+    mount(app, pages)
+
     @app.get("/metrics", include_in_schema=False)
     async def metrics_page(request: Request) -> Response:
         """The figures for a monitoring tool: off unless the settings say so, and for the local network only."""
         if not config.metrics:
             raise HTTPException(404)
-        if not is_local(request.client.host if request.client else None):
+        if not pages.reachable(request):
             raise HTTPException(403)
         return PlainTextResponse(render(runtime), media_type="text/plain; version=0.0.4; charset=utf-8")
 
-    pages = Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml")
-    app.state.admin_pages = pages
-    mount(app, pages)
     return app
