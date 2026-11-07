@@ -51,6 +51,17 @@
     adjust();
   }
 
+  // -- the library's filters apply as they change (the search waits for a pause in the typing) ------------
+  for (const form of document.querySelectorAll("form[data-autosubmit]")) {
+    let timer = 0;
+    form.addEventListener("change", () => form.requestSubmit());
+    form.addEventListener("input", (e) => {
+      if (e.target.type !== "search") return;
+      clearTimeout(timer);
+      timer = setTimeout(() => form.requestSubmit(), 350);
+    });
+  }
+
   // -- logs -------------------------------------------------------------------------------------------
   const log = document.getElementById("log");
   if (log && window.EventSource) {

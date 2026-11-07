@@ -15,6 +15,7 @@ from pathlib import Path
 
 from lantern.server import MemoryLibrary
 
+from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
 from lantern_bridge.index import Index
@@ -67,6 +68,7 @@ class Runtime:
         self._watchers: list[threading.Thread] = []
         self._remote_failed: dict[tuple[str, str], float] = {}
         self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
+        self.browser = Browser(self.index, self.projection)
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
         self.ledger: Ledger | None = None

@@ -139,3 +139,37 @@ td[colspan]{color:var(--mist);text-align:center;padding:1.6rem 1rem}
   table:not(:has(td[colspan])) td:not([data-label])>*{grid-column:1/-1}
   .scroll:has(td[colspan]){background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
 }
+
+/* -- library: the shelf and a title's page ---------------------------------------------------------------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:end;margin:1rem 0}
+.toolbar .grow{flex:1 1 14rem}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0 1rem}
+.chips a{display:inline-flex;gap:.5rem;align-items:center;padding:.35rem .9rem;border:1px solid var(--line);border-radius:999px;color:var(--mist);text-decoration:none;font-weight:500}
+.chips a b{font:500 .75rem var(--mono);color:var(--dusk)}
+.chips a:hover{color:var(--snow);border-color:var(--mist)}
+.chips a[aria-current]{background:var(--snow);color:var(--abyss);border-color:var(--snow)}.chips a[aria-current] b{color:var(--abyss)}
+.count,.small{font-size:.85rem}
+.shelf{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr));gap:1rem}
+.game{display:flex;gap:.9rem;align-items:center;height:100%;padding:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);color:var(--snow);text-decoration:none}
+.game:hover{border-color:hsl(var(--h) 90% 60% / .6);box-shadow:0 0 0 3px hsl(var(--h) 90% 60% / .15)}
+.cover{flex:none;width:4.2rem;aspect-ratio:3/4;display:grid;place-items:center;border-radius:12px;background-color:var(--night);background-image:linear-gradient(155deg,hsl(var(--h) 85% 55% / .85),hsl(var(--h2) 70% 30% / .9) 70%);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .12)}
+.cover span{font:700 1.3rem var(--display);color:rgb(255 255 255 / .92);letter-spacing:.02em}
+.cover.big{width:min(11rem,38vw)}.cover.big span{font-size:2.6rem}
+.meta{display:grid;gap:.3rem;min-width:0}
+.meta strong{font-family:var(--display);font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.badges{display:flex;flex-wrap:wrap;gap:.3rem;margin:0}
+.badge{font:500 .7rem var(--mono);padding:.1rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--mist)}
+.badge.wait{color:var(--warn);border-color:rgb(255 209 102 / .4)}
+.pager{display:flex;gap:1rem;align-items:center;justify-content:center;margin:1.5rem 0}
+.empty{text-align:center;color:var(--mist)}
+.crumb{margin:0 0 1rem}
+.hero{display:flex;gap:1.5rem;align-items:flex-start;padding:1.4rem;background-color:var(--surface);background-image:linear-gradient(120deg,hsl(var(--h) 80% 50% / .16),transparent 70%);border:1px solid var(--line);border-radius:var(--radius)}
+.hero .about{display:grid;gap:.5rem;min-width:0}.hero h1{margin:0}
+.facts{margin-top:1rem}.tile .n.small{font-size:1.5rem}
+.assoc{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.assoc li{display:flex;flex-wrap:wrap;gap:.4rem 1rem;align-items:center;padding:.6rem .9rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.kind{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:.15rem .6rem;border-radius:999px;background:rgb(255 255 255 / .06)}
+.kind.base{color:var(--aurora)}.kind.update{color:var(--ice)}.kind.dlc{color:var(--violet)}
+@media (max-width:40rem){.hero{flex-direction:column}.shelf{grid-template-columns:1fr}}
+.tone-0{--h:150;--h2:210}.tone-1{--h:162;--h2:222}.tone-2{--h:174;--h2:234}.tone-3{--h:186;--h2:246}.tone-4{--h:198;--h2:258}.tone-5{--h:210;--h2:270}.tone-6{--h:222;--h2:282}.tone-7{--h:234;--h2:294}.tone-8{--h:246;--h2:306}.tone-9{--h:258;--h2:318}.tone-10{--h:270;--h2:330}.tone-11{--h:282;--h2:342}
+/* The pages' CSP forbids inline styles: a title's colour is one of these twelve classes. */

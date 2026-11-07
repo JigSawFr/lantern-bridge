@@ -181,6 +181,16 @@ class Index:
         with self._lock:
             return [Row(*row) for row in self._db.execute(query + " ORDER BY source, path", args)]
 
+    def rows(self, source: str | None = None) -> list[Row]:
+        """Every file the index knows, hashed or still waiting."""
+        query = "SELECT source, path, size, mtime_ns, sha256 FROM files"
+        args: tuple[str, ...] = ()
+        if source is not None:
+            query += " WHERE source = ?"
+            args = (source,)
+        with self._lock:
+            return [Row(*row) for row in self._db.execute(query + " ORDER BY source, path", args)]
+
     def counts(self) -> dict[str, int]:
         with self._lock:
             done, todo = self._db.execute("SELECT COUNT(sha256), COUNT(*) - COUNT(sha256) FROM files").fetchone()

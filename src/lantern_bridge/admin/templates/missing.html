@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Not found") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Not found") }}</h1>
+<p class="lede">{{ _("The bridge does not know this title (any more).") }}</p>
+<p><a class="button ghost" href="/admin/library">← {{ _("Library") }}</a></p>
+{% endblock %}

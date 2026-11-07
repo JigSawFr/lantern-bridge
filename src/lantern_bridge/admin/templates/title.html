@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ title.name }}{% endblock %}
+{% block body %}
+<p class="crumb"><a href="/admin/library">← {{ _("Library") }}</a></p>
+<section class="hero tone-{{ title.tone }}">
+  <div class="cover big" aria-hidden="true"><span>{{ title.initials }}</span></div>
+  <div class="about">
+    <h1>{{ title.name }}</h1>
+    <p class="dim"><code>{{ title.title_id }}</code> <button type="button" class="link" data-copy-text="{{ title.title_id }}">{{ _("Copy") }}</button></p>
+    {% if sheet and (sheet.developer or sheet.publisher or sheet.release) %}
+    <p class="muted">{{ [sheet.developer, sheet.publisher if sheet.publisher != sheet.developer else none, sheet.release] | select | join(" · ") }}</p>{% endif %}
+    {% if sheet and (sheet.genres or sheet.tags) %}<p class="badges">{% for g in (sheet.genres or []) + (sheet.tags or []) %}<span class="badge">{{ g }}</span>{% endfor %}</p>{% endif %}
+    {% if sheet and sheet.summary %}<p class="muted">{{ sheet.summary }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="cards facts">
+  <div class="tile"><span class="n">{{ title.count("base") }}</span><span class="what">{{ _("games") }}</span></div>
+  <div class="tile"><span class="n">{{ title.count("update") }}</span><span class="what">{{ _("updates") }}</span></div>
+  <div class="tile"><span class="n">{{ title.count("dlc") }}</span><span class="what">DLC</span></div>
+  <div class="tile"><span class="n small">{{ title.size | size }}</span><span class="what">{{ title.sources | join(", ") }}</span></div>
+</section>
+
+<h2>{{ _("Versions and add-ons") }}</h2>
+<ul class="assoc">
+  {% for f in title.files %}
+  <li><span class="kind {{ f.type }}">{{ {"base": _("Game"), "update": _("Update"), "dlc": "DLC"}[f.type] }}</span>
+    <span>{% if f.type != "dlc" %}v{{ f.version }}{% else %}<code>{{ f.app_id }}</code>{% endif %}</span>
+    <span class="dim small">{{ f.size | size }} · {{ f.format }} · {{ f.source }}</span>
+    {% if f.sha256 %}<span class="pill ok">{{ _("hashed") }}</span>{% else %}<span class="pill wait">{{ _("waiting") }}</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>{{ _("Files") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>SHA-256</th><th>{{ _("Served") }}</th></tr></thead>
+  <tbody>
+  {% for f in title.files %}
+  <tr>
+    <td><code>{{ f.name }}</code></td><td>{{ f.source }}</td><td>{{ f.size | size }}</td>
+    <td>{% if f.sha256 %}<code title="{{ f.sha256 }}">{{ f.sha256[:16] }}…</code> <button type="button" class="link" data-copy-text="{{ f.sha256 }}">{{ _("Copy") }}</button>{% else %}<span class="dim">{{ _("waiting") }}</span>{% endif %}</td>
+    <td>{% if f.served %}<span class="pill ok">{{ _("yes") }}</span>{% elif f.sha256 %}<span class="pill">{{ _("a copy serves it") }}</span>{% else %}–{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+{% if cheats %}
+<h2>{{ _("Cheats") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Build") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>{{ _("Updated") }}</th></tr></thead>
+  <tbody>{% for c in cheats %}<tr><td><code>{{ c.build_id or "–" }}</code></td><td>{{ c.source or "–" }}</td><td>{{ c.size | size }}</td><td>{{ c.updated or "–" }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% endblock %}
