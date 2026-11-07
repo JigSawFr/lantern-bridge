@@ -66,8 +66,53 @@
       if (found) { el.textContent = String(found.n); el.className = `dot ${found.level}`; }
     }
   };
+  // Alerts: when the dots show something new that needs a look, a browser that allowed it shows a notification
+  // (through the service worker, so that an installed app gets it too). Only this device decides, and only while
+  // the pages are open: nothing goes through a third party. The texts are kept in the browser when alerts are
+  // turned on, so that any page can show them.
+  const ALERTS = "lb-alerts", TEXTS = "lb-alert-texts";
+  const store = (key, value) => { try { if (value === null) localStorage.removeItem(key); else if (value !== undefined) localStorage.setItem(key, value); return localStorage.getItem(key); } catch (_) { return null; } };
+  const alertsOn = () => "Notification" in window && Notification.permission === "granted" && store(ALERTS) === "1";
+  let before = null;
+  const notify = (badges) => {
+    if (before !== null && alertsOn() && navigator.serviceWorker) {
+      let texts = {};
+      try { texts = JSON.parse(store(TEXTS) || "{}"); } catch (_) { /* skipped */ }
+      for (const key of ["overview", "pairings", "sources", "tasks"]) {
+        const now = badges[key], was = before[key];
+        if (now && now.level !== "info" && texts[key] && (!was || now.n > was.n || was.level === "info")) {
+          navigator.serviceWorker.ready.then((reg) => reg.showNotification(texts.title || "Lantern Bridge", { body: texts[key], tag: `lb-${key}`, icon: "/admin/static/icon-192.png", data: { url: "/admin/" } })).catch(() => {});
+        }
+      }
+    }
+    before = badges;
+  };
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/admin/sw.js", { scope: "/admin/" }).catch(() => {});
+  const card = document.getElementById("alerts");
+  if (card) {
+    const state = card.querySelector("[data-notify-state]"), button = card.querySelector("[data-notify-toggle]");
+    const labels = { on: button.textContent, off: card.dataset.turnOff };
+    const show = () => {
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) { state.textContent = card.dataset.unsupported; button.hidden = true; return; }
+      if (Notification.permission === "denied") { state.textContent = card.dataset.blocked; button.hidden = true; return; }
+      state.textContent = alertsOn() ? card.dataset.on : card.dataset.off;
+      button.textContent = alertsOn() ? labels.off : labels.on;
+    };
+    button.addEventListener("click", async () => {
+      try {
+        if (alertsOn()) store(ALERTS, "0");
+        else if ((await Notification.requestPermission()) === "granted") {
+          const { title, overview, pairings, sources, tasks } = card.dataset;
+          store(TEXTS, JSON.stringify({ title, overview, pairings, sources, tasks }));
+          store(ALERTS, "1");
+        }
+      } catch (_) { /* skipped */ }
+      show();
+    });
+    show();
+  }
   if (document.querySelector("[data-badge]")) {
-    follow("/admin/api/badges", (text) => { try { dots(typeof text === "string" ? JSON.parse(text) : text); } catch (_) { /* skipped */ } });
+    follow("/admin/api/badges", (text) => { try { const found = typeof text === "string" ? JSON.parse(text) : text; dots(found); notify(found); } catch (_) { /* skipped */ } });
   }
 
   if (document.getElementById("progress")) {

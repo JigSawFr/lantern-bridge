@@ -530,5 +530,18 @@
  "See what would change": "Посмотреть, что изменится",
  "The settings were imported.": "Настройки импортированы.",
  "The file cannot be used:": "Файл нельзя использовать:",
- "This file changes nothing.": "Этот файл ничего не меняет."
+ "This file changes nothing.": "Этот файл ничего не меняет.",
+ "Lantern Bridge": "Lantern Bridge",
+ "Something needs a look.": "Что-то требует внимания.",
+ "A device is waiting to pair.": "Устройство ожидает сопряжения.",
+ "A source does not answer.": "Источник не отвечает.",
+ "A conversion failed.": "Не удалось выполнить преобразование.",
+ "Turn alerts off": "Выключить уведомления",
+ "Alerts are on for this browser.": "Уведомления включены для этого браузера.",
+ "Alerts are off for this browser.": "Уведомления отключены для этого браузера.",
+ "This browser refuses alerts from this page: allow them in its site settings.": "Браузер отклоняет уведомления от этой страницы: разрешите их в настройках сайта.",
+ "This browser cannot show alerts.": "Этот браузер не может показывать уведомления.",
+ "Alerts on this device": "Уведомления на этом устройстве",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "Страницы можно установить как приложение (из меню браузера); они показывают уведомление, когда что-то требует внимания: источник не отвечает, устройство ожидает сопряжения, сбой преобразования. Уведомления приходят, пока страницы открыты, во вкладке или в приложении; ничего не отправляется через третьи стороны.",
+ "Turn alerts on": "Включить уведомления"
 }
