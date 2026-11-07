@@ -80,6 +80,9 @@
         <span class="dim">{{ f.source }}</span>
         {% if f.sha256 %}<span class="pill ok">{{ _("hashed") }}</span>{% else %}<span class="pill wait">{{ _("waiting") }}</span>{% endif %}
       </div>
+      {% if f.source in open_folders %}<div class="factions">
+        <form method="post" action="/admin/library/{{ title.title_id }}/delete"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}"><button class="danger small" data-confirm="{{ _('Delete this file from the disk? This cannot be undone.') }}">{{ _("Delete") }}</button></form>
+      </div>{% endif %}
     </li>
     {% endfor %}
   </ul>

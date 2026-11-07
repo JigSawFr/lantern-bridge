@@ -107,6 +107,10 @@
         el.hidden = !shop;
         for (const input of el.querySelectorAll("input")) input.disabled = !shop;
       }
+      for (const el of kind.form.querySelectorAll("[data-folder-only]")) {
+        el.hidden = shop;
+        for (const input of el.querySelectorAll("input")) input.disabled = shop;
+      }
       where.placeholder = shop ? where.dataset.phShop : where.dataset.phFolder;
     };
     kind.addEventListener("change", adjust);

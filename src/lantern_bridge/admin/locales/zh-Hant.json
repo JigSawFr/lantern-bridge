@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "隱藏位址、路徑和訊息",
  "Report a problem": "回報問題",
  "cheats": "金手指",
- "latest": "最新"
+ "latest": "最新",
+ "Allow this bridge to delete and compress files in this folder": "允許此橋接器刪除與壓縮此資料夾中的檔案",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "預設關閉：橋接器不會寫入資料夾，唯讀磁碟區即可。開啟後，磁碟區必須以可寫入方式掛載。",
+ "can change files": "可變更檔案",
+ "The pages may delete and compress files in this folder.": "頁面可以刪除與壓縮此資料夾中的檔案。",
+ "Stop changing files": "不再變更檔案",
+ "Allow changing files": "允許變更檔案",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "允許頁面刪除與壓縮此資料夾中的檔案嗎？磁碟區必須以可寫入方式掛載。",
+ "Delete this file from the disk? This cannot be undone.": "要從磁碟刪除此檔案嗎？此操作無法復原。",
+ "Delete": "刪除",
+ "The file was deleted from the disk.": "檔案已從磁碟刪除。",
+ "This folder is not open to changes: allow it in the sources.": "此資料夾未開放變更：請在來源中允許。",
+ "The file is not there any more, or is not a plain file of the folder.": "檔案已不存在，或不是資料夾中的一般檔案。",
+ "The file could not be deleted: the folder may be mounted read-only.": "無法刪除檔案：資料夾可能以唯讀方式掛載。",
+ "No such file in this title.": "此標題中沒有這樣的檔案。"
 }

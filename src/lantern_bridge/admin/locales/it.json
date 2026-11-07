@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "Nascondi indirizzi, percorsi e messaggi",
  "Report a problem": "Segnala un problema",
  "cheats": "cheat",
- "latest": "ultima"
+ "latest": "ultima",
+ "Allow this bridge to delete and compress files in this folder": "Consenti a questo bridge di eliminare e comprimere i file di questa cartella",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "Disattivato per impostazione predefinita: il bridge non scrive mai nella cartella e basta un volume in sola lettura. Attivato, il volume deve essere montato in scrittura.",
+ "can change files": "può modificare i file",
+ "The pages may delete and compress files in this folder.": "Le pagine possono eliminare e comprimere i file di questa cartella.",
+ "Stop changing files": "Non modificare più i file",
+ "Allow changing files": "Consenti la modifica dei file",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "Lasciare che le pagine eliminino e comprimano i file di questa cartella? Il volume deve essere montato in scrittura.",
+ "Delete this file from the disk? This cannot be undone.": "Eliminare questo file dal disco? Non si può annullare.",
+ "Delete": "Elimina",
+ "The file was deleted from the disk.": "Il file è stato eliminato dal disco.",
+ "This folder is not open to changes: allow it in the sources.": "Questa cartella non è aperta alle modifiche: consentilo nelle sorgenti.",
+ "The file is not there any more, or is not a plain file of the folder.": "Il file non c'è più o non è un file normale della cartella.",
+ "The file could not be deleted: the folder may be mounted read-only.": "Impossibile eliminare il file: la cartella potrebbe essere montata in sola lettura.",
+ "No such file in this title.": "Nessun file di questo tipo in questo titolo."
 }

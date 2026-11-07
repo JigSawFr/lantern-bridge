@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "Ocultar endereços, caminhos e mensagens",
  "Report a problem": "Comunicar um problema",
  "cheats": "cheats",
- "latest": "mais recente"
+ "latest": "mais recente",
+ "Allow this bridge to delete and compress files in this folder": "Permitir que esta ponte elimine e comprima ficheiros nesta pasta",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "Desativado por predefinição: a ponte nunca escreve na pasta e um volume só de leitura serve. Ativado, o volume tem de estar montado com escrita.",
+ "can change files": "pode alterar ficheiros",
+ "The pages may delete and compress files in this folder.": "As páginas podem eliminar e comprimir ficheiros nesta pasta.",
+ "Stop changing files": "Deixar de alterar ficheiros",
+ "Allow changing files": "Permitir alterar ficheiros",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "Deixar as páginas eliminarem e comprimirem ficheiros nesta pasta? O volume tem de estar montado com escrita.",
+ "Delete this file from the disk? This cannot be undone.": "Eliminar este ficheiro do disco? Não pode ser anulado.",
+ "Delete": "Eliminar",
+ "The file was deleted from the disk.": "O ficheiro foi eliminado do disco.",
+ "This folder is not open to changes: allow it in the sources.": "Esta pasta não está aberta a alterações: permita-o nas fontes.",
+ "The file is not there any more, or is not a plain file of the folder.": "O ficheiro já não existe ou não é um ficheiro normal da pasta.",
+ "The file could not be deleted: the folder may be mounted read-only.": "Não foi possível eliminar o ficheiro: a pasta pode estar montada só de leitura.",
+ "No such file in this title.": "Não existe tal ficheiro neste título."
 }

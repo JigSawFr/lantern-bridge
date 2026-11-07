@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "Скрыть адреса, пути и сообщения",
  "Report a problem": "Сообщить о проблеме",
  "cheats": "читы",
- "latest": "последняя"
+ "latest": "последняя",
+ "Allow this bridge to delete and compress files in this folder": "Разрешить этому шлюзу удалять и сжимать файлы в этой папке",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "По умолчанию выключено: шлюз никогда не пишет в папку, достаточно тома только для чтения. Если включено, том должен быть смонтирован с записью.",
+ "can change files": "может изменять файлы",
+ "The pages may delete and compress files in this folder.": "Страницы могут удалять и сжимать файлы в этой папке.",
+ "Stop changing files": "Больше не изменять файлы",
+ "Allow changing files": "Разрешить изменение файлов",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "Разрешить страницам удалять и сжимать файлы в этой папке? Том должен быть смонтирован с записью.",
+ "Delete this file from the disk? This cannot be undone.": "Удалить этот файл с диска? Это нельзя отменить.",
+ "Delete": "Удалить",
+ "The file was deleted from the disk.": "Файл удалён с диска.",
+ "This folder is not open to changes: allow it in the sources.": "Эта папка закрыта для изменений: разрешите это в источниках.",
+ "The file is not there any more, or is not a plain file of the folder.": "Файла больше нет, или это не обычный файл папки.",
+ "The file could not be deleted: the folder may be mounted read-only.": "Не удалось удалить файл: папка, возможно, смонтирована только для чтения.",
+ "No such file in this title.": "В этой игре нет такого файла."
 }

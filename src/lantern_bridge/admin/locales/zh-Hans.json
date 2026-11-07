@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "隐藏地址、路径和消息",
  "Report a problem": "报告问题",
  "cheats": "金手指",
- "latest": "最新"
+ "latest": "最新",
+ "Allow this bridge to delete and compress files in this folder": "允许此桥接器删除和压缩此文件夹中的文件",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "默认关闭：桥接器不会向文件夹写入，只读卷即可。开启后，卷必须以可写方式挂载。",
+ "can change files": "可更改文件",
+ "The pages may delete and compress files in this folder.": "页面可以删除和压缩此文件夹中的文件。",
+ "Stop changing files": "不再更改文件",
+ "Allow changing files": "允许更改文件",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "允许页面删除和压缩此文件夹中的文件吗？卷必须以可写方式挂载。",
+ "Delete this file from the disk? This cannot be undone.": "要从磁盘删除此文件吗？此操作无法撤销。",
+ "Delete": "删除",
+ "The file was deleted from the disk.": "文件已从磁盘删除。",
+ "This folder is not open to changes: allow it in the sources.": "此文件夹未开放更改：请在来源中允许。",
+ "The file is not there any more, or is not a plain file of the folder.": "文件已不存在，或不是文件夹中的普通文件。",
+ "The file could not be deleted: the folder may be mounted read-only.": "无法删除文件：文件夹可能以只读方式挂载。",
+ "No such file in this title.": "此标题中没有这样的文件。"
 }

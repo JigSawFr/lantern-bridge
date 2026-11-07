@@ -37,6 +37,9 @@ class FolderSource:
 
     id: str
     path: Path
+    #: Off unless the settings say so: the bridge then never writes in the folder (a read-only volume is fine).
+    #: On, the pages may delete a file of it and compress it.
+    writable: bool = False
 
     @property
     def location(self) -> str:
@@ -193,7 +196,10 @@ class Config:
 
 def _source_table(source: Source) -> dict[str, Any]:
     if isinstance(source, FolderSource):
-        return {"id": source.id, "kind": "folder", "path": str(source.path)}
+        folder: dict[str, Any] = {"id": source.id, "kind": "folder", "path": str(source.path)}
+        if source.writable:
+            folder["writable"] = True
+        return folder
     kind = {OwnfoilSource: "ownfoil", AerofoilSource: "aerofoil"}.get(type(source), "tinfoil")
     table: dict[str, Any] = {"id": source.id, "kind": kind, "url": source.url}
     if source.user is not None:
@@ -378,8 +384,11 @@ def _parse(data: dict[str, Any]) -> Config:
         if kind == "folder":
             if not isinstance(path, str) or not path:
                 raise ConfigError(f"source {sid!r}: `path` is required")
-            sources.append(FolderSource(id=sid, path=Path(path)))
-            own = {"id", "kind", "path"}
+            writable = raw.get("writable", False)
+            if not isinstance(writable, bool):
+                raise ConfigError(f"source {sid!r}: `writable` must be true or false")
+            sources.append(FolderSource(id=sid, path=Path(path), writable=writable))
+            own = {"id", "kind", "path", "writable"}
         elif kind in ("tinfoil", "ownfoil", "aerofoil"):
             user, env = raw.get("user"), raw.get("password_env")
             for key, value in (("user", user), ("password_env", env)):

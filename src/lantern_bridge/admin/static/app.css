@@ -329,3 +329,4 @@ pre.report{margin:1rem 0;padding:1rem;overflow:auto;background:var(--night);bord
 .filerow .fmain{display:grid;gap:.1rem;min-width:0}
 .filerow .fname code{word-break:break-all}
 .filerow .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem}
+.filerow .factions{display:flex;gap:.5rem;flex-wrap:wrap}.filerow .factions form{margin:0}

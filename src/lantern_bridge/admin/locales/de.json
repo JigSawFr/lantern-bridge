@@ -442,5 +442,19 @@
  "Hide addresses, paths and messages": "Adressen, Pfade und Meldungen ausblenden",
  "Report a problem": "Problem melden",
  "cheats": "Cheats",
- "latest": "neueste"
+ "latest": "neueste",
+ "Allow this bridge to delete and compress files in this folder": "Dieser Bridge erlauben, Dateien in diesem Ordner zu löschen und zu komprimieren",
+ "Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.": "Standardmäßig aus: Die Bridge schreibt dann nie in den Ordner, und ein schreibgeschütztes Volume genügt. Wenn aktiv, muss das Volume beschreibbar eingebunden sein.",
+ "can change files": "kann Dateien ändern",
+ "The pages may delete and compress files in this folder.": "Die Seiten dürfen Dateien in diesem Ordner löschen und komprimieren.",
+ "Stop changing files": "Keine Dateien mehr ändern",
+ "Allow changing files": "Änderung von Dateien erlauben",
+ "Let the pages delete and compress files in this folder? The volume must be mounted for writing.": "Den Seiten erlauben, Dateien in diesem Ordner zu löschen und zu komprimieren? Das Volume muss beschreibbar eingebunden sein.",
+ "Delete this file from the disk? This cannot be undone.": "Diese Datei vom Datenträger löschen? Das lässt sich nicht rückgängig machen.",
+ "Delete": "Löschen",
+ "The file was deleted from the disk.": "Die Datei wurde vom Datenträger gelöscht.",
+ "This folder is not open to changes: allow it in the sources.": "Dieser Ordner ist nicht für Änderungen freigegeben: Erlauben Sie es in den Quellen.",
+ "The file is not there any more, or is not a plain file of the folder.": "Die Datei ist nicht mehr vorhanden oder keine normale Datei des Ordners.",
+ "The file could not be deleted: the folder may be mounted read-only.": "Die Datei konnte nicht gelöscht werden: Der Ordner ist möglicherweise schreibgeschützt eingebunden.",
+ "No such file in this title.": "Keine solche Datei in diesem Titel."
 }

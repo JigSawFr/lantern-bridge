@@ -103,6 +103,7 @@ _DONE = {
     "tied": "Login tied.",
     "untied": "Login removed.",
     "queued": "Hashing again: these files go first.",
+    "deleted": "The file was deleted from the disk.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -976,6 +977,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             shots=len(sheet.screenshots or []) if sheet is not None else 0,
             cheats=cheats,
             timings=admin.runtime.stats.timings,
+            open_folders={x.id for x in admin.config.sources if isinstance(x, FolderSource) and x.writable},
             atlas=admin.runtime.atlas.get(title.title_id) if admin.runtime.atlas is not None else None,
             message=admin.tr(request)(_DONE[done]) if done else None,
         )
@@ -985,7 +987,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         session, _, refused = await authed(request)
         if refused is not None:
             return refused
-        return title_view(request, session, title_id)
+        done = request.query_params.get("m")
+        return title_view(request, session, title_id, done if done in _DONE else None)
 
     @router.post("/library/{title_id}/rehash")
     async def title_rehash(title_id: str, request: Request) -> Response:
@@ -1005,6 +1008,53 @@ def mount(app: FastAPI, admin: Admin) -> None:
         count = admin.runtime.rehash(wanted)
         log.info("rehash of %s requested from the pages: %d file(s)", title.title_id, count)
         return title_view(request, session, title.title_id, "queued")
+
+    def writable_file(title: TitleInfo, source: str, path: str) -> tuple[Path | None, str | None]:
+        """The file on disk behind one file of a title, if the pages may change it; else why not.
+
+        It has to be a file of that title, in a folder the settings allow changes in (the running settings: an
+        allowance saved but not applied does not count), and it has to be a regular file inside that folder."""
+        if (source, path) not in {(f.source, f.path) for f in title.files}:
+            return None, "No such file in this title."
+        allowed = next(
+            (x for x in admin.config.sources if x.id == source and isinstance(x, FolderSource) and x.writable), None
+        )
+        root = admin.runtime.roots.get(source)
+        if allowed is None or root is None:
+            return None, "This folder is not open to changes: allow it in the sources."
+        real_root = root.resolve()
+        target = root.joinpath(*path.split("/"))
+        if target.is_symlink() or not target.is_file() or not target.resolve().is_relative_to(real_root):
+            return None, "The file is not there any more, or is not a plain file of the folder."
+        return target, None
+
+    @router.post("/library/{title_id}/delete")
+    async def title_delete(title_id: str, request: Request) -> Response:
+        """Deletes one file of a title from the disk (only in a folder the settings open to changes)."""
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        title = admin.runtime.browser.catalog().titles.get(title_id.upper())
+        if title is None:
+            return admin.page(request, "missing.html", session, status=404, active="library")
+        target, why = writable_file(title, fields.get("source", ""), fields.get("path", ""))
+        if target is None:
+            return Response(admin.tr(request)(why or ""), 403, headers=_HEADERS)
+        try:
+            target.unlink()
+        except OSError as error:
+            log.warning("a file of %s could not be deleted: %s", title.title_id, error.strerror or error)
+            return Response(
+                admin.tr(request)("The file could not be deleted: the folder may be mounted read-only."),
+                500,
+                headers=_HEADERS,
+            )
+        log.info("a file of %s was deleted from the pages (source %s)", title.title_id, fields.get("source", ""))
+        admin.runtime.history.event("deleted", subject=title.title_id, detail="1 file")
+        admin.runtime.forget_file(fields.get("source", ""), fields.get("path", ""))
+        last = len(title.files) == 1  # nothing of the title is left: back to the library
+        where = "/admin/library?m=deleted" if last else f"/admin/library/{title.title_id}?m=deleted"
+        return RedirectResponse(where, status_code=303, headers=_HEADERS)
 
     def activity_data() -> dict[str, Any]:
         traffic = admin.runtime.traffic
@@ -1372,6 +1422,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 "id": x.id,
                 "kind": type(x).__name__.removesuffix("Source").lower(),
                 "location": x.location,
+                "writable": getattr(x, "writable", None),
                 "user": getattr(x, "user", None),
                 "password_env": getattr(x, "password_env", None),
                 "password_set": bool(getattr(x, "password_env", None)) and getattr(x, "password_env", "") in os.environ,
@@ -1573,7 +1624,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if cls is None:
             raise ConfigError("this kind of source is not supported")
         if kind == "folder":
-            return FolderSource(id=sid, path=Path(where))
+            return FolderSource(id=sid, path=Path(where), writable=f.get("writable") == "on")
         user, env = f.get("user", "").strip() or None, f.get("password_env", "").strip() or None
         if env is not None and not _ENV_NAME.match(env):
             raise ConfigError("a variable's name is letters, digits and _")
@@ -1634,6 +1685,20 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return None
 
         return await change(request, edit, "removed")
+
+    @router.post("/config/sources/{sid}/writable")
+    async def config_writable(sid: str, request: Request) -> Response:
+        """Allows, or forbids, the pages to delete and compress files in a folder."""
+
+        def edit(config: Config, f: dict[str, str]) -> str | None:
+            at = find(config, sid)
+            folder = config.sources[at] if at is not None else None
+            if at is None or not isinstance(folder, FolderSource):
+                return "No such source."
+            config.sources[at] = dataclasses.replace(folder, writable=f.get("allow") == "1")
+            return None
+
+        return await change(request, edit, "saved")
 
     async def move(sid: str, request: Request, step: int) -> Response:
         def edit(config: Config, f: dict[str, str]) -> str | None:
