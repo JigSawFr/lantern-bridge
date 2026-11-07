@@ -35,6 +35,7 @@ code{background:rgb(255 255 255 / .06);border-radius:6px;padding:.05em .4em;font
 .brand{display:flex;align-items:center;gap:.65rem;font:600 1.05rem var(--display);color:var(--snow);text-decoration:none}
 .brand img{width:34px;height:34px;flex:none}
 .brand span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.out .ico{display:none}
 .brand small{display:block;font:500 .7rem var(--mono);color:var(--dusk);letter-spacing:.04em}
 nav{display:flex;flex-wrap:wrap;align-items:center;gap:.15rem;flex:1}
 nav a{color:var(--mist);text-decoration:none;padding:.4rem .5rem;border-radius:999px;font-weight:500;font-size:.9rem;border:1px solid transparent}
@@ -90,7 +91,7 @@ progress::-moz-progress-bar{background:var(--grad);border-radius:999px}
 
 .row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end}
 .stack{display:grid;gap:1rem;max-width:28rem}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;align-items:end}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;align-items:start}
 label{display:grid;gap:.3rem;font-size:.85rem;color:var(--mist)}
 .hint{font-size:.78rem;font-weight:400;color:var(--dusk)}
 label.check{display:flex;align-items:center;gap:.6rem;color:var(--snow);font-size:1rem}
@@ -116,7 +117,7 @@ dt{color:var(--dusk)}dd{margin:0}
 .auth .mark{width:72px;height:72px;margin-bottom:1rem}
 :focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.tile,.card,button{transition:border-color .2s,box-shadow .2s}.tile:hover{border-color:rgb(0 255 204 / .4)}}
-@media (max-width:40rem){.more-btn{display:none}.brand{flex:1 1 0;min-width:0}.tools{margin-left:auto;gap:.35rem}.out{padding:0 .6rem}.brand small{display:none}nav{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 1rem}nav::-webkit-scrollbar{display:none}nav a{white-space:nowrap}}
+@media (max-width:40rem){.more-btn{display:none}.brand{flex:1 1 0;min-width:0}.tools{margin-left:auto;gap:.35rem}.out{width:36px;padding:0}.out .txt{display:none}.out .ico{display:block;margin:auto}.brand small{display:none}nav{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 2rem 0 1rem;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 1.5rem),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 1.5rem),transparent)}nav::-webkit-scrollbar{display:none}nav a{white-space:nowrap}}
 
 /* -- polish: skip link, toasts, dialog, logs, reveal ----------------------------------------------------- */
 .skip{position:absolute;left:.75rem;top:-4rem;z-index:20;background:var(--snow);color:var(--abyss);padding:.6rem 1rem;border-radius:12px;font-weight:600;text-decoration:none}
@@ -199,7 +200,6 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 .badge.genre{color:var(--ice);border-color:rgb(51 187 255 / .35)}
 .card.atlas dl{background:none;border:0;padding:0;margin:.5rem 0}
 .actions{margin:1rem 0}
-[data-live]{min-height:12rem}
 
 .shots{display:flex;gap:.6rem;overflow-x:auto;margin:1rem 0;padding-bottom:.4rem}.shots img{height:9rem;border-radius:10px;border:1px solid var(--line);flex:none}
 

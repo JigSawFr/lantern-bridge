@@ -11,9 +11,11 @@
       const value = state[el.dataset.bind];
       if (value !== undefined && value !== null) el.textContent = value;
     }
-    const busy = Number(state.total) > 0;
-    for (const el of document.querySelectorAll("[data-busy]")) el.hidden = !busy;
-    for (const el of document.querySelectorAll("[data-idle]")) el.hidden = busy;
+    const total = Number(state.total) > 0;
+    const working = Number(state.pending) > 0;
+    for (const el of document.querySelectorAll("[data-hashing]")) el.hidden = !working;
+    for (const el of document.querySelectorAll("[data-done]")) el.hidden = !total || working;
+    for (const el of document.querySelectorAll("[data-idle]")) el.hidden = total;
     const bar = document.getElementById("progress");
     if (bar) { bar.max = state.total || 1; bar.value = state.hashed; }
   };
