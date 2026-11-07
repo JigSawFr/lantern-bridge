@@ -10,6 +10,11 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "Open Lantern on the console and pick this server, then accept its request in": "Ouvrez Lantern sur la console et choisissez ce serveur, puis acceptez sa demande dans",
+    "Create one above and give its code to the person, who types it in Lantern when adding this server.": "Créez-en une ci-dessus et donnez son code à la personne, qui le saisit dans Lantern en ajoutant ce serveur.",
+    "Clear the filters": "Effacer les filtres",
+    "It may have been renamed or removed from its folder.": "Il a peut-être été renommé ou retiré de son dossier.",
+    "Search the library for": "Chercher dans la bibliothèque",
     "The previous settings are back. Restart the bridge to apply them.": "Les réglages précédents sont revenus. Redémarrez le pont pour les appliquer.",
     "There is nothing to undo.": "Il n'y a rien à annuler.",
     "Try it first": "Essayer d'abord",

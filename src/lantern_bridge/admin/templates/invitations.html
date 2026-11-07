@@ -27,7 +27,7 @@
     <td><form method="post" action="/admin/invitations/{{ i.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this invitation?') }}">{{ _("Revoke") }}</button></form></td>
   </tr>
   {% else %}
-  <tr><td colspan="6">{{ _("No open invitation.") }}</td></tr>
+  <tr><td colspan="6">{{ _("No open invitation.") }} {{ _("Create one above and give its code to the person, who types it in Lantern when adding this server.") }}</td></tr>
   {% endfor %}
   </tbody>
 </table></div>
