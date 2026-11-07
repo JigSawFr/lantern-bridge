@@ -56,7 +56,8 @@ def state(runtime: Runtime, now: float | None = None) -> dict[str, Any]:
     counts = index.counts()
     apps, titles = runtime.projection.served()
     checks = health.run(runtime)
-    return {
+    updates = runtime.updates
+    document = {
         "schema": SCHEMA,
         "ts": int(time.time() if now is None else now),
         "bridge": {"uid": runtime.config.uid, "name": runtime.config.name, "version": __version__},
@@ -77,6 +78,9 @@ def state(runtime: Runtime, now: float | None = None) -> dict[str, Any]:
         ],
         "uptime": int((time.time() if now is None else now) - stats.started),
     }
+    if updates is not None and updates.checked is not None:  # only when the settings allow the check
+        document["update"] = {"available": updates.available, "latest": updates.latest}
+    return document
 
 
 class Publisher:

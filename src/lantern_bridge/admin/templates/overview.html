@@ -4,6 +4,7 @@
 <h1>{{ _("Overview") }}</h1>
 <p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
 {% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }} <a href="/admin/config">{{ _("Settings") }}</a></p>{% endif %}
+{% if updates and updates.available %}<p class="note" role="status">{{ _("A newer version is out:") }} <a href="{{ updates.page }}" rel="noreferrer">{{ updates.latest }}</a> ({{ _("you run") }} {{ updates.current }}).</p>{% endif %}
 <section class="cards">
   <a class="tile" href="/admin/library"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></a>
   <a class="tile" href="/admin/library"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></a>

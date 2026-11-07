@@ -140,6 +140,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **Backup.** *Settings › Backup* downloads a zip, and `lantern-bridge backup -o file.zip` writes one (the bridge may run): the settings (`config.toml`, no secret in it: passwords are read from the environment), the index with the hashes already computed and the activity history. Pairings are not in it, so a device pairs again. To restore, stop the bridge and run `lantern-bridge restore file.zip` (in a container, with the file in the `./config` volume: `docker run --rm -v ./config:/config lantern-bridge restore file.zip`); it refuses an archive of a newer schema, and keeps what it replaces beside it as `.before-restore`.
 
+**Updates.** Off by default. With *Settings › Updates* (`update_check = true`) the bridge reads GitHub's latest release once a day and says on the overview when it is newer (and `update` in the MQTT state). It sends only the request, so GitHub sees the machine's address as for any download, and it downloads and installs nothing.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.

@@ -421,6 +421,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             session,
             active="overview",
             checks=health.run(admin.runtime),
+            updates=admin.runtime.updates,
             state=admin.state(),
             uid=admin.config.uid,
             public=admin.config.public,
@@ -880,6 +881,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             error=error,
             tested=tested,
             atlas_info=admin.runtime.atlas,
+            updates=admin.runtime.updates,
         )
 
     async def change(request: Request, edit: Any, done: str) -> Response:
@@ -925,6 +927,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.developer = "developer" in f
             config.atlas = "atlas" in f
             config.metrics = "metrics" in f
+            config.update_check = "update_check" in f
             config.webhook = parse_webhook(f.get("webhook", "").strip())
             return None
 
