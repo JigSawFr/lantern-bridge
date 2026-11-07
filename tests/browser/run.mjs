@@ -228,6 +228,34 @@ await test("the live block shows a server event at once, not at the next tick", 
   assert.ok(Date.now() - began < 1800, "the block changed well before the idle wait of five seconds");
 });
 
+for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone", { width: 390, height: 800 }]]) {
+  await test(`${label}: the library list can be ticked, and the bar follows`, size, async (page) => {
+    await page.goto(`${BASE}/library?view=list`);
+    assert.equal(await page.locator("[data-bulk]").isVisible(), false, "no bar before a tick");
+    const boxes = page.locator("input[data-pick]");
+    const n = await boxes.count();
+    assert.ok(n >= 2, "the list has rows");
+    await boxes.first().check();
+    assert.equal(await page.locator("[data-bulk]").isVisible(), true, "the bar shows after a tick");
+    assert.equal(await page.locator("[data-n]").innerText(), "1");
+    const href = await page.locator("[data-export]").getAttribute("href");
+    assert.ok(href.includes("ids="), "the export link names the ticked titles");
+    if (label === "desktop") {
+      await page.locator("[data-pick-all]").check();
+      assert.equal(await page.locator("[data-n]").innerText(), String(n));
+    }
+    assert.ok(await noSideScroll(page), "the bar fits the screen");
+    await page.locator("[data-clear]").click();
+    assert.equal(await page.locator("[data-bulk]").isVisible(), false, "cleared");
+    if (label === "desktop") { // a phone shows the rows as cards, with no header to sort by
+      assert.equal(await page.locator("th[aria-sort] a").count(), 1, "one column is the sort");
+      await page.getByRole("link", { name: /^Size/i }).click();
+      await page.waitForURL(/sort=size/);
+      assert.match(await page.locator("th[aria-sort] a").innerText(), /size/i, "the clicked column is the sort");
+    }
+  });
+}
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

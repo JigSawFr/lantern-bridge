@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
 from lantern_bridge.catalog import Catalog, search
-from test_admin import _admin, _client
+from test_admin import _admin, _client, _csrf
 
 BASE = "Aurora Quest [0100AAAA00000000][v0].nsp"
 UPDATE = "Aurora Quest [0100AAAA00000800][v65536].nsp"
@@ -223,3 +224,72 @@ def test_the_library_can_be_exported_as_json_and_as_csv(tmp_path: Path) -> None:
     assert rows[0][0] == "title_id" and rows[1][0] == "0100AAAA00000000"
     assert all(not cell.startswith("=") for row in rows for cell in row)  # a name cannot become a formula
     assert _client(tmp_path).get("/admin/library/export").status_code == 303
+
+
+def test_columns_sort_both_ways_and_a_tie_goes_by_name(tmp_path: Path) -> None:
+    catalog = _catalog(_shelf(tmp_path))
+
+    def names(**kw: Any) -> list[str]:
+        return [t.name for t in search(catalog, **kw).titles]
+
+    assert names(sort="name") == ["Aurora Quest", "Zebra Run"] and names(sort="name", descending=True) == [
+        "Zebra Run",
+        "Aurora Quest",
+    ]
+    assert names(sort="size") == ["Aurora Quest", "Zebra Run"]  # the biggest first, unless told otherwise
+    assert names(sort="size", descending=False) == ["Zebra Run", "Aurora Quest"]
+    assert (
+        names(sort="version") == ["Aurora Quest", "Zebra Run"]
+        and names(sort="version", descending=False)[0] == "Zebra Run"
+    )
+    assert names(sort="nonsense") == names(sort="name")  # an unknown sort is the default
+
+
+def test_the_list_has_sortable_headers_and_a_checkbox_a_title(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    page = client.get("/admin/library?view=list").text
+    assert 'aria-sort="ascending"' in page and "sort=name&amp;dir=desc" in page  # the active column flips
+    assert "sort=size&amp;dir=desc" in page and "sort=version&amp;dir=desc" in page  # the others start their way
+    assert (
+        page.count('data-pick value="0100') == 2
+        and "data-pick-all" in page
+        and 'action="/admin/library/rehash"' in page
+    )
+    by_size = client.get("/admin/library?view=list&sort=size&dir=asc").text
+    assert 'aria-sort="ascending"' in by_size and by_size.index("Zebra Run") < by_size.index("Aurora Quest")
+    assert "data-pick" not in client.get("/admin/library").text  # the grid has no selection
+
+
+def test_titles_ticked_are_hashed_again_together(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    csrf = _csrf(client.get("/admin/library?view=list").text)
+    reply = client.post(
+        "/admin/library/rehash",
+        data={
+            "csrf": csrf,
+            "ids": "0100aaaa00000000, 0100FFFF00000000",
+            "next": "/admin/library?view=list&q=aur&m=old",
+        },
+    )
+    assert reply.status_code == 303 and reply.headers["location"] == "/admin/library?view=list&q=aur&m=queued"
+    assert runtime.index.counts() == {"hashed": 1, "pending": 3}  # the three files of one title, not the other's
+    assert "Hashing again" in client.get(reply.headers["location"]).text
+    nothing = client.post("/admin/library/rehash", data={"csrf": csrf, "ids": "", "next": "//evil.example.org"})
+    assert nothing.headers["location"] == "/admin/library"  # nothing ticked, and an outside address is not followed
+    assert client.post("/admin/library/rehash", data={"ids": "0100AAAA00000000"}).status_code == 403  # no token
+
+
+def test_an_export_can_be_the_filtered_list_or_the_ticked_titles(tmp_path: Path) -> None:
+    import csv
+    import io
+    import json
+
+    client = _shelf(tmp_path)
+    rows = list(csv.reader(io.StringIO(client.get("/admin/library/export?format=csv&q=zebra").text)))
+    assert [r[0] for r in rows[1:]] == ["0100BBBB00000000"]
+    ids = json.loads(client.get("/admin/library/export?ids=0100bbbb00000000,0100FFFF00000000").text)["titles"]
+    assert [t["title_id"] for t in ids] == ["0100BBBB00000000"]  # an unknown id is skipped
+    everything = json.loads(client.get("/admin/library/export").text)["titles"]
+    assert len(everything) == 2
+    assert len(json.loads(client.get("/admin/library/export?q=nothing-like-it").text)["titles"]) == 0

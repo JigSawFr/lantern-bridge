@@ -426,5 +426,13 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "これらのページは設定ファイルに書き込みます。ブリッジは、変更が保存されるとすぐに、またはファイルが手動で編集されたときに適用します。",
  "Unsaved changes.": "未保存の変更があります。",
  "card(s).": "カード。",
- "The source you added was not applied: see the note on the settings page.": "追加したソースは適用されませんでした。設定ページの注記をご確認ください。"
+ "The source you added was not applied: see the note on the settings page.": "追加したソースは適用されませんでした。設定ページの注記をご確認ください。",
+ "Version": "バージョン",
+ "Select all on this page": "このページをすべて選択",
+ "Select {name}": "{name} を選択",
+ "selected": "件選択中",
+ "Hash the selected titles again?": "選択したタイトルのハッシュを再計算しますか？",
+ "Export the selection (CSV)": "選択範囲をエクスポート (CSV)",
+ "Export this list (CSV)": "この一覧をエクスポート (CSV)",
+ "Clear the selection": "選択を解除"
 }

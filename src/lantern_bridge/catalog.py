@@ -108,8 +108,8 @@ KINDS = ("same_content", "same_version", "no_base")
 class Catalog:
     titles: dict[str, TitleInfo]
 
-    def export(self, generated: str) -> dict[str, object]:
-        """The whole library as a document (`schema` 1): the titles, and for each its files."""
+    def export(self, generated: str, titles: Iterable[TitleInfo] | None = None) -> dict[str, object]:
+        """The library, or the titles given, as a document (`schema` 1): the titles, and for each its files."""
         return {
             "schema": EXPORT_SCHEMA,
             "generated": generated,
@@ -132,16 +132,16 @@ class Catalog:
                         for f in t.files
                     ],
                 }
-                for t in sorted(self.titles.values(), key=lambda t: (t.name.lower(), t.title_id))
+                for t in sorted(self.titles.values() if titles is None else titles, key=_by_name)
             ],
         }
 
-    def export_csv(self) -> str:
-        """One line a file, for a spreadsheet."""
+    def export_csv(self, titles: Iterable[TitleInfo] | None = None) -> str:
+        """One line a file, for a spreadsheet: the whole library, or the titles given."""
         out = io.StringIO()
         writer = csv.writer(out, lineterminator="\n")
         writer.writerow(_CSV_COLUMNS)
-        for t in sorted(self.titles.values(), key=lambda t: (t.name.lower(), t.title_id)):
+        for t in sorted(self.titles.values() if titles is None else titles, key=_by_name):
             for f in t.files:
                 row = (t.title_id, t.name, f.type, f.app_id, f.version, f.format, f.size, f.sha256, f.source)
                 writer.writerow([*(_cell(v) for v in row), _cell(f.path.rsplit("#", 1)[-1])])
@@ -274,6 +274,14 @@ class Page:
     pages: int
 
 
+def _by_name(title: TitleInfo) -> tuple[str, str]:
+    return (title.name.lower(), title.title_id)
+
+
+#: The way each sort goes when the pages do not say: names from A, the biggest and the newest first.
+FIRST_DOWN = {"name": False, "size": True, "version": True}
+
+
 def search(
     catalog: Catalog,
     *,
@@ -283,6 +291,7 @@ def search(
     state: str = "",
     genre: str = "",
     sort: str = "name",
+    descending: bool | None = None,
     page: int = 1,
     per_page: int = PAGE,
     flagged: Iterable[str] = (),
@@ -307,12 +316,13 @@ def search(
         return not (state == "hashed" and title.pending)
 
     found: Iterable[TitleInfo] = (t for t in catalog.titles.values() if keep(t))
-    if sort == "size":
-        ordered = sorted(found, key=lambda t: (-t.size, t.name.lower()))
-    elif sort == "version":
-        ordered = sorted(found, key=lambda t: (-t.latest, t.name.lower()))
-    else:
-        ordered = sorted(found, key=lambda t: (t.name.lower(), t.title_id))
+    sort = sort if sort in SORTS else "name"
+    down = FIRST_DOWN[sort] if descending is None else descending
+    if sort == "name":
+        ordered = sorted(found, key=_by_name, reverse=down)
+    else:  # a tie goes by name, from A, whichever way the figures go
+        sign = -1 if down else 1
+        ordered = sorted(found, key=lambda t: (sign * (t.size if sort == "size" else t.latest), *_by_name(t)))
     pages = max(1, -(-len(ordered) // per_page))
     page = min(max(1, page), pages)
     return Page(ordered[(page - 1) * per_page : page * per_page], len(ordered), page, pages)
