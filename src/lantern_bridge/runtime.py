@@ -27,6 +27,7 @@ from lantern_bridge.history import History
 from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
 from lantern_bridge.notify import Notifier
+from lantern_bridge.pulse import Pulse
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
@@ -102,7 +103,9 @@ class Runtime:
         self.notifier = Notifier(config.notify, config.name) if config.notify else None
         if self.notifier is not None:
             self.history.listeners.append(self.notifier.on_event)
-        self.traffic = Traffic(history=self.history)
+        self.pulse = Pulse()  # what the pages' live blocks wait on
+        self.history.listeners.append(lambda _event: self.pulse.bump())
+        self.traffic = Traffic(history=self.history, pulse=self.pulse)
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
         self.ledger: Ledger | None = None
@@ -252,6 +255,7 @@ class Runtime:
                 self.stats.hashed_bytes += total
                 self.stats.hashing_seconds += time.monotonic() - began
                 log.info("source %s: hashed %s", row.source, row.path.rsplit("#", 1)[-1])
+                self.pulse.bump()
                 return True
         return False
 
@@ -286,11 +290,13 @@ class Runtime:
             mark = now
             self.stats.hashed_files += 1
             self.stats.hashed_bytes += sizes.get((source, path), 0)
+            self.pulse.bump()
 
         done = hash_pending(self.index, self.roots, limit=batch, on_hashed=hashed)
         self.stats.hashing_seconds += time.monotonic() - began
         taken = self.projection.fetch_pictures()
         self.projection.refresh()
+        self.pulse.bump()
         return done + taken
 
     def _loop(self) -> None:

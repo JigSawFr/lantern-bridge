@@ -217,6 +217,17 @@ await test("the flags are drawn by the bundled font", { width: 1280, height: 800
   assert.ok(loaded, "the font is loaded");
 });
 
+await test("the live block shows a server event at once, not at the next tick", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/activity`);
+  await page.waitForFunction(() => document.querySelector("[data-live]").dataset.html !== undefined, null, { timeout: 4000 });
+  await page.waitForTimeout(1500); // the stream is idle now: it waits for a change, or five seconds
+  const before = await page.locator("[data-live]").first().evaluate((el) => el.dataset.html);
+  const began = Date.now();
+  await page.request.get(`${BASE.replace("/admin", "")}/api/lantern/v1/apps`); // a request the library counts
+  await page.waitForFunction((old) => document.querySelector("[data-live]").dataset.html !== old, before, { timeout: 4000 });
+  assert.ok(Date.now() - began < 1800, "the block changed well before the idle wait of five seconds");
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

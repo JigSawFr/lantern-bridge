@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from lantern_bridge.history import Delta, History
+from lantern_bridge.pulse import Pulse
 
 Scope = MutableMapping[str, Any]
 Message = MutableMapping[str, Any]
@@ -109,6 +110,8 @@ class Traffic:
     history: History | None = None
     #: Maps a bearer token to (device id, label) for a paired device; set by the application.
     identify: Callable[[str], tuple[str, str] | None] | None = None
+    #: Bumped when a transfer starts or ends, so the pages' live blocks look again at once.
+    pulse: Pulse | None = None
     _pending: dict[str, list[Any]] = field(default_factory=dict)
     _who: dict[str, tuple[float, tuple[str, str] | None]] = field(default_factory=dict)
     _flushed: float = field(default_factory=time.monotonic)
@@ -157,6 +160,8 @@ class Traffic:
         with self._lock:
             self.totals.simple += 1
             self.recent.append(Done(time.time(), client, method, path, status, 0.0, 0, agent, simple=True))
+        if self.pulse is not None:
+            self.pulse.bump()
 
     def begin(
         self, client: str, method: str, path: str, range_: str | None, authorization: str | None = None
@@ -165,6 +170,8 @@ class Traffic:
         transfer = Transfer(next(self._ids), client, method, path, time.monotonic(), range=range_, key=key, label=label)
         with self._lock:
             self.active[transfer.id] = transfer
+        if self.pulse is not None:
+            self.pulse.bump()
         return transfer
 
     def sent(self, transfer: Transfer, count: int) -> None:
@@ -220,6 +227,8 @@ class Traffic:
                 pend[6] += transfer.sent
                 pend[7] += 1 if transfer.status >= 500 else 0
         self.flush()
+        if self.pulse is not None:
+            self.pulse.bump()
 
     def flush(self, *, force: bool = False) -> None:
         """Writes what happened since the last write (at most every `FLUSH` seconds, or when forced)."""

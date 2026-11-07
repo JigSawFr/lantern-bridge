@@ -138,6 +138,12 @@ def _csv_safe(value: str) -> str:
 #: What the live stream may follow: the pages' fragments and the state. Each is asked again as the same session.
 #: Live streams one session may keep open at once (a page opens one per block it follows).
 _STREAMS_PER_SESSION = 8
+_BUSY, _IDLE, _SETTLE, _BEAT = (
+    1.0,
+    5.0,
+    0.25,
+    15.0,
+)  # seconds: look again while busy, while idle, after a change; keep-alive
 _FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state")
 
 
@@ -1152,21 +1158,31 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
         async def events() -> AsyncIterator[str]:
             last: str | None = None
-            beat = 0
+            sent = time.monotonic()
             try:
                 while not await request.is_disconnected():
-                    body = await _ask(request, target)
-                    if body is None:  # the session ended or the page failed: the browser reconnects, is sent to sign in
-                        return
-                    if body != last:
-                        last = body
-                        yield f"data: {json.dumps(body)}\n\n"
-                        beat = 0
-                    beat += 1
-                    if beat >= 15:
-                        yield ": keep-alive\n\n"
-                        beat = 0
-                    await asyncio.sleep(1)
+                    if admin.reloader is not None and admin.reloader.current is not request.app:
+                        return  # the settings were applied: the browser reconnects to the new server
+                    runtime = admin.runtime
+                    with runtime.pulse.listen() as changed:  # opened first: a change while rendering is not lost
+                        body = await _ask(request, target)
+                        if (
+                            body is None
+                        ):  # the session ended or the page failed: the browser reconnects, is sent to sign in
+                            return
+                        if body != last:
+                            last = body
+                            yield f"data: {json.dumps(body)}\n\n"
+                            sent = time.monotonic()
+                        elif time.monotonic() - sent >= _BEAT:
+                            yield ": keep-alive\n\n"
+                            sent = time.monotonic()
+                        # What changes by itself, the rates and the durations, is looked at every second while
+                        # something is going on; otherwise the page waits for a change, or a few seconds.
+                        moving = bool(runtime.traffic.active) or any(runtime.traffic.rates().values())
+                        with contextlib.suppress(TimeoutError):
+                            await asyncio.wait_for(changed.wait(), _BUSY if moving else _IDLE)
+                    await asyncio.sleep(_SETTLE)  # a burst of changes is one look
             finally:
                 left = admin.streams.get(holder, 1) - 1
                 if left > 0:
