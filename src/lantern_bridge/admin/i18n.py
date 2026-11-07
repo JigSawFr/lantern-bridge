@@ -346,6 +346,7 @@ FR: dict[str, str] = {
     "days": "jours",
     "expires": "expire",
     "files hashed": "fichiers hachés",
+    "Reading the sources again.": "Relecture des sources en cours.",
     "On this page": "Sur cette page",
     "Integrations": "Intégrations",
     "Advanced": "Avancé",

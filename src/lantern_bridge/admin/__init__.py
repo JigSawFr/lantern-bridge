@@ -100,6 +100,7 @@ _DONE = {
     "untied": "Login removed.",
     "queued": "Hashing again: these files go first.",
     "done": "Done.",
+    "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
 }
 #: The kinds of the journal, in the order of its filter.
@@ -631,6 +632,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             state=state,
             uid=admin.config.uid,
             public=admin.config.public,
+            message=admin.tr(request)(_DONE[done]) if (done := request.query_params.get("m", "")) in _DONE else None,
         )
 
     @router.get("/api/state")
@@ -659,7 +661,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         else:
             log.info("a new pass was requested from the pages")
         admin.runtime.wake()
-        return redirect("/", request)
+        return redirect("/?m=" + ("queued" if fields.get("action") == "rehash" else "scan"), request)
 
     def icons_of(title_ids: Iterable[str]) -> set[str]:
         """The titles, among these, whose sheet has an icon the bridge holds."""
