@@ -192,7 +192,7 @@ jobs:
           VERSION: ${{ needs.meta.outputs.version }}
         run: |
           set -eu
-          [ "$(ls digests | wc -l)" = 2 ] || { echo "::error::expected two image digests"; ls digests; exit 1; }
+          [ "$(find digests -type f | wc -l)" = 2 ] || { echo "::error::expected two image digests"; find digests -type f; exit 1; }
           refs=""
           for d in digests/*; do refs="$refs $IMAGE@sha256:$(basename "$d")"; done
           # shellcheck disable=SC2086
