@@ -61,6 +61,10 @@ nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .lang button{background:none;color:var(--mist);border:0;padding:.35rem .7rem;font:500 .8rem var(--mono);cursor:pointer;min-height:36px}
 .lang button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.modes button{background:none;color:var(--mist);border:0;width:36px;min-height:36px;display:grid;place-items:center;padding:0;cursor:pointer}
+.modes button:hover{color:var(--snow)}
+.modes button[aria-pressed="true"]{background:rgb(0 255 204 / .14);color:var(--aurora)}
 main{max-width:72rem;width:100%;margin:0 auto;padding:2rem 1rem 1rem;flex:1 0 auto}
 footer{max-width:72rem;width:100%;margin:2.5rem auto 2rem;padding:1.2rem 1rem 0;color:var(--dusk);font:.8rem var(--mono);border-top:1px solid var(--line)}
 
@@ -296,4 +300,4 @@ body.saveall form[data-dirty] .savebar{display:none}
 .searchbox{margin:.5rem 0 1rem}
 .searchbox input{width:100%}
 .card.dirty .savebar{position:sticky;bottom:0;margin:1rem -1.25rem -1.1rem;padding:.8rem 1.25rem;background:var(--night);border-top:1px solid var(--aurora);border-radius:0 0 var(--radius) var(--radius)}
-:root[data-theme="light"] .lang button[aria-current]{color:#00604d}
+:root[data-theme="light"] .lang button[aria-current],:root[data-theme="light"] .modes button[aria-pressed="true"]{color:#00604d}

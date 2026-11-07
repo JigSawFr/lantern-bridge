@@ -87,6 +87,7 @@ _ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _STATIC = {
     "app.css": "text/css",
     "app.js": "text/javascript",
+    "theme.js": "text/javascript",
     "bridge.svg": "image/svg+xml",
     "sora.woff2": "font/woff2",
     "figtree.woff2": "font/woff2",
@@ -355,6 +356,9 @@ class Admin:
             developer=self.config.developer,
             lang=lang,
             theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
+            mode=request.cookies.get(_THEME_COOKIE)
+            if request.cookies.get(_THEME_COOKIE) in ("light", "dark")
+            else "auto",
             languages=LANGUAGES,
             here=request.url.path if request.url.path.startswith("/admin") else "/admin/",
             _=tr,
@@ -528,17 +532,18 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/theme")
     async def theme(request: Request) -> Response:
-        """Dark is the look of the pages; light is a choice of this browser, kept in a cookie."""
+        """Automatic follows the browser's own preference (the page script reads it); light and dark are a choice of
+        this browser, kept in a cookie. Without the script the pages are dark."""
         if not admin.own_form(request):
             return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         target = fields.get("next", "")
         back = target if target.startswith("/admin") and "//" not in target and "\\" not in target else "/admin/"
         response = RedirectResponse(back, status_code=303, headers=_HEADERS)
-        if fields.get("theme") == "light":
+        if fields.get("theme") in ("light", "dark"):
             response.set_cookie(
                 _THEME_COOKIE,
-                "light",
+                fields["theme"],
                 max_age=365 * 86400,
                 path="/admin",
                 samesite="strict",

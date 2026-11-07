@@ -437,6 +437,8 @@ FR: dict[str, str] = {
     "Health checks, browsers and scanners: not counted above.": "Contrôles de santé, navigateurs et scanners : non comptés ci-dessus.",
     "Health checks, browsers and scanners: not counted in the activity.": "Contrôles de santé, navigateurs et scanners : non comptés dans l'activité.",
     "simple": "simple",
+    "Theme": "Thème",
+    "Automatic theme": "Thème automatique",
 }
 
 

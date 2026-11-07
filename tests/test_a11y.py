@@ -121,3 +121,17 @@ def test_the_header_menu_depends_on_the_role_and_marks_where_you_are(tmp_path: P
     assert 'aria-controls="more-list"' in page and 'id="more-list"' in page
     assert 'class="more"' in client.get("/admin/").text and "data-here" not in client.get("/admin/").text
     assert 'aria-label="Light theme"' in page
+
+
+def test_the_theme_is_automatic_until_a_browser_chooses(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    page = client.get("/admin/").text
+    assert 'data-mode="auto"' in page and '<script src="/admin/static/theme.js"></script>' in page
+    assert re.search(r'value="auto"[^>]*aria-pressed="true"', page) and "Automatic theme" in page
+    assert client.get("/admin/static/theme.js").status_code == 200
+    reply = client.post("/admin/theme", data={"theme": "dark", "next": "/admin/"})
+    assert "lb_theme=dark" in reply.headers["set-cookie"]
+    forced = client.get("/admin/").text
+    assert 'data-mode="dark"' in forced and re.search(r'value="dark"[^>]*aria-pressed="true"', forced)
+    client.post("/admin/theme", data={"theme": "auto", "next": "/admin/"})
+    assert 'data-mode="auto"' in client.get("/admin/").text  # the cookie is gone: the browser decides again
