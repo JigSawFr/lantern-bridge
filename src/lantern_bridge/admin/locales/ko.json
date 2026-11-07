@@ -495,5 +495,13 @@
  "smallest": "가장 작음",
  "then the original is deleted": "그 후 원본 삭제",
  "File deleted": "파일 삭제됨",
- "File converted": "파일 변환됨"
+ "File converted": "파일 변환됨",
+ "Conversions": "변환",
+ "Estimated result": "예상 결과",
+ "a typical figure: it varies a lot with the game": "일반적인 수치입니다. 게임에 따라 크게 다릅니다",
+ "about {time} left": "약 {time} 남음",
+ "expected": "예상",
+ "from your earlier conversions": "이전 변환 기준",
+ "grew by": "증가",
+ "saved": "절약"
 }

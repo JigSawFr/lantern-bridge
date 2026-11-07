@@ -495,5 +495,13 @@
  "smallest": "最小",
  "then the original is deleted": "然後刪除原始檔案",
  "File deleted": "檔案已刪除",
- "File converted": "檔案已轉換"
+ "File converted": "檔案已轉換",
+ "Conversions": "轉換",
+ "Estimated result": "預估結果",
+ "a typical figure: it varies a lot with the game": "典型值：因遊戲而異，差別很大",
+ "about {time} left": "約剩 {time}",
+ "expected": "預計",
+ "from your earlier conversions": "根據您之前的轉換",
+ "grew by": "增加了",
+ "saved": "節省"
 }

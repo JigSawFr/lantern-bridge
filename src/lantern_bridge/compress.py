@@ -14,6 +14,7 @@ Nothing here reads the keys: they are the tool's.
 from __future__ import annotations
 
 import contextlib
+import itertools
 import json
 import logging
 import os
@@ -45,6 +46,35 @@ KEEP = 50  # jobs remembered
 LEVEL = 18  # nsz's own default
 
 
+#: What a result weighs against its source when nothing was measured here: nsz's compression level against the size
+#: ratio, typically (it varies a lot with the game). Block mode costs a little; an XCZ also drops the XCI's padding.
+_PRIOR = ((1, 0.84), (3, 0.80), (10, 0.74), (18, 0.70), (22, 0.68))
+RATIOS = "compress-ratios.json"
+RATIOS_SCHEMA = 1
+REMEMBERED = 30  # results kept for each way of converting
+
+
+def prior_ratio(action: str, target: str, level: int, block: bool) -> float:
+    """The size of the result over the size of the source that is usual for this way of converting."""
+    if action == "decompress":
+        return 1.45 if target == "nsp" else 1.50
+    level = min(max(level, _PRIOR[0][0]), _PRIOR[-1][0])
+    for (low, a), (high, b) in itertools.pairwise(_PRIOR):
+        if low <= level <= high:
+            ratio = a + (b - a) * (level - low) / (high - low)
+            break
+    else:  # pragma: no cover  (the clamp above keeps the level inside the table)
+        ratio = _PRIOR[-1][1]
+    return min(ratio + (0.03 if block else 0.0) - (0.02 if target == "xcz" else 0.0), 0.95)
+
+
+def ratio_key(source_format: str, target: str, level: int, block: bool) -> str:
+    """What results are compared by: a conversion of the same formats, level and mode."""
+    if CONVERSIONS.get(source_format, ("", ""))[1] == "decompress":
+        return f"{source_format}>{target}"
+    return f"{source_format}>{target}:{level}:{'block' if block else 'solid'}"
+
+
 def argv(tool: str) -> list[str]:
     """The command for a tool: a Python script (a stand-in for tests, or a tool run with the same Python) runs with
     this interpreter, anything else is run as it is."""
@@ -72,10 +102,25 @@ class Job:
     message: str = ""
     size_in: int = 0
     size_out: int = 0
+    format: str = ""  # the source's: nsp, xci, nsz, xcz
+    expected: int = 0  # the size the result should have, estimated before it starts
+    progress: float = 0.0  # 0 to 1: how far the tool is
+    step: str = ""  # what the tool says it is doing
     created: float = field(default_factory=time.time)
     started: float = 0.0
     finished: float = 0.0
     cancel: bool = False
+
+    def eta(self, now: float) -> float | None:
+        """Seconds left, from how far it got and how long that took; None until there is something to go by."""
+        if self.state != "running" or self.progress < 0.02 or self.started <= 0:
+            return None
+        return max(0.0, (now - self.started) * (1 - self.progress) / self.progress)
+
+    def speed(self, now: float) -> float:
+        """Bytes of the source dealt with a second."""
+        elapsed = now - self.started
+        return self.size_in * self.progress / elapsed if self.state == "running" and elapsed > 0 else 0.0
 
 
 class Compressor:
@@ -92,9 +137,59 @@ class Compressor:
         self._thread: threading.Thread | None = None
         self._process: subprocess.Popen[str] | None = None
         self._closing = False
+        self._results: dict[str, list[float]] = {}  # what conversions here weighed, by way of converting
+        self._writable = True
+        self._load()
 
     def attach(self, runtime: Runtime) -> None:
         self.runtime = runtime
+
+    # -- what results weigh -----------------------------------------------------------------------
+
+    def _load(self) -> None:
+        """The ratios measured by earlier conversions. A file of a newer schema is not read, and not written over."""
+        try:
+            data = json.loads((self.state_dir / RATIOS).read_text("utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(data, dict) or not isinstance(data.get("results"), dict):
+            return
+        if int(data.get("schema", 0)) > RATIOS_SCHEMA:
+            self._writable = False
+            return
+        for key, values in data["results"].items():
+            if isinstance(values, list):
+                self._results[str(key)] = [float(v) for v in values if isinstance(v, int | float) and 0 < v < 20][
+                    -REMEMBERED:
+                ]
+
+    def _remember(self, key: str, ratio: float) -> None:
+        with self._lock:
+            kept = self._results.setdefault(key, [])
+            kept.append(round(ratio, 4))
+            del kept[:-REMEMBERED]
+            document = {"schema": RATIOS_SCHEMA, "results": self._results}
+            writable = self._writable
+        if writable:
+            try:
+                (self.state_dir / RATIOS).write_text(json.dumps(document), "utf-8")
+            except OSError as error:
+                log.warning("the measured ratios could not be kept: %s", error.strerror or error)
+
+    def ratio(self, source_format: str, level: int, block: bool = False) -> tuple[float, bool]:
+        """(the size of the result over the source's, whether it comes from conversions done here)."""
+        suffix = source_format.lower()
+        target, action = CONVERSIONS[suffix]
+        with self._lock:
+            kept = sorted(self._results.get(ratio_key(suffix, target, level, block), []))
+        if kept:
+            return kept[len(kept) // 2], True
+        return prior_ratio(action, target, level, block), False
+
+    def estimate(self, source_format: str, size: int, level: int = LEVEL, block: bool = False) -> tuple[int, bool]:
+        """(the size the result should have, whether that is measured here rather than a typical figure)."""
+        ratio, measured = self.ratio(source_format, level, block)
+        return int(size * ratio), measured
 
     # -- what is needed --------------------------------------------------------------------------
 
@@ -125,6 +220,7 @@ class Compressor:
         level: int = LEVEL,
         block: bool = False,
         delete_original: bool = False,
+        size: int = 0,
     ) -> Job:
         """Queues a job for a package; ValueError for a format that cannot be converted."""
         suffix = path.rsplit(".", 1)[-1].lower()
@@ -144,9 +240,13 @@ class Compressor:
                 level=min(max(int(level), 1), 22),
                 block=block and action == "compress",
                 delete_original=delete_original,
+                size_in=size,
+                format=suffix,
             )
             self._jobs.append(job)
             self._queue.append(job)
+        job.expected = self.estimate(suffix, size, job.level, job.block)[0] if size else 0
+        with self._lock:
             if self._thread is None or not self._thread.is_alive():
                 self._thread = threading.Thread(target=self._work, name="lantern-bridge-compress", daemon=True)
                 self._thread.start()
@@ -227,6 +327,8 @@ class Compressor:
             self._finish(job, "failed", "The file is not there any more.")
             return
         job.size_in = source.stat().st_size
+        job.format = job.format or source.suffix[1:].lower()
+        job.expected = job.expected or self.estimate(job.format, job.size_in, job.level, job.block)[0]
         need = job.size_in * (2 if job.action == "decompress" else 1)
         if shutil.disk_usage(root).free < need:
             self._finish(job, "failed", "Not enough free space in the folder for the result.")
@@ -260,6 +362,9 @@ class Compressor:
                 removed = True
             except OSError as error:
                 log.warning("the original of a compressed file could not be deleted: %s", error.strerror or error)
+        if job.size_in > 0 and job.size_out > 0:
+            self._remember(ratio_key(job.format, job.target, job.level, job.block), job.size_out / job.size_in)
+        job.progress = 1.0
         runtime.history.event("converted", subject=job.title_id, detail=f"{source.suffix[1:].lower()}→{job.target}")
         if removed:
             runtime.forget_file(job.source, job.path)
@@ -285,6 +390,19 @@ class Compressor:
                 process.terminate()
         summary: dict[str, Any] = {}
         errors: list[str] = []
+        whole = False  # the tool says how far it got in the whole file, not in a part of it
+
+        def see_progress(data: dict[str, Any]) -> None:
+            nonlocal whole
+            if data.get("step"):
+                job.step = str(data["step"])[:40]
+            total, done = data.get("totalRead"), data.get("currentRead")
+            if not isinstance(total, int | float) or not isinstance(done, int | float):
+                return
+            # a part of the file (one NCA) says little of the whole: only the whole counts
+            if total > 0 < job.size_in and total >= 0.95 * job.size_in:
+                whole = True
+                job.progress = max(job.progress, min(done / total, 0.99))
 
         def read() -> None:
             assert process.stdout is not None  # noqa: S101
@@ -295,6 +413,8 @@ class Compressor:
                     continue
                 if isinstance(data, dict) and data.get("type") == "summary":
                     summary.update(data)
+                elif isinstance(data, dict) and data.get("type") == "progress":
+                    see_progress(data)
                 elif isinstance(data, dict) and data.get("type") in ("warning", "error"):
                     errors.append(str(data.get("message", ""))[:200])
 
@@ -303,7 +423,9 @@ class Compressor:
         while process.poll() is None:
             if job.cancel:
                 process.terminate()
-            job.size_out = sum(p.stat().st_size for p in work.iterdir() if p.is_file())  # the progress
+            job.size_out = sum(p.stat().st_size for p in work.iterdir() if p.is_file())
+            if not whole and job.expected:  # what was written against what should come out
+                job.progress = max(job.progress, min(job.size_out / job.expected, 0.99))
             time.sleep(0.5)
         reader.join(timeout=5)
         with self._lock:

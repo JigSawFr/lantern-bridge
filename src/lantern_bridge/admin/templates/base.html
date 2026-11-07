@@ -12,17 +12,18 @@
 <link rel="stylesheet" href="/admin/static/app.css">
 </head>
 <body data-cancel="{{ _('Cancel') }}" data-confirm-label="{{ _('Confirm') }}" data-copy="{{ _('Copy') }}" data-copied="{{ _('Copied') }}" data-show="{{ _('Show') }}" data-hide="{{ _('Hide') }}" data-working="{{ _('Working…') }}">
+{% macro dot(key) %}{% set b = badges.get(key) %}<span class="dot {{ b.level if b else 'info' }}" data-badge="{{ key }}"{% if not b %} hidden{% endif %}>{{ b.n if b else '' }}</span>{% endmacro %}
 <a class="skip" href="#content">{{ _("Skip to content") }}</a>
 <header class="top"><div class="bar">
   <a class="brand" href="/admin/"><img src="/admin/static/bridge.svg" alt="" width="34" height="34"><span>{{ name }}<small>lantern-bridge</small></span></a>
   {% if menu.main %}
   <nav aria-label="{{ _('Pages') }}">
-    {% for item in menu.main %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}
+    {% for item in menu.main %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}{{ dot(item.key) }}</a>{% endfor %}
     {% if menu.manage %}
     <div class="more"{% if menu.holds(active) %} data-here{% endif %}>
-      <button type="button" class="more-btn" aria-expanded="false" aria-controls="more-list" hidden>{{ _("Manage") }}</button>
+      <button type="button" class="more-btn" aria-expanded="false" aria-controls="more-list" hidden>{{ _("Manage") }}{{ dot("manage") }}</button>
       <div id="more-list" class="more-list">
-        {% for item in menu.manage %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}
+        {% for item in menu.manage %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}{{ dot(item.key) }}</a>{% endfor %}
       </div>
     </div>
     {% endif %}

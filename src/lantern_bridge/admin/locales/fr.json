@@ -495,5 +495,13 @@
  "smallest": "le plus petit",
  "then the original is deleted": "puis l'original est supprimé",
  "File deleted": "Fichier supprimé",
- "File converted": "Fichier converti"
+ "File converted": "Fichier converti",
+ "Conversions": "Conversions",
+ "Estimated result": "Résultat estimé",
+ "a typical figure: it varies a lot with the game": "un chiffre courant : il varie beaucoup selon le jeu",
+ "about {time} left": "environ {time} restantes",
+ "expected": "attendu",
+ "from your earlier conversions": "d'après vos conversions précédentes",
+ "grew by": "a grossi de",
+ "saved": "économisé"
 }
