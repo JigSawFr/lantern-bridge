@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Setup guide") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Setup guide") }}</h1>
+<p class="lede">{{ _("Four steps from an empty bridge to a console that reads your library. The list follows the bridge: it ticks itself.") }}</p>
+{% if message %}<p class="note" role="status">{{ message }}</p>{% endif %}
+{% if not sources %}{% set back = "start" %}{% include "_add_source.html" %}{% endif %}
+<div data-live="/admin/start?fragment=1">{% include "_start.html" %}</div>
+{% endblock %}

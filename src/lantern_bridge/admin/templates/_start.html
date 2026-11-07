@@ -1,0 +1,13 @@
+<ol class="steps">
+  {% for s in steps %}
+  <li class="{{ 'done' if s.done else 'todo' }}"{% if s.current %} aria-current="step"{% endif %}>
+    <span class="pill {{ 'ok' if s.done else 'wait' }}">{{ _("done") if s.done else _("to do") }}</span>
+    <div class="what"><strong>{{ _(s.title) }}</strong>
+      <p class="dim">{{ _(s.text) }}{% if s.detail %} <span class="small">{{ s.detail }}</span>{% endif %}</p>
+      {% if s.href %}<a class="button{{ '' if s.current else ' ghost' }}" href="{{ s.href }}">{{ _(s.link) }}</a>{% endif %}
+      {% if s.scan %}<form method="post" action="/admin/scan" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button name="action" value="scan">{{ _("Scan now") }}</button></form>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{% if finished %}<p class="note" role="status">{{ _("All set: the bridge serves your library and a device is paired.") }} <a href="/admin/">{{ _("Overview") }}</a></p>{% endif %}

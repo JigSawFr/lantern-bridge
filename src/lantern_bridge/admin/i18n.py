@@ -10,6 +10,23 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "Restart the bridge to apply the source you added.": "Redémarrez le pont pour appliquer la source ajoutée.",
+    "Start the setup": "Démarrer la configuration",
+    "No device is paired yet": "Aucun appareil n'est encore appairé",
+    "Setup guide": "Guide de démarrage",
+    "Four steps from an empty bridge to a console that reads your library. The list follows the bridge: it ticks itself.": "Quatre étapes pour passer d'un pont vide à une console qui lit votre bibliothèque. La liste suit le pont : elle se coche toute seule.",
+    "done": "fait",
+    "to do": "à faire",
+    "A folder of games on this machine, or a Tinfoil, Ownfoil or AeroFoil shop.": "Un dossier de jeux sur cette machine, ou une boutique Tinfoil, Ownfoil ou AeroFoil.",
+    "Let the bridge read the files": "Laisser le pont lire les fichiers",
+    "It reads them in place and never changes them.": "Il les lit sur place et ne les modifie jamais.",
+    "Check the library": "Vérifier la bibliothèque",
+    "The titles the bridge found, with the problems it noticed.": "Les titres trouvés par le pont, avec les problèmes qu'il a relevés.",
+    "Open the library": "Ouvrir la bibliothèque",
+    "Pair a device": "Appairer un appareil",
+    "Open Lantern on the console, add this server, then accept its request here.": "Ouvrez Lantern sur la console, ajoutez ce serveur, puis acceptez sa demande ici.",
+    "The access is public: the console only needs the address of this server.": "L'accès est public : la console n'a besoin que de l'adresse de ce serveur.",
+    "All set: the bridge serves your library and a device is paired.": "Tout est prêt : le pont sert votre bibliothèque et un appareil est appairé.",
     "Needs your attention": "À traiter",
     "for your information": "pour information",
     "Read again": "Relire",
