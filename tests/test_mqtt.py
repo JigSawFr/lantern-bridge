@@ -212,6 +212,6 @@ def test_each_journal_line_is_published_as_it_happens_and_the_state_counts_the_p
     def boom(_event: Any) -> None:
         raise RuntimeError("listener")
 
-    runtime.history.listener = boom
+    runtime.history.listeners.append(boom)
     runtime.history.event("scan")  # a failing listener never reaches the caller
     assert runtime.history.events(1)[0].kind == "scan"

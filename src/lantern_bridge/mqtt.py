@@ -109,7 +109,7 @@ class Publisher:
         self._client.on_message = self._on_message
         self._mqtt = mqtt
         self.event_topic = f"{self.base}/event"
-        runtime.history.listener = self._on_event
+        runtime.history.listeners.append(self._on_event)
 
     def start(self) -> None:
         self._client.connect_async(self._mqtt.host, self._mqtt.port)

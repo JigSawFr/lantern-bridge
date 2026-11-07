@@ -1180,6 +1180,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             except ValueError as error:
                 raise ConfigError("the disk limit is a number of megabytes") from error
             config.webhook = parse_webhook(f.get("webhook", "").strip())
+            config.notify = parse_webhook(f.get("notify", "").strip(), "notify")
             return None
 
         return await change(request, edit, "saved")
