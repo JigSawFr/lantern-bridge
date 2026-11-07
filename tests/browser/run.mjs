@@ -243,6 +243,18 @@ await test("a changed figure of a live block lights up once, and the header says
   await page.waitForSelector("[data-livestate]:not(.down)", { timeout: 8000 });
 });
 
+await test("the rates are drawn under their tiles, and the tab says when something needs a look", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/activity`);
+  await page.waitForFunction(() => document.querySelector("svg[data-spark] .line")?.getAttribute("d"), null, { timeout: 4000 });
+  await page.goto(`${BASE}/`);
+  await page.waitForSelector("[data-badge]", { state: "attached" });
+  await page.waitForTimeout(800);
+  const badges = await page.evaluate(() => fetch("/admin/api/badges").then((r) => r.json()));
+  const look = Object.entries(badges).filter(([k, b]) => k !== "manage" && b.level !== "info").reduce((n, [, b]) => n + b.n, 0);
+  const title = await page.title();
+  assert.equal(/^\(\d+\) /.test(title) ? Number(title.match(/^\((\d+)\)/)[1]) : 0, look, `the title counts what needs a look (${title})`);
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);
