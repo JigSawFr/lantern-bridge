@@ -94,6 +94,15 @@ def _inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def _note_restore(state: Path, names: list[str]) -> None:
+    """Puts the restoration in the journal (the restored one, when the archive held it)."""
+    from lantern_bridge.history import History
+
+    history = History(state / "activity.sqlite3")
+    history.event("restored", detail=", ".join(names))
+    history.close()
+
+
 def _backup(args: argparse.Namespace) -> int:
     from lantern_bridge import backup
 
@@ -105,6 +114,7 @@ def _backup(args: argparse.Namespace) -> int:
             print(f"{out}: {', '.join(names)}")
         else:
             names = backup.restore(args.file, config.parent, config)
+            _note_restore(config.parent, names)
             print(f"restored {', '.join(names)}; what was replaced is kept beside it as .before-restore")
     except (backup.BackupError, ConfigError, OSError) as error:
         print(f"lantern-bridge: {error}", file=sys.stderr)
