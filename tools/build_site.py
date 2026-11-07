@@ -273,6 +273,24 @@ def main() -> None:
         encoding="utf-8",
     )
     (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+    if os.environ.get("SITE_NOINDEX") != "1":
+        (out / "llms.txt").write_text(
+            BRIDGE.llms(
+                "Lantern Bridge",
+                "A gateway that presents an Ownfoil or AeroFoil server, a Tinfoil shop or plain folders of games as a Lantern server.",
+                {language: catalogs[language]["description_bridge"] for language, _, _, _ in LANGUAGES},
+                [
+                    (
+                        "Source code",
+                        REPO,
+                        "The Bridge's repository: the code, the configuration reference and the tests.",
+                    ),
+                    ("Lantern", LANTERN_URL, "The protocol the Bridge speaks."),
+                    ("Specification", f"{LANTERN_URL}spec/", "The Lantern specification the Bridge follows."),
+                ],
+            ),
+            encoding="utf-8",
+        )
     host = boreale.urlparse(SITE_URL).hostname if hasattr(boreale, "urlparse") else SITE_URL.split("/")[2]
     if host and not host.endswith("github.io"):
         (out / "CNAME").write_text(host + "\n", encoding="utf-8")
