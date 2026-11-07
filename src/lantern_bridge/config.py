@@ -99,6 +99,35 @@ Source = FolderSource | TinfoilSource | OwnfoilSource | AerofoilSource
 
 
 @dataclass(slots=True)
+class Mqtt:
+    """The broker the bridge publishes its state on (and takes a few orders from). Absent: nothing is published."""
+
+    host: str
+    port: int = 1883
+    user: str | None = None
+    # The name of the environment variable that holds the password, as for a source.
+    password_env: str | None = None
+    prefix: str = "lantern-bridge"
+    tls: bool = False
+    # Everything this version does not know, kept to be written back.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    def table(self) -> dict[str, Any]:
+        table: dict[str, Any] = {
+            **self.extra,
+            "host": self.host,
+            "port": self.port,
+            "prefix": self.prefix,
+            "tls": self.tls,
+        }
+        if self.user is not None:
+            table["user"] = self.user
+        if self.password_env is not None:
+            table["password_env"] = self.password_env
+        return table
+
+
+@dataclass(slots=True)
 class Config:
     uid: str
     name: str = DEFAULT_NAME
@@ -114,6 +143,7 @@ class Config:
     atlas: bool = True
     # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
     metrics: bool = False
+    mqtt: Mqtt | None = None
     sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -130,6 +160,8 @@ class Config:
         data["developer"] = self.developer
         data["atlas"] = self.atlas
         data["metrics"] = self.metrics
+        if self.mqtt is not None:
+            data["mqtt"] = self.mqtt.table()
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -148,6 +180,40 @@ def _source_table(source: Source) -> dict[str, Any]:
             {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
         ]
     return table
+
+
+def parse_mqtt(raw: object) -> Mqtt | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ConfigError("`mqtt` must be a table")
+    host, port, prefix, tls = (
+        raw.get("host"),
+        raw.get("port", 1883),
+        raw.get("prefix", "lantern-bridge"),
+        raw.get("tls", False),
+    )
+    if not isinstance(host, str) or not host.strip():
+        raise ConfigError("`mqtt.host` is required")
+    if isinstance(port, bool) or not isinstance(port, int) or not 0 < port < 65536:
+        raise ConfigError("`mqtt.port` must be a port number")
+    if (
+        not isinstance(prefix, str)
+        or not prefix.strip("/")
+        or any(c in prefix for c in "+#")
+        or prefix != prefix.strip("/")
+    ):
+        raise ConfigError("`mqtt.prefix` must be a topic without wildcards or slashes at its ends")
+    if not isinstance(tls, bool):
+        raise ConfigError("`mqtt.tls` must be true or false")
+    user, env = raw.get("user"), raw.get("password_env")
+    for key, value in (("user", user), ("password_env", env)):
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ConfigError(f"`mqtt.{key}` must be a non-empty string")
+    if (user is None) != (env is None):
+        raise ConfigError("`mqtt.user` and `mqtt.password_env` go together")
+    own = {"host", "port", "user", "password_env", "prefix", "tls"}
+    return Mqtt(host.strip(), port, user, env, prefix, tls, {k: v for k, v in raw.items() if k not in own})
 
 
 def _logins(sid: str, raw: dict[str, Any]) -> tuple[Login, ...]:
@@ -194,6 +260,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "developer",
         "atlas",
         "metrics",
+        "mqtt",
         "sources",
     }
     extra = {k: v for k, v in data.items() if k not in known}
@@ -219,6 +286,7 @@ def _parse(data: dict[str, Any]) -> Config:
     metrics = data.get("metrics", False)
     if not isinstance(metrics, bool):
         raise ConfigError("`metrics` must be true or false")
+    mqtt = parse_mqtt(data.get("mqtt"))
     sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -268,6 +336,7 @@ def _parse(data: dict[str, Any]) -> Config:
         developer=developer,
         atlas=atlas,
         metrics=metrics,
+        mqtt=mqtt,
         sources=sources,
         _extra=extra,
         _extra_sources=extra_sources,
