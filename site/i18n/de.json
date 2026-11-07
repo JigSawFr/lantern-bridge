@@ -67,5 +67,9 @@
   "diag_sources": "Deine Quellen",
   "diag_bridge": "Hasht, führt zusammen, liefert",
   "diag_clients": "Lantern-Clients",
-  "diag_alt": "Deine Quellen laufen in die Bridge, die sie hasht, zusammenführt und als eine Bibliothek an Lantern-Clients liefert."
+  "diag_alt": "Deine Quellen laufen in die Bridge, die sie hasht, zusammenführt und als eine Bibliothek an Lantern-Clients liefert.",
+  "lost_title": "Verloren in der Nacht",
+  "lost_text": "Diese Seite gibt es nicht oder nicht mehr.",
+  "lost_back": "Zurück zur Startseite",
+  "lost_page_title": "Seite nicht gefunden · Lantern Bridge"
 }

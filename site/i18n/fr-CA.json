@@ -67,5 +67,9 @@
   "diag_sources": "Vos sources",
   "diag_bridge": "Calcule les empreintes, fusionne, sert",
   "diag_clients": "Clients Lantern",
-  "diag_alt": "Vos sources entrent dans le pont, qui calcule les empreintes, les fusionne et sert une seule bibliothèque aux clients Lantern."
+  "diag_alt": "Vos sources entrent dans le pont, qui calcule les empreintes, les fusionne et sert une seule bibliothèque aux clients Lantern.",
+  "lost_title": "Perdu dans la nuit",
+  "lost_text": "Cette page n'existe pas, ou plus.",
+  "lost_back": "Retour à l'accueil",
+  "lost_page_title": "Page introuvable · Lantern Bridge"
 }

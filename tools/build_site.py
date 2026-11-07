@@ -15,6 +15,7 @@ library/boreale-site. Served at https://bridge.lantern.boreale.dev/
 """
 
 import html
+import json
 import os
 import shutil
 import sys
@@ -92,8 +93,10 @@ def diagram(catalog: dict) -> str:
     )
 
 
-def page_html(template: str, language: str, catalog: dict) -> str:
+def page_html(template: str, language: str, catalog: dict, lost: bool = False) -> str:
     root = "../" * (0 if language == ENGLISH else 1)
+    if lost:
+        root = boreale.urlparse(SITE_URL).path  # 404.html is served at any depth
     values = dict(catalog)
     values.update(
         {
@@ -130,9 +133,50 @@ def page_html(template: str, language: str, catalog: dict) -> str:
             ),
         }
     )
-    body = (SITE / "home.html").read_text(encoding="utf-8")
+    values["structured"] = structured_data(language, catalog)
+    if lost:
+        # The root's 404.html (the English one) sends a visitor reading another language to that language's 404.html
+        # (boreale-site's lang.js); the site's path tells it where.
+        values.update(
+            {
+                "title": catalog["lost_page_title"],
+                "description": html.escape(catalog["lost_text"], quote=True),
+                "indexing": BRIDGE.indexing(language, "", True),
+                "structured": "",
+                "hero": "",
+                "scripts": "",
+                "lost": f' data-lost="{root}"' if language == ENGLISH else "",
+            }
+        )
+        body = (SITE / "lost.html").read_text(encoding="utf-8")
+    else:
+        values["lost"] = ""
+        body = (SITE / "home.html").read_text(encoding="utf-8")
     values["body"] = fill(body, values)
     return BRIDGE.links_out(fill(template, values))
+
+
+def structured_data(language: str, catalog: dict) -> str:
+    """What the page is, for search engines: schema.org's SoftwareApplication, in the page's language. A data block,
+    which the Content-Security-Policy leaves alone."""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Lantern Bridge",
+        "description": catalog["description_bridge"],
+        "url": SITE_URL + folder(language),
+        "codeRepository": REPO,
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Linux, macOS, Windows, Docker",
+        "license": "https://spdx.org/licenses/MIT.html",
+        "inLanguage": boreale.html_lang(language),
+        "isPartOf": {"@type": "SoftwareSourceCode", "name": "Lantern", "url": LANTERN_URL},
+    }
+    return (
+        '<script type="application/ld+json">'
+        + json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+        + "</script>"
+    )
 
 
 def main() -> None:
@@ -153,6 +197,9 @@ def main() -> None:
         target = out / folder(language) / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(page_html(template, language, catalogs[language]), encoding="utf-8")
+        (target.parent / "404.html").write_text(
+            page_html(template, language, catalogs[language], lost=True), encoding="utf-8"
+        )
         urls.append(SITE_URL + folder(language))
     (out / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

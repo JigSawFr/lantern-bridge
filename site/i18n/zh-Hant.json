@@ -67,5 +67,9 @@
   "diag_sources": "你的來源",
   "diag_bridge": "計算雜湊、合併、提供",
   "diag_clients": "Lantern 用戶端",
-  "diag_alt": "你的來源進入橋接器，經過雜湊與合併，以一個遊戲庫的形式提供給 Lantern 用戶端。"
+  "diag_alt": "你的來源進入橋接器，經過雜湊與合併，以一個遊戲庫的形式提供給 Lantern 用戶端。",
+  "lost_title": "迷失在夜色中",
+  "lost_text": "此頁面不存在，或已不存在。",
+  "lost_back": "回到首頁",
+  "lost_page_title": "找不到頁面 · Lantern Bridge"
 }

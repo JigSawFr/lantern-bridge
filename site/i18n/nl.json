@@ -67,5 +67,9 @@
   "diag_sources": "Je bronnen",
   "diag_bridge": "Hasht, voegt samen, serveert",
   "diag_clients": "Lantern-clients",
-  "diag_alt": "Je bronnen gaan de bridge in, die ze hasht, samenvoegt en als één bibliotheek aan Lantern-clients serveert."
+  "diag_alt": "Je bronnen gaan de bridge in, die ze hasht, samenvoegt en als één bibliotheek aan Lantern-clients serveert.",
+  "lost_title": "Verdwaald in de nacht",
+  "lost_text": "Deze pagina bestaat niet, of niet meer.",
+  "lost_back": "Terug naar de startpagina",
+  "lost_page_title": "Pagina niet gevonden · Lantern Bridge"
 }

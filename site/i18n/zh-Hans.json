@@ -67,5 +67,9 @@
   "diag_sources": "你的来源",
   "diag_bridge": "计算哈希、合并、提供",
   "diag_clients": "Lantern 客户端",
-  "diag_alt": "你的来源进入桥接器，经过哈希与合并，以一个游戏库的形式提供给 Lantern 客户端。"
+  "diag_alt": "你的来源进入桥接器，经过哈希与合并，以一个游戏库的形式提供给 Lantern 客户端。",
+  "lost_title": "迷失在夜色中",
+  "lost_text": "此页面不存在，或已不存在。",
+  "lost_back": "返回首页",
+  "lost_page_title": "找不到页面 · Lantern Bridge"
 }

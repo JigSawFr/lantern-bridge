@@ -898,3 +898,7 @@ pre code .tk-k { color: #7cc4ff; }
   .fb-arrow::after { left: auto; right: -1px; bottom: auto; top: 50%; transform: translateY(-50%) rotate(-45deg); }
 }
 
+/* 404.html. */
+.lost { padding-block: clamp(64px, 12vw, 140px); display: grid; gap: 18px; justify-items: start; }
+.lost h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); font-weight: 600; letter-spacing: -0.03em; }
+.lost p { color: var(--mist); max-width: 50ch; }
