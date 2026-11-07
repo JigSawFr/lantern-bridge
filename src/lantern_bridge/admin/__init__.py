@@ -42,7 +42,7 @@ from lantern_bridge.admin import attention
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
-from lantern_bridge.catalog import search
+from lantern_bridge.catalog import KINDS, search
 from lantern_bridge.config import (
     AerofoilSource,
     Config,
@@ -536,8 +536,18 @@ def mount(app: FastAPI, admin: Admin) -> None:
         session, _, refused = await authed(request)
         if refused is not None:
             return refused
+        every = admin.runtime.browser.catalog().issues()
+        kind = request.query_params.get("kind", "")
+        kept = [i for i in every if i.kind == kind] if kind in KINDS else every
         return admin.page(
-            request, "checks.html", session, active="library", issues=admin.runtime.browser.catalog().issues()
+            request,
+            "checks.html",
+            session,
+            active="library",
+            issues=kept,
+            kind=kind if kind in KINDS else "",
+            counts={k: sum(1 for i in every if i.kind == k) for k in KINDS},
+            total=len(every),
         )
 
     @router.get("/library/ignored")
@@ -579,8 +589,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
         q = request.query_params
         catalog = admin.runtime.browser.catalog()
         number = q.get("page", "1")
+        flagged = catalog.flagged()
         found = search(
             catalog,
+            flagged=flagged,
             q=q.get("q", "")[:100],
             kind=q.get("type", ""),
             source=q.get("source", ""),
@@ -599,7 +611,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             genres=catalog.genres(),
             icons=icons_of(t.title_id for t in found.titles),
             ignored=sum(len(v) for v in admin.runtime.stats.ignored.values()),
-            issues=len(catalog.issues()),
+            issues=sum(len(v) for v in flagged.values()),
+            flagged=flagged.keys(),
             sources=[s.id for s in admin.config.sources],
             f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
         )
@@ -616,6 +629,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             session,
             active="library",
             title=title,
+            issues=admin.runtime.browser.catalog().flagged().get(title.title_id, []),
             sheet=sheet,
             has_image=bool(sheet is not None and sheet.icon is not None),
             shots=len(sheet.screenshots or []) if sheet is not None else 0,

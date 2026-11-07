@@ -4,6 +4,12 @@
 <p class="crumb"><a href="/admin/library">← {{ _("Library") }}</a></p>
 <h1>{{ _("Things to check") }}</h1>
 <p class="lede">{{ _("Duplicates and add-ons whose game is missing. Nothing is changed here: the files stay where they are.") }}</p>
+<nav class="chips" aria-label="{{ _('Finding') }}">
+  <a href="/admin/library/checks"{% if not kind %} aria-current="true"{% endif %}>{{ _("All") }} <b>{{ total }}</b></a>
+  {% for key, label in [("same_content", _("The same file twice")), ("same_version", _("Two different files for one version")), ("no_base", _("Update or DLC without its game"))] %}
+  <a href="/admin/library/checks?kind={{ key }}"{% if kind == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key] }}</b></a>
+  {% endfor %}
+</nav>
 <div class="scroll"><table>
   <thead><tr><th>{{ _("Title") }}</th><th>{{ _("Finding") }}</th><th>{{ _("Files") }}</th></tr></thead>
   <tbody>
