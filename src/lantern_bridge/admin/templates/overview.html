@@ -4,7 +4,7 @@
 <h1>{{ _("Overview") }}</h1>
 <p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
 <div data-live="/admin/?fragment=todo">{% include "_todo.html" %}</div>
-<section class="cards">
+<section class="cards stats">
   <a class="tile" href="/admin/library"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></a>
   <a class="tile" href="/admin/library"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></a>
   <a class="tile" href="/admin/pairings"><span class="n" data-bind="waiting">{{ state.waiting }}</span><span class="what">{{ _("pairings waiting") }}</span></a>
@@ -34,9 +34,11 @@
 <h2>{{ _("Sources") }}</h2>
 <div data-live="/admin/?fragment=sources">{% include "_sources.html" %}</div>
 
-<h2>{{ _("Server") }}</h2>
+<details class="fold">
+<summary>{{ _("Server") }}</summary>
 <dl>
   <dt>Uid</dt><dd><code>{{ uid }}</code> <button type="button" class="link" data-copy-text="{{ uid }}">{{ _("Copy") }}</button></dd>
   <dt>{{ _("Access") }}</dt><dd>{% if public %}{{ _("public: anyone who reaches the server reads the library") }}{% else %}{{ _("pairing required: only paired devices read the library") }}{% endif %}</dd>
 </dl>
+</details>
 {% endblock %}
