@@ -130,7 +130,7 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 
 The pages wear Boréale's night, in English and French (the browser's language, or the switch in the header), with the fonts served from the bridge.
 
-The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. The browser loads nothing from elsewhere.
+The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. `/metrics`, when the settings turn it on, follows the same rule (the local network only, whatever `admin_lan_only` says). The browser loads nothing from elsewhere.
 
 **Atlas.** By default (`atlas = true`) the bridge fetches one public file once a day, [Atlas](https://atlas.boreale.dev)'s `platforms/switch/games.json` (CC0: names, developers, publishers, genres, series and modes from Wikidata, Steam's rating), from `raw.githubusercontent.com`, keeps it in its state directory (`atlas.json`) and uses it to fill in the genres, developer and publisher a source leaves empty. Nothing about your library is sent: it is a plain `GET`. Set `atlas = false` (or untick it in the settings) and the bridge contacts nothing outside your sources.
 

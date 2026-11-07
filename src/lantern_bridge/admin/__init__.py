@@ -16,6 +16,7 @@ import logging
 import os
 import platform
 import re
+import secrets
 import threading
 import time
 from collections.abc import AsyncIterator, Iterable
@@ -321,7 +322,15 @@ def mount(app: FastAPI, admin: Admin) -> None:
         back = target if target.startswith("/admin") and "//" not in target and "\\" not in target else "/admin/"
         response = RedirectResponse(back, status_code=303, headers=_HEADERS)
         if fields.get("lang") in LANGUAGES:
-            response.set_cookie(LANG_COOKIE, fields["lang"], max_age=365 * 86400, path="/admin", samesite="strict")
+            response.set_cookie(
+                LANG_COOKIE,
+                fields["lang"],
+                max_age=365 * 86400,
+                path="/admin",
+                samesite="strict",
+                httponly=True,
+                secure=request.url.scheme == "https",
+            )
         return response
 
     @router.get("/setup")
@@ -382,7 +391,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         fields: dict[str, str] = {}
         if request.method == "POST":
             fields = await admin.form(request)
-            if fields.get("csrf") != session.csrf:
+            if not secrets.compare_digest(fields.get("csrf", "").encode(), session.csrf.encode()):
                 return None, {}, Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         return session, fields, None
 
