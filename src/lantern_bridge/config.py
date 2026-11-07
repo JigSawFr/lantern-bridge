@@ -443,6 +443,20 @@ def check(config: Config) -> Config:
         raise ConfigError(str(error)) from error
 
 
+def parse_text(text: str, uid: str | None = None) -> Config:
+    """Settings given as text (an exported file): ConfigError for what a reader would refuse.
+
+    With `uid`, the file's own identity is ignored and this one is used (a bridge keeps its own).
+    """
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as error:
+        raise ConfigError(f"not valid TOML ({error})") from error
+    if uid is not None:
+        data["uid"] = uid
+    return _parse(data)
+
+
 def load(path: Path) -> Config:
     """Read the file; a missing file gives the defaults with a new uid (not written)."""
     try:

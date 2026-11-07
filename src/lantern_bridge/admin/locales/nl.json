@@ -518,5 +518,17 @@
  "read-only": "alleen-lezen",
  "this one": "deze",
  "Sign-ins blocked": "Inloggen geblokkeerd",
- "Session ended": "Sessie beëindigd"
+ "Session ended": "Sessie beëindigd",
+ "Export and import": "Exporteren en importeren",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "De instellingen in één bestand, om te bewaren of aan een andere bridge te geven. Er staat geen wachtwoord in (een bron noemt alleen de variabele die het bevat) en de bridge behoudt zijn eigen identiteit wanneer een bestand wordt geïmporteerd.",
+ "Export the settings": "De instellingen exporteren",
+ "This file would change:": "Dit bestand zou het volgende wijzigen:",
+ "Replace the settings with this file?": "De instellingen vervangen door dit bestand?",
+ "Import these settings": "Deze instellingen importeren",
+ "An exported file": "Een geëxporteerd bestand",
+ "Or its text": "Of de tekst ervan",
+ "See what would change": "Bekijken wat er zou veranderen",
+ "The settings were imported.": "De instellingen zijn geïmporteerd.",
+ "The file cannot be used:": "Het bestand kan niet worden gebruikt:",
+ "This file changes nothing.": "Dit bestand verandert niets."
 }

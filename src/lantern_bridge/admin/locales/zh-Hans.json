@@ -518,5 +518,17 @@
  "read-only": "只读",
  "this one": "当前",
  "Sign-ins blocked": "登录已被阻止",
- "Session ended": "会话已结束"
+ "Session ended": "会话已结束",
+ "Export and import": "导出和导入",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "将设置保存为一个文件，可留存或交给另一个桥接器。文件不含任何密码（来源仅注明存放密码的变量名），导入文件时桥接器会保留自己的身份。",
+ "Export the settings": "导出设置",
+ "This file would change:": "此文件将更改：",
+ "Replace the settings with this file?": "用此文件替换设置？",
+ "Import these settings": "导入这些设置",
+ "An exported file": "已导出的文件",
+ "Or its text": "或其文本",
+ "See what would change": "查看将更改的内容",
+ "The settings were imported.": "设置已导入。",
+ "The file cannot be used:": "无法使用该文件：",
+ "This file changes nothing.": "此文件不会更改任何内容。"
 }

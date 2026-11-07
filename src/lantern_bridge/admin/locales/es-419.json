@@ -13,5 +13,11 @@
  "Nothing to hash yet: add a source that holds games, then scan.": "Nada que procesar todavía: agrega una fuente que contenga juegos y analice.",
  "The server wrote a one-time code in its log (administrator setup code). Enter it here with the name and the password you want.": "El servidor ha escrito un código de un solo uso en su registro (código de configuración del administrador). Ingréscalo aquí con el nombre y la contraseña que desee.",
  "Source added.": "Fuente agregida.",
- "The source you added was not applied: see the note on the settings page.": "La fuente que agregó no se aplicó: consulte la nota en la página de ajustes."
+ "The source you added was not applied: see the note on the settings page.": "La fuente que agregó no se aplicó: consulte la nota en la página de ajustes.",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "La configuración en un solo archivo, para guardarlo o pasárselo a otro bridge. No incluye ninguna contraseña (una fuente solo indica el nombre de la variable que la contiene) y el bridge conserva su propia identidad cuando se importa un archivo.",
+ "Export the settings": "Exportar la configuración",
+ "This file would change:": "Este archivo cambiaría lo siguiente:",
+ "Replace the settings with this file?": "¿Reemplazar la configuración con este archivo?",
+ "Import these settings": "Importar esta configuración",
+ "The settings were imported.": "Se importó la configuración."
 }

@@ -5,6 +5,14 @@
   const say = (name) => document.body.dataset[name] || "";
   const get = () => fetch("/admin/api/state", { credentials: "same-origin" }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
 
+  // Import: a chosen file fills the text box beside it (the file never leaves the browser until it is sent).
+  document.addEventListener("change", (e) => {
+    const input = e.target;
+    if (!input.matches || !input.matches("input[type=file][data-fill]") || !input.files[0]) return;
+    const box = document.getElementById(input.dataset.fill);
+    input.files[0].text().then((text) => { if (box) box.value = text; }).catch(() => {});
+  });
+
   // -- overview ---------------------------------------------------------------------------------------
   const bind = (state) => {
     for (const el of document.querySelectorAll("[data-bind]")) {

@@ -518,5 +518,17 @@
  "read-only": "唯讀",
  "this one": "目前",
  "Sign-ins blocked": "登入已被封鎖",
- "Session ended": "工作階段已結束"
+ "Session ended": "工作階段已結束",
+ "Export and import": "匯出與匯入",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "將設定儲存為單一檔案，可留存或交給另一個橋接器。檔案不含任何密碼（來源僅註明存放密碼的變數名稱），匯入檔案時橋接器會保留自己的身分。",
+ "Export the settings": "匯出設定",
+ "This file would change:": "此檔案將變更：",
+ "Replace the settings with this file?": "要用此檔案取代設定嗎？",
+ "Import these settings": "匯入這些設定",
+ "An exported file": "已匯出的檔案",
+ "Or its text": "或其文字",
+ "See what would change": "查看將變更的內容",
+ "The settings were imported.": "設定已匯入。",
+ "The file cannot be used:": "無法使用該檔案：",
+ "This file changes nothing.": "此檔案不會變更任何內容。"
 }
