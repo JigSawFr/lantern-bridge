@@ -28,6 +28,8 @@ App = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 #: The requests of the administration pages are not the library's traffic.
 _OWN = ("/admin", "/healthz", "/metrics")
+#: What a browser, a scanner or a health check asks for: it moves no library data and says who asks nobody.
+_SIMPLE = ("/", "/favicon.ico", "/robots.txt", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png")
 WINDOW = 60  # seconds of history for the rates
 FLUSH = 15.0  # seconds between two writes to the history
 WHO_TTL = 60.0  # seconds a token's device is remembered (a revoked device is forgotten within a minute)
@@ -66,6 +68,7 @@ class Done:
     seconds: float
     sent: int
     agent: str
+    simple: bool = False  # a simple request (see `Traffic.simple`): shown apart, never counted
 
 
 @dataclass(slots=True)
@@ -92,6 +95,7 @@ class Totals:
     sent: int = 0
     errors: int = 0  # 5xx
     refused: int = 0  # 401, 403
+    simple: int = 0  # health checks, browsers and scanners: not the library's traffic, counted apart
 
 
 @dataclass(slots=True)
@@ -137,6 +141,22 @@ class Traffic:
         return f"addr:{address}", ""
 
     # -- recording -------------------------------------------------------------------------------
+
+    @staticmethod
+    def simple(path: str, authorization: str | None) -> bool:
+        """Whether a request is noise: the discovery document (the container's health check asks for it every
+        thirty seconds), the root page and a favicon (a browser), a scanner's guesses. A request with a token is
+        always the library's, whatever it asks for; so is any other path, from wherever it comes (behind a
+        proxy on the same machine, everybody is 127.0.0.1)."""
+        if authorization:
+            return False
+        return path in _SIMPLE or path.startswith("/.well-known/")
+
+    def note_simple(self, client: str, method: str, path: str, status: int, agent: str) -> None:
+        """A simple request is over: counted apart and kept in the recent list, flagged, for the developer page."""
+        with self._lock:
+            self.totals.simple += 1
+            self.recent.append(Done(time.time(), client, method, path, status, 0.0, 0, agent, simple=True))
 
     def begin(
         self, client: str, method: str, path: str, range_: str | None, authorization: str | None = None
@@ -245,6 +265,22 @@ class TrafficMiddleware:
             return
         headers = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
         client = (scope.get("client") or ("-", 0))[0]
+        if self.traffic.simple(path, headers.get("authorization")):
+            status = 0
+
+            async def watching(message: Message) -> None:
+                nonlocal status
+                if message["type"] == "http.response.start":
+                    status = int(message.get("status", 0))
+                await send(message)
+
+            try:
+                await self.app(scope, receive, watching)
+            finally:
+                self.traffic.note_simple(
+                    client, scope.get("method", "GET"), path, status, headers.get("user-agent", "")[:120]
+                )
+            return
         transfer = self.traffic.begin(
             client, scope.get("method", "GET"), path, headers.get("range"), headers.get("authorization")
         )

@@ -63,6 +63,12 @@ def render(runtime: Runtime) -> str:
         ],
     )
     metric("requests_total", "counter", "Library requests answered since the start.", ("", traffic.totals.requests))
+    metric(
+        "simple_requests_total",
+        "counter",
+        "Health checks, browsers and scanners since the start (not in requests_total).",
+        ("", traffic.totals.simple),
+    )
     metric("sent_bytes_total", "counter", "Bytes sent since the start.", ("", traffic.totals.sent))
     metric("errors_total", "counter", "Answers of 5xx since the start.", ("", traffic.totals.errors))
     metric("refused_total", "counter", "Answers of 401 or 403 since the start.", ("", traffic.totals.refused))

@@ -2,7 +2,7 @@
   <div class="tile"><span class="n">{{ transfers | length }}</span><span class="what">{{ _("transfers in progress") }}</span></div>
   <div class="tile"><span class="n">{{ rates.bytes | size }}/s</span><span class="what">{{ _("sent now") }}</span></div>
   <div class="tile"><span class="n">{{ "%.1f"|format(rates.requests) }}</span><span class="what">{{ _("requests a second") }}</span></div>
-  <div class="tile"><span class="n">{{ totals.sent | size }}</span><span class="what">{{ _("sent since the start") }} · {{ totals.requests }} {{ _("requests") }}{% if totals.errors %} · {{ totals.errors }} {{ _("errors") }}{% endif %}</span></div>
+  <div class="tile"><span class="n">{{ totals.sent | size }}</span><span class="what">{{ _("sent since the start") }} · {{ totals.requests }} {{ _("requests") }}{% if totals.errors %} · {{ totals.errors }} {{ _("errors") }}{% endif %}{% if totals.simple %} · <span title="{{ _('Health checks, browsers and scanners: not counted above.') }}">{{ totals.simple }} {{ _("simple requests, apart") }}</span>{% endif %}</span></div>
 </section>
 
 <h2>{{ _("Transfers in progress") }}</h2>
