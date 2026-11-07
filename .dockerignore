@@ -1,11 +1,14 @@
-.git
-.venv
+# SPDX-FileCopyrightText: 2026 JigSawFr
+# SPDX-License-Identifier: MIT
+
+# An allow-list: the build context holds only what the image is built from
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src
+!sdk/python
 **/__pycache__
-.mypy_cache
-.ruff_cache
-.pytest_cache
-tests
-dist
-sdk/.git
 sdk/python/.venv
 sdk/python/dist
+sdk/python/tests
