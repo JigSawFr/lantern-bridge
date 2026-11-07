@@ -37,6 +37,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from jinja2 import Environment, PackageLoader, select_autoescape
 from lantern.server import LanternApp
 from lantern.server.pairing import Limiter
+from markupsafe import Markup
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
@@ -190,6 +191,17 @@ def is_loopback(host: str | None) -> bool:
         return False
 
 
+def _when(stamp: float | None) -> Markup | str:
+    """A moment as its exact local time; the page script turns a recent one into "3 min ago" (the exact time stays
+    in the tooltip). Without the script the exact time is what is read."""
+    if not stamp:
+        return "-"
+    exact = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stamp))
+    return Markup('<time class="ago" datetime="{}" title="{}">{}</time>').format(
+        datetime.fromtimestamp(stamp, UTC).isoformat(timespec="seconds"), exact, exact
+    )
+
+
 def _size(count: float) -> str:
     for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
         if count < 1024 or unit == "TiB":
@@ -234,7 +246,7 @@ class Admin:
         self.env.filters["day"] = lambda t: time.strftime("%Y-%m-%d", time.localtime(t))
         self.env.filters["clock"] = lambda t: time.strftime("%H:%M:%S", time.localtime(t))
         self.env.filters["iso"] = lambda t: datetime.fromtimestamp(t, UTC).isoformat(timespec="seconds")
-        self.env.filters["when"] = lambda t: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t)) if t else "-"
+        self.env.filters["when"] = _when
 
     # -- state ---------------------------------------------------------------
 

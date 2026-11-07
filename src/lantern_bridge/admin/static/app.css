@@ -258,3 +258,11 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 .timeline .ev.source_down,.timeline .ev.pairing_refused,.timeline .ev.revoked{border-left-color:var(--danger)}
 .timeline .ev.source_up,.timeline .ev.paired{border-left-color:var(--aurora)}
 .timeline .ev.update{border-left-color:var(--ice)}
+
+/* -- overview: figures on one row on a phone, the server's identity folded away ------------------------------- */
+@media (max-width:40rem){.cards.stats{grid-template-columns:repeat(3,1fr);gap:.5rem}.stats .tile{padding:.7rem .8rem}.stats .tile .n{font-size:1.6rem}.stats .tile .what{font-size:.78rem;line-height:1.25;display:block}}
+details.fold{margin:2.2rem 0 .8rem}
+details.fold>summary{font:600 1.15rem/1.2 var(--display);letter-spacing:-.02em;cursor:pointer;margin-bottom:.8rem;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"▸";display:inline-block;width:1.1em;color:var(--dusk);transition:transform .15s}
+details.fold[open]>summary::before{transform:rotate(90deg)}

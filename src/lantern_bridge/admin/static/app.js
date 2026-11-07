@@ -51,6 +51,20 @@
   };
   labelTables(document);
 
+  // -- moments read as "3 min ago" for a day, then as the exact time (which stays in the tooltip) -----------
+  const rtf = typeof Intl.RelativeTimeFormat === "function" ? new Intl.RelativeTimeFormat(document.documentElement.lang || "en", { numeric: "auto", style: "short" }) : null;
+  const ago = (root) => {
+    if (!rtf) return;
+    for (const el of root.querySelectorAll("time.ago[datetime]")) {
+      const seconds = (Date.parse(el.getAttribute("datetime")) - Date.now()) / 1000;
+      if (!Number.isFinite(seconds) || seconds > 5 || seconds < -86400) continue;
+      const [value, unit] = seconds > -60 ? [Math.round(seconds), "second"] : seconds > -3600 ? [Math.round(seconds / 60), "minute"] : [Math.round(seconds / 3600), "hour"];
+      el.textContent = rtf.format(value, unit);
+    }
+  };
+  ago(document);
+  setInterval(() => { if (!document.hidden) ago(document); }, 30000);
+
   // -- blocks that follow the server: their HTML arrives when it changes ------------------------------------
   for (const live of document.querySelectorAll("[data-live]")) {
     if (!live.dataset.live.startsWith("/")) continue;
@@ -60,6 +74,7 @@
       live.innerHTML = html;
       live.dataset.html = html;
       labelTables(live);
+      ago(live);
     });
   }
 
