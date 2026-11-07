@@ -453,6 +453,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             kind=q.get("type", ""),
             source=q.get("source", ""),
             state=q.get("state", ""),
+            genre=q.get("genre", ""),
             sort=q.get("sort", "name"),
             page=int(number) if number.isdigit() else 1,
         )
@@ -463,8 +464,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
             active="library",
             found=found,
             counts=catalog.counts(),
+            genres=catalog.genres(),
             sources=[s.id for s in admin.config.sources],
-            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "sort")},
+            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort")},
         )
 
     def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:

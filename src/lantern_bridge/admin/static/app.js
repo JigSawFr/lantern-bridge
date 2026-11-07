@@ -82,6 +82,16 @@
     setTimeout(() => { if (!document.querySelector("dialog[open]")) location.reload(); }, 3000);
   }
 
+  // -- "/" jumps to the search box, as on most sites; Escape leaves it ---------------------------------------
+  const search = document.getElementById("q");
+  if (search) {
+    document.addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement ? document.activeElement.tagName : "");
+      if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey) { e.preventDefault(); search.focus(); search.select(); }
+      else if (e.key === "Escape" && document.activeElement === search) search.blur();
+    });
+  }
+
   // -- logs -------------------------------------------------------------------------------------------
   const log = document.getElementById("log");
   if (log && window.EventSource) {
