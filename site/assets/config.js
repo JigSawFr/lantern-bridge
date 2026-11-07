@@ -48,7 +48,7 @@
   }
 
   form.addEventListener('submit', (event) => event.preventDefault());
-  form.addEventListener('input', render);
+  form.addEventListener('input', () => { if (window.countEvent) window.countEvent('config'); render(); });
   form.addEventListener('change', render);
   render();
   root.hidden = false;

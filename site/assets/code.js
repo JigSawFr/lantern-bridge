@@ -57,6 +57,7 @@
     button.append(text);
     button.addEventListener('click', () => {
       copy((code || pre).textContent.replace(/\n$/, '')).then(() => {
+        if (window.countEvent) window.countEvent('copy', true);
         button.dataset.done = ''; text.textContent = T.copied;
         setTimeout(() => { button.removeAttribute('data-done'); text.textContent = T.copy; }, 1600);
         say(T.copied);
