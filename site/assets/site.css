@@ -926,7 +926,7 @@ pre code .tk-k { color: #7cc4ff; }
 /* "Will my files be recognised?" (identify.js): names in, what the bridge makes of each out. */
 #identify[hidden] { display: none; }
 .idf { margin-top: 20px; display: grid; gap: 12px; }
-.idf textarea { min-height: 9rem; padding: 12px; border: 1px solid var(--night-line); border-radius: 10px; background: rgb(14 26 51 / 0.6); color: var(--snow); font: 0.875rem/1.5 var(--mono); resize: vertical; }
+.idf textarea { min-height: 9rem; padding: 12px; border: 1px solid var(--night-line); border-radius: 10px; background: rgb(14 26 51 / 0.6); color: var(--snow); font: 1rem/1.5 var(--mono); resize: vertical; }
 .idf textarea:focus-visible { outline: 2px solid var(--aurora); outline-offset: 2px; }
 .idf-count { margin: 0; color: var(--mist); font-size: 0.9375rem; }
 .idf-out { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
