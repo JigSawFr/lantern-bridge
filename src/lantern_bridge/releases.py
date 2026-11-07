@@ -39,6 +39,7 @@ log = logging.getLogger("lantern_bridge.releases")
 
 SCHEMA = 1
 API = "https://api.github.com"
+API_HOST = "api.github.com"
 CHECK = 6 * 3600.0  # how often a repository is read again
 RETRY = 3600.0  # after a failure
 MAX_ASSET = 256 << 20
@@ -262,7 +263,8 @@ class Releases:
 
     def _get(self, url: str, etag: str = "") -> httpx.Response:
         headers = {"If-None-Match": etag} if etag else {}
-        if self.token and url.startswith(API):
+        parts = urlsplit(url)
+        if self.token and parts.scheme == "https" and parts.hostname == API_HOST:
             headers["Authorization"] = f"Bearer {self.token}"
         reply = self.http.get(url, headers=headers)
         if reply.status_code in (403, 429) and reply.headers.get("x-ratelimit-remaining") == "0":

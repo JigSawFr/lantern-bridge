@@ -9,6 +9,7 @@ import json
 import zipfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 import pytest
@@ -55,9 +56,9 @@ class Fake:
         }
 
     def handler(self, request: httpx.Request) -> httpx.Response:
-        url = str(request.url)
+        url, path = str(request.url), request.url.path
         self.calls.append(url)
-        if url.endswith("/releases/latest"):
+        if path.endswith("/releases/latest"):
             if self.status != 200:
                 return httpx.Response(self.status, headers=self.headers, json={"message": "no"})
             if request.headers.get("if-none-match") == self.etag:
@@ -81,10 +82,10 @@ class Fake:
                 ],
             }
             return httpx.Response(200, json=body, headers={"etag": self.etag})
-        if url.endswith("/repos/someone/tool"):
+        if path == "/repos/someone/tool":
             return httpx.Response(200, json=self.about)
-        if "/releases/download/" in url:
-            name = url.rsplit("/", 1)[1]
+        if "/releases/download/" in path:
+            name = path.rsplit("/", 1)[1]
             data = self.assets.get(name)
             if data is None and name == "lantern.json" and self.manifest is not None:
                 data = json.dumps(self.manifest).encode()
@@ -264,4 +265,4 @@ def test_the_token_goes_to_the_api_and_only_there(tmp_path: Path) -> None:
     client = httpx.Client(transport=httpx.MockTransport(handler))
     releases = Releases(tmp_path, MemoryLibrary(), [HomebrewRepo("someone/tool")], token="secret", client=client)
     releases.check(HomebrewRepo("someone/tool"))
-    assert seen and all(auth == "Bearer secret" for url, auth in seen if url.startswith("https://api.github.com"))
+    assert seen and all(auth == "Bearer secret" for url, auth in seen if urlsplit(url).hostname == "api.github.com")
