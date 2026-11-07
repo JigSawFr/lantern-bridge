@@ -16,7 +16,7 @@ from urllib.parse import quote, urlsplit
 
 import httpx
 
-from lantern_bridge.sources.tinfoil import Shop, UpstreamError
+from lantern_bridge.sources.tinfoil import USER_AGENT, Shop, UpstreamError
 
 #: The largest answer read from a call (a save archive is read whole, to be hashed).
 MAX_CALL = 64 << 20
@@ -90,7 +90,7 @@ class AeroFoil(Shop):
                 method,
                 self._root() + path,
                 auth=self._auth,
-                headers={"Accept": "application/json, */*"},
+                headers={"Accept": "application/json, */*", "User-Agent": USER_AGENT},
                 data=data,
                 files=files,
                 json=document,
