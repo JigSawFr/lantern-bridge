@@ -3,21 +3,7 @@
 {% block body %}
 <h1>{{ _("Overview") }}</h1>
 <p class="lede">{{ _("What the bridge serves, and how far its hashing has come.") }}</p>
-{% if todo %}
-<section class="todo" aria-labelledby="todo-title">
-  <h2 id="todo-title">{{ _("Needs your attention") }} <span class="count">{{ todo | length }}</span></h2>
-  <ul>
-    {% for t in todo %}
-    <li class="{{ t.level }}">
-      <span class="pill {{ t.level if t.level != 'info' else 'ok' }}">{{ _("failing") if t.level == "bad" else _("to check") if t.level == "wait" else _("for your information") }}</span>
-      <span class="what">{{ _(t.text) }}{% if t.detail %} <span class="dim small">{{ t.detail }}</span>{% endif %}</span>
-      {% if t.scan and session.role != "observer" %}<form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ t.scan }}"><button class="ghost small" name="action" value="scan">{{ _("Read again") }}</button></form>{% endif %}
-      {% if t.href and (t.external or session.role != "observer") %}<a href="{{ t.href }}"{% if t.external %} rel="noreferrer"{% endif %}>{{ _(t.link) }}</a>{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
+<div data-live="/admin/?fragment=todo">{% include "_todo.html" %}</div>
 <section class="cards">
   <a class="tile" href="/admin/library"><span class="n" data-bind="apps">{{ state.apps }}</span><span class="what">{{ _("apps served") }}</span></a>
   <a class="tile" href="/admin/library"><span class="n" data-bind="titles">{{ state.titles }}</span><span class="what">{{ _("titles") }}</span></a>
@@ -45,21 +31,7 @@
 </div>
 
 <h2>{{ _("Sources") }}</h2>
-<div class="scroll"><table>
-  <thead><tr><th>{{ _("Source") }}</th><th>{{ _("Location") }}</th><th>{{ _("State") }}</th><th>{{ _("Last read") }}</th><th>{{ _("Hashed") }}</th><th>{{ _("Pending") }}</th><th></th></tr></thead>
-  <tbody>
-  {% for s in state.sources %}
-  <tr>
-    <td><strong>{{ s.id }}</strong></td><td><code>{{ s.path }}</code></td>
-    <td>{% if s.reachable is none %}<span class="pill wait">{{ _("waiting") }}</span>{% elif s.reachable %}<span class="pill ok">{{ _("reachable") }}</span>{% else %}<span class="pill bad">{{ _("unreachable") }}</span><br><span class="error">{{ s.error }}</span>{% endif %}{% if s.free is not none %}<br><span class="dim small">{{ s.free | size }} {{ _("free") }}</span>{% endif %}</td>
-    <td>{{ s.scanned | when }}</td><td>{{ s.hashed }}</td><td>{{ s.pending }}</td>
-    <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button class="ghost small" name="action" value="rehash" data-confirm="{{ _('Hash every file of this source again?') }}">{{ _("Rehash") }}</button></form></td>
-  </tr>
-  {% else %}
-  <tr><td colspan="7">{{ _("No source configured yet.") }} <a href="/admin/config">{{ _("Add one") }}</a></td></tr>
-  {% endfor %}
-  </tbody>
-</table></div>
+<div data-live="/admin/?fragment=sources">{% include "_sources.html" %}</div>
 
 <h2>{{ _("Server") }}</h2>
 <dl>

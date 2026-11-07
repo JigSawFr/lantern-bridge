@@ -34,15 +34,18 @@
   };
   labelTables(document);
 
-  // -- a block that follows the server: its HTML is fetched again every two seconds -----------------------
-  const live = document.querySelector("[data-live]");
-  if (live) {
+  // -- blocks that follow the server: their HTML is fetched again every two seconds -----------------------
+  const lives = [...document.querySelectorAll("[data-live]")].filter((el) => el.dataset.live.startsWith("/"));
+  if (lives.length) {
     setInterval(() => {
       if (document.hidden) return;
-      fetch(live.dataset.live, { credentials: "same-origin" })
-        .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
-        .then((html) => { live.innerHTML = html; labelTables(live); })
-        .catch(() => {});
+      for (const live of lives) {
+        if (live.contains(document.activeElement) && document.activeElement !== document.body) continue; // not under a click or a keyboard
+        fetch(live.dataset.live, { credentials: "same-origin" })
+          .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+          .then((html) => { if (html !== live.dataset.html) { live.innerHTML = html; live.dataset.html = html; labelTables(live); } })
+          .catch(() => {});
+      }
     }, 2000);
   }
 
