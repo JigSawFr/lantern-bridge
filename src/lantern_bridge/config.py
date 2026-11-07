@@ -130,6 +130,16 @@ class Mqtt:
         return table
 
 
+@dataclass(frozen=True, slots=True)
+class HomebrewRepo:
+    """A GitHub repository whose releases are served as homebrew (see releases.py)."""
+
+    repo: str  # owner/name
+    asset: str | None = None  # a pattern naming the asset to serve, when the release has several
+    kind: str | None = None  # app, game, port, emulator, tool, overlay, sysmodule or theme
+    prerelease: bool = False  # True: the latest release counts even when it is marked as a pre-release
+
+
 @dataclass(slots=True)
 class Config:
     uid: str
@@ -169,6 +179,10 @@ class Config:
     # ntfy topic, a Gotify or Home Assistant notify hook, any tool that takes a POST. None: no call.
     notify: str | None = None
     sources: list[Source] = field(default_factory=list)
+    # GitHub repositories whose releases are served as homebrew, and the environment variable holding a GitHub token
+    # (optional: without it GitHub allows 60 reads an hour, with it 5 000).
+    homebrew: list[HomebrewRepo] = field(default_factory=list)
+    github_token_env: str | None = None
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
     _extra_sources: dict[str, dict[str, Any]] = field(default_factory=dict, repr=False)
@@ -199,6 +213,18 @@ class Config:
             data["webhook"] = self.webhook
         if self.notify is not None:
             data["notify"] = self.notify
+        if self.github_token_env is not None:
+            data["github_token_env"] = self.github_token_env
+        if self.homebrew:
+            data["homebrew"] = [
+                {
+                    "repo": r.repo,
+                    **({"asset": r.asset} if r.asset else {}),
+                    **({"kind": r.kind} if r.kind else {}),
+                    **({"prerelease": True} if r.prerelease else {}),
+                }
+                for r in self.homebrew
+            ]
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -336,6 +362,8 @@ def _parse(data: dict[str, Any]) -> Config:
         "low_disk_mb",
         "hash_threads",
         "compress_threads",
+        "homebrew",
+        "github_token_env",
         "admin_allow",
         "admin_hosts",
         "trusted_proxies",
@@ -376,6 +404,10 @@ def _parse(data: dict[str, Any]) -> Config:
         if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 64:
             raise ConfigError(f"`{key}` must be a number of threads from 0 (automatic) to 64")
         threads[key] = count
+    homebrew = _homebrew(data.get("homebrew"))
+    token_env = data.get("github_token_env")
+    if token_env is not None and (not isinstance(token_env, str) or not token_env.strip()):
+        raise ConfigError("`github_token_env` must name an environment variable")
     update_check = data.get("update_check", True)
     if not isinstance(update_check, bool):
         raise ConfigError("`update_check` must be true or false")
@@ -440,6 +472,8 @@ def _parse(data: dict[str, Any]) -> Config:
         mqtt=mqtt,
         update_check=update_check,
         low_disk_mb=low_disk,
+        homebrew=homebrew,
+        github_token_env=token_env.strip() if isinstance(token_env, str) else None,
         hash_threads=threads["hash_threads"],
         compress_threads=threads["compress_threads"],
         admin_allow=admin_allow,
@@ -460,6 +494,32 @@ def check(config: Config) -> Config:
         return _parse(tomllib.loads(config.to_toml()))
     except tomllib.TOMLDecodeError as error:
         raise ConfigError(str(error)) from error
+
+
+def _homebrew(raw: object) -> list[HomebrewRepo]:
+    from lantern_bridge.releases import KINDS, ReleaseError, parse_repo
+
+    if raw is None:
+        return []
+    if not isinstance(raw, list) or not all(isinstance(row, dict) for row in raw):
+        raise ConfigError("`homebrew` must be a list of tables (`[[homebrew]]`)")
+    repos: list[HomebrewRepo] = []
+    for row in raw:
+        try:
+            name = parse_repo(str(row.get("repo", "")))
+        except ReleaseError as error:
+            raise ConfigError(f"homebrew: {error}") from error
+        if name.lower() in {r.repo.lower() for r in repos}:
+            raise ConfigError(f"homebrew: {name} is there twice")
+        asset, kind, pre = row.get("asset"), row.get("kind"), row.get("prerelease", False)
+        if asset is not None and (not isinstance(asset, str) or not asset.strip() or len(asset) > 200):
+            raise ConfigError(f"homebrew {name}: `asset` must be a name or a pattern such as `*.nro`")
+        if kind is not None and kind not in KINDS:
+            raise ConfigError(f"homebrew {name}: `kind` must be one of {', '.join(KINDS)}")
+        if not isinstance(pre, bool):
+            raise ConfigError(f"homebrew {name}: `prerelease` must be true or false")
+        repos.append(HomebrewRepo(name, asset.strip() if asset else None, kind, pre))
+    return repos
 
 
 def parse_text(text: str, uid: str | None = None) -> Config:
