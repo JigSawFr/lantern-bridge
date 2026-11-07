@@ -46,7 +46,7 @@ from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
 from lantern_bridge.admin import attention, nav, netguard
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
-from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
+from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
 from lantern_bridge.catalog import KINDS, search
 from lantern_bridge.config import (
     AerofoilSource,
@@ -92,6 +92,7 @@ _STATIC = {
     "sora.woff2": "font/woff2",
     "figtree.woff2": "font/woff2",
     "jetbrains-mono.woff2": "font/woff2",
+    "twemoji-flags.woff2": "font/woff2",
 }
 #: What a settings page says after it saved (a fixed word in the address, never a text).
 _DONE = {
@@ -359,7 +360,12 @@ class Admin:
             mode=request.cookies.get(_THEME_COOKIE)
             if request.cookies.get(_THEME_COOKIE) in ("light", "dark")
             else "auto",
-            languages=LANGUAGES,
+            htmllang=HTML_LANG[lang],
+            lang_flag=flag(lang),
+            lang_code=lang.split("-")[0].upper()
+            if lang in ("en", "fr", "de", "es", "it", "nl", "pt", "ru", "ja", "ko")
+            else lang.upper(),
+            languages=[(code, NAMES[code], flag(code)) for code in LANGUAGES],
             here=request.url.path if request.url.path.startswith("/admin") else "/admin/",
             _=tr,
             **ctx,

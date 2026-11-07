@@ -129,7 +129,7 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 - **Invitations**: a code that pairs a device without approval, for 1, 7 or 30 days and a number of devices.
 - **Diagnostic**: a JSON file with versions, sources, counts and recent warnings, and no secret.
 
-The pages wear Boréale's night, in English and French (the browser's language, or the switch in the header), with the fonts served from the bridge. The theme is automatic (it follows the browser's own light or dark preference, and when that changes), with a light and a dark choice one click away in the header (a choice of that browser, kept in a cookie). The header keeps the everyday pages in view and puts the settings ones under "Manage", and both keep to WCAG AA contrast.
+The pages wear Boréale's night, in the fifteen languages of Boréale (the browser's language, or the menu with flags in the header: English, French and Canadian French, German, Spanish and Latin American Spanish, Italian, Dutch, Portuguese and Brazilian Portuguese, Russian, Japanese, Korean, Simplified and Traditional Chinese; a text a language lacks falls back to its base, then to English), with the fonts served from the bridge. The theme is automatic (it follows the browser's own light or dark preference, and when that changes), with a light and a dark choice one click away in the header (a choice of that browser, kept in a cookie). The header keeps the everyday pages in view and puts the settings ones under "Manage", and both keep to WCAG AA contrast.
 
 The pages answer the local network only (private and loopback addresses). Three settings in `config.toml` fit them to a proxy or a stricter network:
 

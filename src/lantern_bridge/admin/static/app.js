@@ -124,6 +124,13 @@
     });
   }
 
+  // -- the language menu closes on a click elsewhere and on Escape ---------------------------------------------
+  const langs = document.querySelector(".langmenu");
+  if (langs) {
+    document.addEventListener("click", (e) => { if (!langs.contains(e.target)) langs.open = false; });
+    langs.addEventListener("keydown", (e) => { if (e.key === "Escape") { langs.open = false; langs.querySelector("summary").focus(); } });
+  }
+
   // -- a settings card that was edited says so; one bar saves every edited card, and a box finds a setting -----
   const cards = [...document.querySelectorAll("form[data-dirty]")];
   const bar = document.querySelector("[data-saveall]");
