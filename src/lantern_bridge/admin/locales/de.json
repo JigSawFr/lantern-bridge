@@ -426,5 +426,13 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Diese Seiten schreiben die Konfigurationsdatei. Die Bridge übernimmt eine Änderung, sobald sie gespeichert ist oder wenn die Datei von Hand bearbeitet wird.",
  "Unsaved changes.": "Nicht gespeicherte Änderungen.",
  "card(s).": "Karte(n).",
- "The source you added was not applied: see the note on the settings page.": "Die hinzugefügte Quelle wurde nicht übernommen: Siehe den Hinweis auf der Einstellungsseite."
+ "The source you added was not applied: see the note on the settings page.": "Die hinzugefügte Quelle wurde nicht übernommen: Siehe den Hinweis auf der Einstellungsseite.",
+ "Version": "Version",
+ "Select all on this page": "Alle auf dieser Seite auswählen",
+ "Select {name}": "{name} auswählen",
+ "selected": "ausgewählt",
+ "Hash the selected titles again?": "Hashes der ausgewählten Titel neu berechnen?",
+ "Export the selection (CSV)": "Auswahl exportieren (CSV)",
+ "Export this list (CSV)": "Diese Liste exportieren (CSV)",
+ "Clear the selection": "Auswahl aufheben"
 }

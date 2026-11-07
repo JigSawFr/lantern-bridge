@@ -426,5 +426,13 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "這些頁面會寫入設定檔。橋接器會在變更儲存後立即套用，或在檔案被手動編輯時套用。",
  "Unsaved changes.": "有未儲存的變更。",
  "card(s).": "張卡片。",
- "The source you added was not applied: see the note on the settings page.": "新增的來源未被套用：請查看設定頁面上的提示。"
+ "The source you added was not applied: see the note on the settings page.": "新增的來源未被套用：請查看設定頁面上的提示。",
+ "Version": "版本",
+ "Select all on this page": "選取本頁全部",
+ "Select {name}": "選取 {name}",
+ "selected": "項已選",
+ "Hash the selected titles again?": "要重新計算所選標題的雜湊嗎？",
+ "Export the selection (CSV)": "匯出所選內容 (CSV)",
+ "Export this list (CSV)": "匯出此清單 (CSV)",
+ "Clear the selection": "取消選取"
 }

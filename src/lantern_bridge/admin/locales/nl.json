@@ -426,5 +426,13 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Deze pagina's schrijven het configuratiebestand. De bridge past een wijziging toe zodra die is opgeslagen, of wanneer het bestand met de hand is bewerkt.",
  "Unsaved changes.": "Niet-opgeslagen wijzigingen.",
  "card(s).": "kaart(en).",
- "The source you added was not applied: see the note on the settings page.": "De toegevoegde bron is niet toegepast: zie de melding op de instellingenpagina."
+ "The source you added was not applied: see the note on the settings page.": "De toegevoegde bron is niet toegepast: zie de melding op de instellingenpagina.",
+ "Version": "Versie",
+ "Select all on this page": "Alles op deze pagina selecteren",
+ "Select {name}": "{name} selecteren",
+ "selected": "geselecteerd",
+ "Hash the selected titles again?": "De hashes van de geselecteerde titels opnieuw berekenen?",
+ "Export the selection (CSV)": "Selectie exporteren (CSV)",
+ "Export this list (CSV)": "Deze lijst exporteren (CSV)",
+ "Clear the selection": "Selectie wissen"
 }

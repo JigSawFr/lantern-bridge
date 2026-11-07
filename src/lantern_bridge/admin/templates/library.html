@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ _("Library") }}{% endblock %}
 {% macro link(page) %}/admin/library?{% for k, v in f.items() if v %}{{ k }}={{ v | urlencode }}&amp;{% endfor %}page={{ page }}{% endmacro %}
+{% macro th(key, label, down_first) %}<th scope="col"{% if order.sort == key %} aria-sort="{{ 'descending' if order.down else 'ascending' }}"{% endif %}><a class="sortlink" href="/admin/library?{% for k, v in f.items() if v and k not in ('sort', 'dir', 'page') %}{{ k }}={{ v | urlencode }}&amp;{% endfor %}sort={{ key }}&amp;dir={% if order.sort == key %}{{ 'asc' if order.down else 'desc' }}{% else %}{{ 'desc' if down_first else 'asc' }}{% endif %}">{{ label }}{% if order.sort == key %} <span aria-hidden="true">{{ '↓' if order.down else '↑' }}</span>{% endif %}</a></th>{% endmacro %}
 {% block body %}
 <h1>{{ _("Library") }}</h1>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 <p class="lede">{{ _("Everything the bridge knows, from every source: games, their updates and their DLC.") }}{% if ignored %} <a href="/admin/library/ignored">{{ ignored }} {{ _("files ignored") }}</a>{% endif %}{% if issues %} <a href="/admin/library/checks">{{ issues }} {{ _("things to check") }}</a>{% endif %} <a href="/admin/library/export">{{ _("Export") }} JSON</a> · <a href="/admin/library/export?format=csv">CSV</a></p>
 
 <form class="toolbar" method="get" action="/admin/library" role="search" data-autosubmit>
@@ -30,18 +32,28 @@
 
 {% if found.titles %}
 <div class="countbar"><p class="dim count">{{ found.total }} {{ _("titles") }}{% if found.pages > 1 %} · {{ _("page") }} {{ found.page }} / {{ found.pages }}{% endif %}</p>
+  <a class="dim small" href="/admin/library/export?format=csv{% for k, v in f.items() if v and k in ('q', 'type', 'source', 'state', 'genre') %}&amp;{{ k }}={{ v | urlencode }}{% endfor %}">{{ _("Export this list (CSV)") }}</a>
   <span class="views" role="group" aria-label="{{ _('View') }}">
     {% set rest %}{% for k, v in f.items() if v and k != "view" %}{{ k }}={{ v | urlencode }}&amp;{% endfor %}{% endset %}
     <a href="/admin/library?{{ rest }}view=grid"{% if f.view != "list" %} aria-current="true"{% endif %}>{{ _("Grid") }}</a>
     <a href="/admin/library?{{ rest }}view=list"{% if f.view == "list" %} aria-current="true"{% endif %}>{{ _("List") }}</a>
   </span></div>
 {% if f.view == "list" %}
+<form method="post" action="/admin/library/rehash" class="bulkbar" data-bulk hidden>
+  <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="ids" value=""><input type="hidden" name="next" value="{{ link(found.page) | replace('&amp;', '&') }}">
+  <span><b data-n>0</b> {{ _("selected") }}</span>
+  <button class="ghost small" data-confirm="{{ _('Hash the selected titles again?') }}">{{ _("Hash again") }}</button>
+  <a class="button ghost small" href="/admin/library/export?format=csv" data-export>{{ _("Export the selection (CSV)") }}</a>
+  <button type="button" class="link" data-clear>{{ _("Clear the selection") }}</button>
+</form>
 <div class="scroll"><table class="dense">
-  <thead><tr><th>{{ _("Name") }}</th><th>{{ _("Kind") }}</th><th>{{ _("Size") }}</th><th>{{ _("Source") }}</th><th></th></tr></thead>
+  <thead><tr><th scope="col" class="pick"><input type="checkbox" name="pickall" data-pick-all aria-label="{{ _('Select all on this page') }}"></th>{{ th("name", _("Name"), false) }}<th scope="col">{{ _("Kind") }}</th>{{ th("version", _("Version"), true) }}{{ th("size", _("Size"), true) }}<th scope="col">{{ _("Source") }}</th><th></th></tr></thead>
   <tbody>
   {% for t in found.titles %}
-  <tr><td><a href="/admin/library/{{ t.title_id }}"><strong>{{ t.name }}</strong></a> <code>{{ t.title_id }}</code></td>
-    <td>{% if t.count("base") %}<span class="badge">{{ _("game") }}{% if t.latest %} v{{ t.latest }}{% endif %}</span> {% endif %}{% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span> {% endif %}{% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}</td>
+  <tr><td class="pick"><input type="checkbox" name="pick" data-pick value="{{ t.title_id }}" aria-label="{{ _('Select {name}', name=t.name) }}"></td>
+    <td><a href="/admin/library/{{ t.title_id }}"><strong>{{ t.name }}</strong></a> <code>{{ t.title_id }}</code></td>
+    <td>{% if t.count("base") %}<span class="badge">{{ _("game") }}</span> {% endif %}{% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span> {% endif %}{% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}</td>
+    <td>{% if t.latest %}v{{ t.latest }}{% else %}–{% endif %}</td>
     <td>{{ t.size | size }}</td><td class="dim">{{ t.sources | join(", ") }}</td>
     <td>{% if t.title_id in flagged %}<span class="badge wait">{{ _("to check") }}</span>{% endif %}{% if t.pending %} <span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}</td></tr>
   {% endfor %}

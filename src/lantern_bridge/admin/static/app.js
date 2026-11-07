@@ -124,6 +124,26 @@
     });
   }
 
+  // -- the library's list: tick titles, then hash them again or export them -----------------------------------
+  const bulk = document.querySelector("[data-bulk]");
+  if (bulk) {
+    const picks = () => [...document.querySelectorAll("input[data-pick]")];
+    const all = document.querySelector("[data-pick-all]");
+    const sync = () => {
+      const ids = picks().filter((b) => b.checked).map((b) => b.value);
+      bulk.hidden = ids.length === 0;
+      bulk.querySelector("[data-n]").textContent = String(ids.length);
+      bulk.querySelector("input[name=ids]").value = ids.join(",");
+      bulk.querySelector("[data-export]").href = "/admin/library/export?format=csv&ids=" + encodeURIComponent(ids.join(","));
+      if (all) { all.checked = ids.length > 0 && ids.length === picks().length; all.indeterminate = ids.length > 0 && !all.checked; }
+    };
+    document.addEventListener("change", (e) => {
+      if (e.target === all) for (const b of picks()) b.checked = all.checked;
+      if (e.target === all || (e.target.matches && e.target.matches("input[data-pick]"))) sync();
+    });
+    bulk.querySelector("[data-clear]").addEventListener("click", () => { for (const b of picks()) b.checked = false; sync(); });
+  }
+
   // -- the language menu closes on a click elsewhere and on Escape ---------------------------------------------
   const langs = document.querySelector(".langmenu");
   if (langs) {

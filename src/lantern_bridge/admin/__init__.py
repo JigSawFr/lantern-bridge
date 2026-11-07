@@ -47,7 +47,7 @@ from lantern_bridge.admin import attention, nav, netguard
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
-from lantern_bridge.catalog import KINDS, search
+from lantern_bridge.catalog import FIRST_DOWN, KINDS, SORTS, Catalog, TitleInfo, search
 from lantern_bridge.config import (
     AerofoilSource,
     Config,
@@ -138,6 +138,7 @@ def _csv_safe(value: str) -> str:
 #: What the live stream may follow: the pages' fragments and the state. Each is asked again as the same session.
 #: Live streams one session may keep open at once (a page opens one per block it follows).
 _STREAMS_PER_SESSION = 8
+_BULK = 200  # titles one bulk action or one selection export takes
 _BUSY, _IDLE, _SETTLE, _BEAT = (
     1.0,
     5.0,
@@ -711,18 +712,40 @@ def mount(app: FastAPI, admin: Admin) -> None:
         projection = admin.runtime.projection
         return {i for i in title_ids if (sheet := projection.title(i)) is not None and sheet.icon is not None}
 
+    def chosen(request: Request, catalog: Catalog) -> list[TitleInfo] | None:
+        """The titles an export or a bulk action is about: those whose ids are in `ids` (comma separated), else
+        those the filters of the library page keep, else None (the whole library)."""
+        q = request.query_params
+        ids = [i.strip().upper() for i in q.get("ids", "").split(",") if i.strip()][:_BULK]
+        if ids:
+            return [catalog.titles[i] for i in ids if i in catalog.titles]
+        if not any(q.get(k) for k in ("q", "type", "source", "state", "genre")):
+            return None
+        return search(
+            catalog,
+            flagged=catalog.flagged(),
+            q=q.get("q", "")[:100],
+            kind=q.get("type", ""),
+            source=q.get("source", ""),
+            state=q.get("state", ""),
+            genre=q.get("genre", ""),
+            per_page=10**9,
+        ).titles
+
     @router.get("/library/export")
     async def library_export(request: Request) -> Response:
-        """The library as a file to keep: ?format=json (default, with a schema number) or csv."""
+        """The library as a file to keep: ?format=json (default, with a schema number) or csv. With the library
+        page's filters, or `ids`, only those titles."""
         _, _, refused = await authed(request)
         if refused is not None:
             return refused
         catalog = admin.runtime.browser.catalog()
+        titles = chosen(request, catalog)
         stamp = time.strftime("%Y-%m-%d", time.gmtime())
         if request.query_params.get("format") == "csv":
-            body, kind, extension = catalog.export_csv(), "text/csv; charset=utf-8", "csv"
+            body, kind, extension = catalog.export_csv(titles), "text/csv; charset=utf-8", "csv"
         else:
-            document = catalog.export(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+            document = catalog.export(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), titles)
             body, kind, extension = json.dumps(document, indent=2) + "\n", "application/json", "json"
         return Response(
             body,
@@ -799,13 +822,19 @@ def mount(app: FastAPI, admin: Admin) -> None:
             state=q.get("state", ""),
             genre=q.get("genre", ""),
             sort=q.get("sort", "name"),
+            descending={"asc": False, "desc": True}.get(q.get("dir", "")),
             page=int(number) if number.isdigit() else 1,
         )
+        sort = q.get("sort", "name") if q.get("sort", "name") in SORTS else "name"
+        down = FIRST_DOWN[sort] if q.get("dir") not in ("asc", "desc") else q.get("dir") == "desc"
+        done = _DONE.get(q.get("m", ""))
         return admin.page(
             request,
             "library.html",
             session,
             active="library",
+            message=admin.tr(request)(done) if done else None,
+            order={"sort": sort, "down": down},
             found=found,
             counts=catalog.counts(),
             genres=catalog.genres(),
@@ -814,7 +843,28 @@ def mount(app: FastAPI, admin: Admin) -> None:
             issues=sum(len(v) for v in flagged.values()),
             flagged=flagged.keys(),
             sources=[s.id for s in admin.config.sources],
-            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort", "view")},
+            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "genre", "sort", "dir", "view")},
+        )
+
+    @router.post("/library/rehash")
+    async def library_rehash(request: Request) -> Response:
+        """Hash again every file of the titles ticked on the library page (`ids`, comma separated)."""
+        _, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        catalog = admin.runtime.browser.catalog()
+        ids = [i.strip().upper() for i in fields.get("ids", "").split(",") if i.strip()][:_BULK]
+        files = sorted({(f.source, f.path) for i in ids if i in catalog.titles for f in catalog.titles[i].files})
+        count = admin.runtime.rehash(files) if files else 0
+        log.info("rehash of %d title(s) requested from the pages: %d file(s)", len(ids), count)
+        back = fields.get("next", "")
+        stay = back.startswith("/admin/library?") and "//" not in back and "\\" not in back and "\n" not in back
+        target = (back if stay else "/admin/library").partition("?")
+        query = "&".join(p for p in target[2].split("&") if p and not p.startswith("m="))
+        return RedirectResponse(
+            f"{target[0]}?{query + '&' if query else ''}m=queued" if files else target[0],
+            status_code=303,
+            headers=_HEADERS,
         )
 
     def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:

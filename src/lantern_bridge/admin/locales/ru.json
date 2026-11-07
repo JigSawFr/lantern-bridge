@@ -426,5 +426,13 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Эти страницы записывают файл конфигурации. Шлюз применяет изменение сразу после сохранения или когда файл правят вручную.",
  "Unsaved changes.": "Несохранённые изменения.",
  "card(s).": "карточка(и).",
- "The source you added was not applied: see the note on the settings page.": "Добавленный источник не был применён: см. примечание на странице настроек."
+ "The source you added was not applied: see the note on the settings page.": "Добавленный источник не был применён: см. примечание на странице настроек.",
+ "Version": "Версия",
+ "Select all on this page": "Выбрать всё на этой странице",
+ "Select {name}": "Выбрать {name}",
+ "selected": "выбрано",
+ "Hash the selected titles again?": "Пересчитать хеши выбранных игр?",
+ "Export the selection (CSV)": "Экспортировать выбранное (CSV)",
+ "Export this list (CSV)": "Экспортировать этот список (CSV)",
+ "Clear the selection": "Снять выбор"
 }
