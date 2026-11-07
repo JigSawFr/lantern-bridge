@@ -36,7 +36,7 @@ code{background:rgb(255 255 255 / .06);border-radius:6px;padding:.05em .4em;font
 .brand img{width:34px;height:34px}
 .brand small{display:block;font:500 .7rem var(--mono);color:var(--dusk);letter-spacing:.04em}
 nav{display:flex;flex-wrap:wrap;gap:.15rem;flex:1}
-nav a{color:var(--mist);text-decoration:none;padding:.45rem .75rem;border-radius:999px;font-weight:500;font-size:.95rem;border:1px solid transparent}
+nav a{color:var(--mist);text-decoration:none;padding:.45rem .62rem;border-radius:999px;font-weight:500;font-size:.95rem;border:1px solid transparent}
 nav a:hover{color:var(--snow);background:rgb(255 255 255 / .05)}
 nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 .tools{display:flex;gap:.5rem;align-items:center}

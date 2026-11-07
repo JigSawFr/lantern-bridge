@@ -24,11 +24,26 @@
   }
 
   // -- tables: on a narrow screen each row becomes a card, so every cell carries its column's name -------
-  for (const table of document.querySelectorAll("table")) {
-    const heads = [...table.querySelectorAll("thead th")].map((th) => th.textContent.trim());
-    for (const row of table.querySelectorAll("tbody tr")) {
-      [...row.children].forEach((td, i) => { if (heads[i] && td.colSpan === 1) td.dataset.label = heads[i]; });
+  const labelTables = (root) => {
+    for (const table of root.querySelectorAll("table")) {
+      const heads = [...table.querySelectorAll("thead th")].map((th) => th.textContent.trim());
+      for (const row of table.querySelectorAll("tbody tr")) {
+        [...row.children].forEach((td, i) => { if (heads[i] && td.colSpan === 1) td.dataset.label = heads[i]; });
+      }
     }
+  };
+  labelTables(document);
+
+  // -- a block that follows the server: its HTML is fetched again every two seconds -----------------------
+  const live = document.querySelector("[data-live]");
+  if (live) {
+    setInterval(() => {
+      if (document.hidden) return;
+      fetch(live.dataset.live, { credentials: "same-origin" })
+        .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+        .then((html) => { live.innerHTML = html; labelTables(live); })
+        .catch(() => {});
+    }, 2000);
   }
 
   // -- the menu scrolls sideways on a narrow screen: the current page is brought into view ----------------

@@ -108,6 +108,8 @@ class Config:
     public: bool = False
     # True: the administration pages answer only to addresses of the local network (and the machine itself).
     admin_lan_only: bool = True
+    # True: the administration pages add a developer page (requests, raw JSON, timings). Off by default.
+    developer: bool = False
     sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -121,6 +123,7 @@ class Config:
         data["remote_rate"] = self.remote_rate
         data["public"] = self.public
         data["admin_lan_only"] = self.admin_lan_only
+        data["developer"] = self.developer
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -175,7 +178,7 @@ def _parse(data: dict[str, Any]) -> Config:
         raise ConfigSchemaError(
             f"the configuration has schema {schema}, this version reads up to {SCHEMA}: update lantern-bridge"
         )
-    known = {"schema", "uid", "name", "remote_rate", "public", "admin_lan_only", "sources"}
+    known = {"schema", "uid", "name", "remote_rate", "public", "admin_lan_only", "developer", "sources"}
     extra = {k: v for k, v in data.items() if k not in known}
     uid = data.get("uid")
     name = data.get("name", DEFAULT_NAME)
@@ -190,6 +193,9 @@ def _parse(data: dict[str, Any]) -> Config:
     lan_only = data.get("admin_lan_only", True)
     if not isinstance(lan_only, bool):
         raise ConfigError("`admin_lan_only` must be true or false")
+    developer = data.get("developer", False)
+    if not isinstance(developer, bool):
+        raise ConfigError("`developer` must be true or false")
     sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -236,6 +242,7 @@ def _parse(data: dict[str, Any]) -> Config:
         remote_rate=float(rate),
         public=public,
         admin_lan_only=lan_only,
+        developer=developer,
         sources=sources,
         _extra=extra,
         _extra_sources=extra_sources,

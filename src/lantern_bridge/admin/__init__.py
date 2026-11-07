@@ -16,6 +16,7 @@ import logging
 import os
 import platform
 import re
+import threading
 import time
 from collections.abc import AsyncIterator
 from copy import deepcopy
@@ -84,6 +85,7 @@ _DONE = {
     "tied": "Login tied.",
     "untied": "Login removed.",
     "queued": "Hashing again: these files go first.",
+    "done": "Done.",
 }
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
@@ -209,6 +211,7 @@ class Admin:
             version=__version__,
             draft=SPEC_DRAFT,
             name=self.config.name,
+            developer=self.config.developer,
             lang=lang,
             languages=LANGUAGES,
             here=request.url.path if request.url.path.startswith("/admin") else "/admin/",
@@ -507,6 +510,103 @@ def mount(app: FastAPI, admin: Admin) -> None:
         log.info("rehash of %s requested from the pages: %d file(s)", title.title_id, count)
         return title_view(request, session, title.title_id, "queued")
 
+    def activity_data() -> dict[str, Any]:
+        traffic = admin.runtime.traffic
+        transfers, clients, _ = traffic.snapshot()
+        now = time.monotonic()
+        return {
+            "transfers": transfers,
+            "clients": clients,
+            "rates": traffic.rates(),
+            "totals": traffic.totals,
+            "uptime": time.time() - admin.runtime.stats.started,
+            "state": admin.state(),
+            "now": now,
+        }
+
+    @router.get("/activity")
+    async def activity(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        template = "_activity.html" if request.query_params.get("fragment") else "activity.html"
+        return admin.page(request, template, session, active="activity", **activity_data())
+
+    def developer_only() -> None:
+        if not admin.config.developer:
+            raise HTTPException(404)
+
+    @router.get("/developer")
+    async def developer_page(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        developer_only()
+        runtime = admin.runtime
+        _, _, recent = runtime.traffic.snapshot()
+        slow = sorted(runtime.stats.timings.items(), key=lambda kv: -kv[1][0])[:15]
+        library = runtime.projection.library
+        journal = library.journal()
+        return admin.page(
+            request,
+            "developer.html",
+            session,
+            active="developer",
+            recent=recent[:200],
+            slow=slow,
+            process={
+                "pid": os.getpid(),
+                "python": platform.python_version(),
+                "platform": platform.platform(),
+                "threads": threading.active_count(),
+                "uptime": time.time() - runtime.stats.started,
+                "apps": len(library.apps()),
+                "titles": len(runtime.browser.catalog().titles),
+                "journal": journal.position() if journal is not None else None,
+                "cycle": admin.runtime.stats.hashed_files,
+            },
+            state=admin.state(),
+            message=admin.tr(request)(_DONE[request.query_params["m"]])
+            if request.query_params.get("m") in _DONE
+            else None,
+        )
+
+    @router.get("/developer/title.json")
+    async def developer_title(request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return Response(status_code=401, headers=_HEADERS)
+        developer_only()
+        title_id = request.query_params.get("id", "").strip().upper()
+        runtime = admin.runtime
+        title = runtime.browser.catalog().titles.get(title_id)
+        sheet = runtime.projection.title(title_id)
+        apps = [a for a in runtime.projection.library.apps() if a.title_id.upper() == title_id]
+        body = {
+            "title_id": title_id,
+            "known": title is not None,
+            "files": [dataclasses.asdict(f) for f in title.files] if title is not None else [],
+            "sheet": sheet.to_json() if sheet is not None else None,
+            "apps": [a.to_json() for a in apps],
+        }
+        return Response(json.dumps(body, indent=2), media_type="application/json", headers=_HEADERS)
+
+    @router.post("/developer/{action}")
+    async def developer_action(action: str, request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        developer_only()
+        if action == "forget":
+            admin.runtime.browser.forget()
+            log.info("developer: the catalogue cache was cleared")
+        elif action == "scan":
+            admin.runtime.wake()
+            log.info("developer: a new pass was requested")
+        else:
+            raise HTTPException(404)
+        return redirect("/developer?m=done", request)
+
     @router.get("/pairings")
     async def pairings(request: Request) -> Response:
         session, _, refused = await authed(request)
@@ -708,6 +808,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.remote_rate = rate
             config.public = "public" in f
             config.admin_lan_only = "admin_lan_only" in f
+            config.developer = "developer" in f
             return None
 
         return await change(request, edit, "saved")

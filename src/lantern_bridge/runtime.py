@@ -23,6 +23,7 @@ from lantern_bridge.library import Projection
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
+from lantern_bridge.traffic import Traffic
 from lantern_bridge.upstream import AeroRequests, AeroSaves, BridgeLibrary, Cheats, Ledger, Logins
 
 log = logging.getLogger("lantern_bridge.runtime")
@@ -71,6 +72,7 @@ class Runtime:
         self._remote_failed: dict[tuple[str, str], float] = {}
         self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
         self.browser = Browser(self.index, self.projection)
+        self.traffic = Traffic()
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
         self.ledger: Ledger | None = None
