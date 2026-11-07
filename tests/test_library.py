@@ -130,3 +130,35 @@ def test_the_command_line_hashes_one_title_again(tmp_path: Path, capsys: object)
     runtime.index.close()
     assert main(["rehash", "--title", "0100bbbb00000000", "--config", str(config)]) == 0
     assert main(["rehash", "--title", "0100FFFF00000000", "--config", str(config)]) == 1
+
+
+def test_the_covers_come_from_the_sheet_when_the_bridge_holds_them(tmp_path: Path) -> None:
+    import dataclasses
+
+    from lantern._generated.models import Image
+    from lantern.server import FileRef
+
+    client = _admin(_client(tmp_path, sources=True))
+    (tmp_path / "games" / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    runtime.cycle(batch=5)
+    page = client.get("/admin/library/0100AAAA00000000")
+    assert "image/icon" not in page.text
+    assert client.get("/admin/library/0100AAAA00000000/image/icon").status_code == 404
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 16
+    ref = FileRef.of_bytes(png, "image/png")
+    name = runtime.projection.library.add_media(ref, "png")
+    sheet = runtime.projection.title("0100AAAA00000000")
+    assert sheet is not None
+    shown = dataclasses.replace(
+        sheet,
+        icon=Image(url=f"/api/lantern/v1/media/{name}", sha256=ref.sha256),
+        screenshots=[Image(url=f"/api/lantern/v1/media/{name}", sha256=ref.sha256)],
+    )
+    runtime.projection.title = lambda _id: shown
+    assert "/admin/library/0100AAAA00000000/image/icon" in client.get("/admin/library").text
+    assert "image/shot-0" in client.get("/admin/library/0100AAAA00000000").text
+    image = client.get("/admin/library/0100AAAA00000000/image/icon")
+    assert image.status_code == 200 and image.content == png and image.headers["content-type"] == "image/png"
+    assert client.get("/admin/library/0100AAAA00000000/image/shot-3").status_code == 404
+    assert client.get("/admin/library/0100AAAA00000000/image/..%2Fx").status_code == 404

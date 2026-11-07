@@ -55,6 +55,7 @@ FR: dict[str, str] = {
     "The tiles above start again with the bridge; the days and the machines are kept for 90 days.": "Les tuiles du haut repartent de zéro avec le pont ; les jours et les machines sont gardés 90 jours.",
     "The last days": "Les derniers jours",
     "Day": "Jour",
+    "Screenshots": "Captures",
     "Errors": "Erreurs",
     "Time": "Durée",
     "Title id": "Identifiant de titre",

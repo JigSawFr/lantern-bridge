@@ -154,6 +154,7 @@ td[colspan]{color:var(--mist);text-align:center;padding:1.6rem 1rem}
 .game:hover{border-color:hsl(var(--h) 90% 60% / .6);box-shadow:0 0 0 3px hsl(var(--h) 90% 60% / .15)}
 .cover{flex:none;width:4.2rem;aspect-ratio:3/4;display:grid;place-items:center;border-radius:12px;background-color:var(--night);background-image:linear-gradient(155deg,hsl(var(--h) 85% 55% / .85),hsl(var(--h2) 70% 30% / .9) 70%);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .12)}
 .cover span{font:700 1.3rem var(--display);color:rgb(255 255 255 / .92);letter-spacing:.02em}
+.cover{position:relative;overflow:hidden}.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cover.big{width:min(11rem,38vw)}.cover.big span{font-size:2.6rem}
 .meta{display:grid;gap:.3rem;min-width:0}
 .meta strong{font-family:var(--display);font-weight:600;line-height:1.25;overflow-wrap:anywhere}
@@ -181,3 +182,5 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 .card.atlas dl{background:none;border:0;padding:0;margin:.5rem 0}
 .actions{margin:1rem 0}
 [data-live]{min-height:12rem}
+
+.shots{display:flex;gap:.6rem;overflow-x:auto;margin:1rem 0;padding-bottom:.4rem}.shots img{height:9rem;border-radius:10px;border:1px solid var(--line);flex:none}
