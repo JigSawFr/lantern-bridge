@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Live-Änderungen",
   "sim_x_aerofoil": "Spielstände, Cheats, Anfragen, Altersfreigabe",
   "sim_x_none": "Nichts über die Bibliothek hinaus",
-  "sim_json": "Die Antwort von /apps, wie der Client sie liest"
+  "sim_json": "Die Antwort von /apps, wie der Client sie liest",
+  "diag_sources": "Deine Quellen",
+  "diag_bridge": "Hasht, führt zusammen, liefert",
+  "diag_clients": "Lantern-Clients",
+  "diag_alt": "Deine Quellen laufen in die Bridge, die sie hasht, zusammenführt und als eine Bibliothek an Lantern-Clients liefert."
 }

@@ -76,6 +76,22 @@ def page_footer(language: str, catalog: dict, root: str) -> str:
     )
 
 
+def diagram(catalog: dict) -> str:
+    """Sources, the Bridge, the clients: three boxes joined by arrows, in HTML so that the words are the catalog's."""
+    names = "".join(
+        f"<li>{catalog[key]}</li>"
+        for key in ("bridge_src_folders_t", "bridge_src_tinfoil_t", "bridge_src_ownfoil_t", "bridge_src_aerofoil_t")
+    )
+    return (
+        f'<figure class="flow-bridge" role="group" aria-label="{html.escape(catalog["diag_alt"], quote=True)}">'
+        f'<div class="fb-box"><p class="fb-title">{catalog["diag_sources"]}</p><ul>{names}</ul></div>'
+        f'<span class="fb-arrow" aria-hidden="true"></span>'
+        f'<div class="fb-box fb-core"><p class="fb-title">Lantern Bridge</p><p>{catalog["diag_bridge"]}</p></div>'
+        f'<span class="fb-arrow" aria-hidden="true"></span>'
+        f'<div class="fb-box"><p class="fb-title">{catalog["diag_clients"]}</p></div></figure>'
+    )
+
+
 def page_html(template: str, language: str, catalog: dict) -> str:
     root = "../" * (0 if language == ENGLISH else 1)
     values = dict(catalog)
@@ -102,8 +118,9 @@ def page_html(template: str, language: str, catalog: dict) -> str:
             "repo": REPO,
             "sdk": SDK_URL,
             "hero": (
-                f'<div class="wrap hero small">\n    <span class="eyebrow">{catalog["bridge_eyebrow"]}</span>\n'
-                f'    <h1>{catalog["bridge_title"]}</h1>\n    <p class="lede">{catalog["bridge_lede"]}</p>\n  </div>'
+                f'<div class="wrap hero small hero-split">\n    <div class="hero-text"><span class="eyebrow">{catalog["bridge_eyebrow"]}</span>\n'
+                f'    <h1>{catalog["bridge_title"]}</h1>\n    <p class="lede">{catalog["bridge_lede"]}</p></div>\n'
+                f"    {diagram(catalog)}\n  </div>"
             ),
             "scripts": (
                 f'<script src="{root}assets/code.js" defer data-copy="{html.escape(catalog["ui_copy"], quote=True)}" '

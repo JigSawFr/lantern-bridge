@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "リアルタイムの変更",
   "sim_x_aerofoil": "セーブデータ、チート、リクエスト、年齢区分",
   "sim_x_none": "ライブラリ以外は何もなし",
-  "sim_json": "クライアントが読む /apps の応答"
+  "sim_json": "クライアントが読む /apps の応答",
+  "diag_sources": "あなたのソース",
+  "diag_bridge": "ハッシュ化・統合・配信",
+  "diag_clients": "Lantern クライアント",
+  "diag_alt": "ソースはブリッジに入り、ハッシュ化と統合を経て、1 つのライブラリとして Lantern クライアントに配信されます。"
 }

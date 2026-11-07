@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Mudanças ao vivo",
   "sim_x_aerofoil": "Saves, cheats, pedidos, classificação indicativa",
   "sim_x_none": "Nada além da biblioteca",
-  "sim_json": "A resposta de /apps, como o cliente a lê"
+  "sim_json": "A resposta de /apps, como o cliente a lê",
+  "diag_sources": "Suas fontes",
+  "diag_bridge": "Calcula hashes, une, serve",
+  "diag_clients": "Clientes Lantern",
+  "diag_alt": "Suas fontes entram na ponte, que calcula os hashes, as une e serve uma só biblioteca aos clientes Lantern."
 }

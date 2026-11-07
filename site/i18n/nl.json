@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Live wijzigingen",
   "sim_x_aerofoil": "Opslagbestanden, cheats, verzoeken, leeftijdsclassificatie",
   "sim_x_none": "Niets buiten de bibliotheek",
-  "sim_json": "Het antwoord van /apps, zoals de client het leest"
+  "sim_json": "Het antwoord van /apps, zoals de client het leest",
+  "diag_sources": "Je bronnen",
+  "diag_bridge": "Hasht, voegt samen, serveert",
+  "diag_clients": "Lantern-clients",
+  "diag_alt": "Je bronnen gaan de bridge in, die ze hasht, samenvoegt en als één bibliotheek aan Lantern-clients serveert."
 }

@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Live changes",
   "sim_x_aerofoil": "Saves, cheats, requests, content rating",
   "sim_x_none": "Nothing beyond the library",
-  "sim_json": "The /apps answer, as the client reads it"
+  "sim_json": "The /apps answer, as the client reads it",
+  "diag_sources": "Your sources",
+  "diag_bridge": "Hashes, merges, serves",
+  "diag_clients": "Lantern clients",
+  "diag_alt": "Your sources go into the Bridge, which hashes and merges them and serves one library to Lantern clients."
 }

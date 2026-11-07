@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "即時變更",
   "sim_x_aerofoil": "存檔、金手指、請求、內容分級",
   "sim_x_none": "除遊戲庫外沒有其他內容",
-  "sim_json": "用戶端讀取的 /apps 回應"
+  "sim_json": "用戶端讀取的 /apps 回應",
+  "diag_sources": "你的來源",
+  "diag_bridge": "計算雜湊、合併、提供",
+  "diag_clients": "Lantern 用戶端",
+  "diag_alt": "你的來源進入橋接器，經過雜湊與合併，以一個遊戲庫的形式提供給 Lantern 用戶端。"
 }

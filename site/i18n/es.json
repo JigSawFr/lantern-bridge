@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Cambios en directo",
   "sim_x_aerofoil": "Partidas guardadas, trucos, peticiones, clasificación por edades",
   "sim_x_none": "Nada más allá de la biblioteca",
-  "sim_json": "La respuesta de /apps, tal como la lee el cliente"
+  "sim_json": "La respuesta de /apps, tal como la lee el cliente",
+  "diag_sources": "Tus fuentes",
+  "diag_bridge": "Calcula huellas, une, sirve",
+  "diag_clients": "Clientes Lantern",
+  "diag_alt": "Tus fuentes entran en el puente, que calcula sus huellas, las une y sirve una sola biblioteca a los clientes Lantern."
 }
