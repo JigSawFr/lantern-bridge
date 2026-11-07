@@ -44,6 +44,7 @@ FR: dict[str, str] = {
     "none yet": "aucune pour l'instant",
     "checked": "vérifiée",
     "Not checked yet.": "Pas encore vérifiée.",
+    "Served:": "Servi :",
     "MQTT broker": "Broker MQTT",
     "The bridge publishes its state on an MQTT broker, where Home Assistant reads it. Leave the host empty to publish nothing. The password is read from the environment variable named below.": "Le pont publie son état sur un broker MQTT, où Home Assistant le lit. Laissez l'hôte vide pour ne rien publier. Le mot de passe est lu dans la variable d'environnement nommée ci-dessous.",
     "Host": "Hôte",

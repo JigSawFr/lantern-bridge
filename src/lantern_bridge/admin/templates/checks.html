@@ -11,7 +11,7 @@
   <tr>
     <td><a href="/admin/library/{{ i.title_id }}">{{ i.name }}</a></td>
     <td>{{ {"same_content": _("The same file twice"), "same_version": _("Two different files for one version"), "no_base": _("Update or DLC without its game")}[i.kind] }}</td>
-    <td class="dim small">{{ i.detail }}</td>
+    <td class="dim small">{{ i.detail }}{% if i.served %}<br>{{ _("Served:") }} {{ i.served }}{% endif %}</td>
   </tr>
   {% else %}
   <tr><td colspan="3">{{ _("Nothing to check: no duplicate, no add-on without its game.") }}</td></tr>
