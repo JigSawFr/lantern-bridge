@@ -12,16 +12,17 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from lantern.server import LanternApp, SqliteAccounts
 from lantern.server.fastapi import include
 
 from lantern_bridge import health
-from lantern_bridge.admin import Admin, mount
+from lantern_bridge.admin import Admin, is_local, mount
 from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
+from lantern_bridge.metrics import render
 from lantern_bridge.runtime import Runtime
 from lantern_bridge.traffic import TrafficMiddleware
 from lantern_bridge.upstream import BridgeLibrary
@@ -86,6 +87,15 @@ def make_app(
         """The whole status and nothing else: 200 when the bridge does its job (a warning included), 503 when not."""
         status = health.overall(health.run(runtime))
         return JSONResponse({"status": status}, status_code=503 if status == health.FAIL else 200)
+
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics_page(request: Request) -> Response:
+        """The figures for a monitoring tool: off unless the settings say so, and for the local network only."""
+        if not config.metrics:
+            raise HTTPException(404)
+        if not is_local(request.client.host if request.client else None):
+            raise HTTPException(403)
+        return PlainTextResponse(render(runtime), media_type="text/plain; version=0.0.4; charset=utf-8")
 
     mount(app, Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml"))
     return app

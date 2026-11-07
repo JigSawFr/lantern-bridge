@@ -90,7 +90,7 @@ _DONE = {
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
 
-def _local(host: str | None) -> bool:
+def is_local(host: str | None) -> bool:
     """Whether an address is the machine itself or on a private network."""
     try:
         address = ipaddress.ip_address((host or "").split("%")[0])
@@ -276,7 +276,7 @@ class Admin:
         )
 
     def allowed(self, request: Request) -> bool:
-        return not self.config.admin_lan_only or _local(request.client.host if request.client else None)
+        return not self.config.admin_lan_only or is_local(request.client.host if request.client else None)
 
     async def form(self, request: Request) -> dict[str, str]:
         body = b""
@@ -889,6 +889,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.admin_lan_only = "admin_lan_only" in f
             config.developer = "developer" in f
             config.atlas = "atlas" in f
+            config.metrics = "metrics" in f
             return None
 
         return await change(request, edit, "saved")
