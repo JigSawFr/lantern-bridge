@@ -256,7 +256,7 @@ class Runtime:
         return False
 
     def cycle(self, batch: int = 20, *, scan: bool = True) -> int:
-        """One pass: scan the sources (unless `scan` is off), hash a batch, refresh the library; gives the files hashed."""
+        """One pass: scan the sources (unless `scan` is off), hash a batch, refresh the library."""
         self._scan_shops()
         for source, root in self.roots.items() if scan else ():
             state = self.stats.sources.setdefault(source, SourceState())
