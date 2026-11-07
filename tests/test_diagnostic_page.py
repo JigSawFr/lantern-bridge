@@ -76,7 +76,9 @@ def test_the_full_report_has_the_details_but_never_a_password_or_a_secret_path(t
     client = _shelf(tmp_path)
     logging.getLogger("lantern_bridge.test").warning("cannot read /home/ana/secret games/File.nsp")
     text = client.app.state.admin_pages.report(full=True)  # type: ignore[attr-defined]
-    assert "private-folder" in text and "192.168.1.50" in text and "broker.example.org" in text
+    assert "private-folder" in text
+    assert re.search(r"- shop: ownfoil, .* · http://192\.168\.1\.50:8465/\n", text)  # the address, without its login
+    assert re.search(r"- MQTT: on \(broker\.example\.org:1883\)\n", text)
     assert "/home/ana/secret games/File.nsp" in text  # the messages of the log, when asked for
     for never in ("hunter2", "very-secret-path", "topic-secret"):
         assert never not in text, never  # a login in an address, the webhook's and ntfy's addresses: never
