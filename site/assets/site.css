@@ -945,3 +945,10 @@ pre code .tk-k { color: #7cc4ff; }
 .compat td { text-align: center; }
 .compat .cmp-yes { color: var(--aurora); font-weight: 600; }
 .compat .cmp-no { color: var(--mist); }
+
+/* The administration's screenshots (tools/site_shots.mjs): a strip to swipe or scroll, each picture big enough to read. */
+.shots { display: flex; gap: 16px; margin-top: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--dusk) transparent; }
+.shots:focus-visible { outline: 2px solid var(--aurora); outline-offset: 4px; }
+.shots figure { margin: 0; flex: 0 0 min(100%, 760px); scroll-snap-align: start; display: grid; gap: 8px; align-content: start; }
+.shots img { display: block; width: 100%; height: auto; border: 1px solid var(--night-line); border-radius: 12px; background: var(--abyss); }
+.shots figcaption { color: var(--mist); font-size: 0.9375rem; }

@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Conjuntos de trucos",
   "cmp_row_requests": "Solicitudes",
   "cmp_yes": "Sí",
-  "cmp_no": "No"
+  "cmp_no": "No",
+  "shots_title": "La administración, en imágenes",
+  "shots_lede": "El puente trae sus propias páginas, en inglés y francés, con tema oscuro o claro. Aquí van tres, sobre una biblioteca inventada: nada de lo que se ve es una colección real.",
+  "shots_overview": "Resumen: lo que se sirve, el estado de salud y cuánto lleva el hash.",
+  "shots_library": "Biblioteca: cada título de cada fuente, con búsqueda, filtros y exportación.",
+  "shots_sources": "Fuentes: de dónde lee el puente, en qué orden, con una prueba para cada una."
 }

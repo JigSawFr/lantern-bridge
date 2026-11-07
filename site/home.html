@@ -23,6 +23,16 @@
     </ol>
   </section>
 
+  <section class="section" id="admin">
+    <h2>{{shots_title}}</h2>
+    <p class="section-lede">{{shots_lede}}</p>
+    <div class="shots" tabindex="0" role="region" aria-label="{{shots_title}}">
+      <figure><img src="{{root}}assets/shots/overview.jpg" alt="" width="1200" height="760" loading="lazy" decoding="async"><figcaption>{{shots_overview}}</figcaption></figure>
+      <figure><img src="{{root}}assets/shots/library.jpg" alt="" width="1200" height="760" loading="lazy" decoding="async"><figcaption>{{shots_library}}</figcaption></figure>
+      <figure><img src="{{root}}assets/shots/sources.jpg" alt="" width="1200" height="760" loading="lazy" decoding="async"><figcaption>{{shots_sources}}</figcaption></figure>
+    </div>
+  </section>
+
   <section class="section" id="simulator" hidden
     data-name-folders="{{bridge_src_folders_t}}" data-name-tinfoil="{{bridge_src_tinfoil_t}}" data-name-ownfoil="{{bridge_src_ownfoil_t}}" data-name-aerofoil="{{bridge_src_aerofoil_t}}"
     data-seen="{{sim_seen}}" data-empty="{{sim_empty}}" data-extras="{{sim_extras}}" data-extra-ownfoil="{{sim_x_ownfoil}}" data-extra-aerofoil="{{sim_x_aerofoil}}" data-extra-none="{{sim_x_none}}">

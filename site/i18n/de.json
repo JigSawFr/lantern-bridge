@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Cheat-Sets",
   "cmp_row_requests": "Anfragen",
   "cmp_yes": "Ja",
-  "cmp_no": "Nein"
+  "cmp_no": "Nein",
+  "shots_title": "Die Verwaltung in Bildern",
+  "shots_lede": "Die Bridge bringt eigene Seiten mit, auf Englisch und Französisch, im dunklen oder hellen Design. Hier sind drei davon, über einer erfundenen Bibliothek: Nichts davon ist eine echte Sammlung.",
+  "shots_overview": "Übersicht: was bereitgestellt wird, der Zustand und wie weit das Hashing ist.",
+  "shots_library": "Bibliothek: jeder Titel aus jeder Quelle, mit Suche, Filtern und Export.",
+  "shots_sources": "Quellen: woher die Bridge liest, in welcher Reihenfolge, mit einem Test für jede."
 }

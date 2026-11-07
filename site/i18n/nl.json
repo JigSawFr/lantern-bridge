@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Cheatsets",
   "cmp_row_requests": "Verzoeken",
   "cmp_yes": "Ja",
-  "cmp_no": "Nee"
+  "cmp_no": "Nee",
+  "shots_title": "De beheerpagina's in beeld",
+  "shots_lede": "De bridge heeft eigen pagina's, in het Engels en Frans, in een donker of licht thema. Hier zijn er drie, boven een verzonnen bibliotheek: niets hieronder is een echte collectie.",
+  "shots_overview": "Overzicht: wat wordt aangeboden, de gezondheid en hoever het hashen is.",
+  "shots_library": "Bibliotheek: elke titel uit elke bron, met zoeken, filters en export.",
+  "shots_sources": "Bronnen: waaruit de bridge leest, in welke volgorde, met een test voor elke bron."
 }

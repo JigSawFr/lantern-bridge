@@ -103,6 +103,7 @@ ignore = [
 "tests/**" = ["S", "PLR", "B011", "BLE001", "PT018", "PT011"]
 # The site scripts read our own build output and write long HTML lines
 "tools/**" = ["E501", "S314", "PLW0603"]
+"tools/demo_serve.py" = ["S101", "S105"]  # a made-up library and a throwaway password, for the website's screenshots
 # The French texts of the pages are long sentences
 "src/lantern_bridge/admin/i18n.py" = ["E501"]
 
