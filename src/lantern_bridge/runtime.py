@@ -23,6 +23,7 @@ from lantern_bridge.hashing import hash_pending, scan_packages
 from lantern_bridge.history import History
 from lantern_bridge.index import Index, SyncResult
 from lantern_bridge.library import Projection
+from lantern_bridge.mqtt import Publisher
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
@@ -74,6 +75,7 @@ class Runtime:
         self.index = Index(state_dir / "index.sqlite3")
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
+        self.publisher: Publisher | None = None
         self._shop_scanned: dict[str, float] = {}
         self._changed: set[str] = set()  # shops that said something changed
         self._watchers: list[threading.Thread] = []
@@ -284,11 +286,20 @@ class Runtime:
         self.wake()
         return done
 
+    def rescan(self) -> None:
+        """Read every source again now: the shops too, which are otherwise read every few minutes."""
+        self._shop_scanned.clear()
+        self.browser.forget()
+        self.wake()
+
     def wake(self) -> None:
         """Run the next pass now rather than after the idle wait."""
         self._wake.set()
 
     def start(self) -> None:
+        if self.config.mqtt is not None:
+            self.publisher = Publisher(self, self.config.mqtt)
+            self.publisher.start()
         self._thread = threading.Thread(target=self._loop, name="lantern-bridge-index", daemon=True)
         self._thread.start()
         if self.shops:
@@ -311,6 +322,8 @@ class Runtime:
                 self._watchers.append(watcher)
 
     def stop(self) -> None:
+        if self.publisher is not None:
+            self.publisher.stop()
         self._stop.set()
         self._wake.set()
         for thread in (self._thread, self._remote_thread, self._atlas_thread, *self._watchers):

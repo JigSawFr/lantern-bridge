@@ -49,6 +49,7 @@ from lantern_bridge.config import (
     TinfoilSource,
     check,
     load,
+    parse_mqtt,
     save,
 )
 from lantern_bridge.logs import LEVELS, LogRing
@@ -919,6 +920,36 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.developer = "developer" in f
             config.atlas = "atlas" in f
             config.metrics = "metrics" in f
+            return None
+
+        return await change(request, edit, "saved")
+
+    @router.post("/config/mqtt")
+    async def config_mqtt(request: Request) -> Response:
+        def edit(config: Config, f: dict[str, str]) -> str | None:
+            host = f.get("host", "").strip()
+            if not host:
+                config.mqtt = None  # no host: nothing is published
+                return None
+            try:
+                port = int(f.get("port", "1883") or 1883)
+            except ValueError as error:
+                raise ConfigError("the port is a number") from error
+            user, env = f.get("user", "").strip() or None, f.get("password_env", "").strip() or None
+            if env is not None and not _ENV_NAME.match(env):
+                raise ConfigError("a variable's name is letters, digits and _")
+            old = config.mqtt
+            config.mqtt = parse_mqtt(
+                {
+                    **(old.extra if old else {}),
+                    "host": host,
+                    "port": port,
+                    "prefix": f.get("prefix", "").strip() or "lantern-bridge",
+                    "tls": "tls" in f,
+                    **({"user": user} if user else {}),
+                    **({"password_env": env} if env else {}),
+                }
+            )
             return None
 
         return await change(request, edit, "saved")

@@ -134,6 +134,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **Atlas.** By default (`atlas = true`) the bridge fetches one public file once a day, [Atlas](https://atlas.boreale.dev)'s `platforms/switch/games.json` (CC0: names, developers, publishers, genres, series and modes from Wikidata, Steam's rating), from `raw.githubusercontent.com`, keeps it in its state directory (`atlas.json`) and uses it to fill in the genres, developer and publisher a source leaves empty. Nothing about your library is sent: it is a plain `GET`. Set `atlas = false` (or untick it in the settings) and the bridge contacts nothing outside your sources.
 
+**MQTT.** Give the bridge a broker (*Settings › MQTT broker*, or a `[mqtt]` table: `host`, `port`, `user`, `password_env`, `prefix`, `tls`) and it publishes under `<prefix>/<uid>` (`lantern-bridge` unless you change it): `state`, a retained JSON document of `schema` 1 every 30 seconds (status and checks, titles, files hashed and waiting, traffic, each source up or not; no path and no name of a device), and `availability` (`online`, and `offline` as its last will). An order on `order/rescan` reads every source again now. Home Assistant's [Boréale integration](https://github.com/JigSawFr/boreale-ha) reads these topics.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.

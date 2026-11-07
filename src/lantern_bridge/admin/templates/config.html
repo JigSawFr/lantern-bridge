@@ -24,6 +24,21 @@
   <button>{{ _("Save") }}</button>
 </form>
 
+<form method="post" action="/admin/config/mqtt" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("MQTT broker") }}</h2>
+  <p class="muted">{{ _("The bridge publishes its state on an MQTT broker, where Home Assistant reads it. Leave the host empty to publish nothing. The password is read from the environment variable named below.") }}</p>
+  <div class="form-grid">
+    <label>{{ _("Host") }} <input name="host" value="{{ file.mqtt.host if file.mqtt else '' }}" maxlength="253"></label>
+    <label>{{ _("Port") }} <input name="port" type="number" min="1" max="65535" value="{{ file.mqtt.port if file.mqtt else 1883 }}"></label>
+    <label>{{ _("User") }} <input name="user" value="{{ file.mqtt.user or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off"></label>
+    <label>{{ _("Password variable") }} <input name="password_env" value="{{ file.mqtt.password_env or '' if file.mqtt else '' }}" maxlength="128" autocomplete="off"></label>
+    <label>{{ _("Topic prefix") }} <input name="prefix" value="{{ file.mqtt.prefix if file.mqtt else 'lantern-bridge' }}" maxlength="128"></label>
+  </div>
+  <p><label class="check"><input type="checkbox" name="tls"{% if file.mqtt and file.mqtt.tls %} checked{% endif %}> {{ _("Encrypt the connection (TLS)") }}</label></p>
+  <button>{{ _("Save") }}</button>
+</form>
+
 <h2>{{ _("Sources") }}</h2>
 <p class="muted">{{ _("When two sources have the same file, the first one in this list serves it (a folder before a shop).") }}</p>
 <div class="scroll"><table>
