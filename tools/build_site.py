@@ -51,7 +51,6 @@ def page_header(language: str, catalog: dict, root: str) -> str:
             ("nav_sdk", SDK_URL),
         ],
         cta=("bridge_cta_link", REPO),
-        github=REPO,
         label=catalog["nav_label"],
         latest=VERSIONS,
     )
