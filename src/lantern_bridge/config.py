@@ -156,6 +156,11 @@ class Config:
     mqtt: Mqtt | None = None
     # Megabytes free on the volume of the state below which the health says to look (it fails below 20).
     low_disk_mb: int = 500
+    # Files hashed at once, from the folders (0: the machine decides, see `hashing.workers`). Hashing is the SHA-256
+    # of OpenSSL, which already uses the processor's own instructions; more files at once use more cores.
+    hash_threads: int = 0
+    # Threads nsz compresses with (0: its own choice, every logical core for a block compression).
+    compress_threads: int = 0
     # True: the bridge reads GitHub's latest release once a day and says on the overview when newer. On by default.
     update_check: bool = True
     # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
@@ -181,6 +186,10 @@ class Config:
         data["metrics"] = self.metrics
         data["update_check"] = self.update_check
         data["low_disk_mb"] = self.low_disk_mb
+        if self.hash_threads:
+            data["hash_threads"] = self.hash_threads
+        if self.compress_threads:
+            data["compress_threads"] = self.compress_threads
         for key in ("admin_allow", "admin_hosts", "trusted_proxies"):
             if getattr(self, key):
                 data[key] = list(getattr(self, key))
@@ -325,6 +334,8 @@ def _parse(data: dict[str, Any]) -> Config:
         "metrics",
         "update_check",
         "low_disk_mb",
+        "hash_threads",
+        "compress_threads",
         "admin_allow",
         "admin_hosts",
         "trusted_proxies",
@@ -359,6 +370,12 @@ def _parse(data: dict[str, Any]) -> Config:
     low_disk = data.get("low_disk_mb", 500)
     if isinstance(low_disk, bool) or not isinstance(low_disk, int) or not 20 <= low_disk <= 10_000_000:
         raise ConfigError("`low_disk_mb` must be a number of megabytes, 20 or more")
+    threads: dict[str, int] = {}
+    for key in ("hash_threads", "compress_threads"):
+        count = data.get(key, 0)
+        if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 64:
+            raise ConfigError(f"`{key}` must be a number of threads from 0 (automatic) to 64")
+        threads[key] = count
     update_check = data.get("update_check", True)
     if not isinstance(update_check, bool):
         raise ConfigError("`update_check` must be true or false")
@@ -423,6 +440,8 @@ def _parse(data: dict[str, Any]) -> Config:
         mqtt=mqtt,
         update_check=update_check,
         low_disk_mb=low_disk,
+        hash_threads=threads["hash_threads"],
+        compress_threads=threads["compress_threads"],
         admin_allow=admin_allow,
         admin_hosts=admin_hosts,
         trusted_proxies=trusted_proxies,

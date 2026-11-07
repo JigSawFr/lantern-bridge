@@ -16,14 +16,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from lantern.server import MemoryLibrary
-from lantern.server.file_index import Entry, SqliteIndex, SyncResult, hash_pending
+from lantern.server.file_index import Entry, SqliteIndex, SyncResult
 
 from lantern_bridge import __version__
 from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
 from lantern_bridge.compress import Compressor
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
-from lantern_bridge.hashing import scan_packages
+from lantern_bridge.hashing import hash_many, scan_packages, workers
 from lantern_bridge.history import History
 from lantern_bridge.identify import identify
 from lantern_bridge.library import Projection
@@ -295,7 +295,9 @@ class Runtime:
             self.stats.hashed_bytes += sizes.get((source, path), 0)
             self.pulse.bump()
 
-        done = hash_pending(self.index, self.roots, limit=batch, on_hashed=hashed)
+        done = hash_many(
+            self.index, self.roots, threads=workers(self.config.hash_threads), limit=batch, on_hashed=hashed
+        )
         self.stats.hashing_seconds += time.monotonic() - began
         taken = self.projection.fetch_pictures()
         self.projection.refresh()

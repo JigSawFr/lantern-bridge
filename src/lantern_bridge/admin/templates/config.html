@@ -9,7 +9,7 @@
 {% if can_undo %}<form method="post" action="/admin/config/undo" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" data-confirm="{{ _('Bring back the settings from before the last change?') }}">{{ _("Undo the last change") }}</button></form>{% endif %}
 
 <nav class="toc" aria-label="{{ _('On this page') }}">
-  <a href="#server">{{ _("Server") }}</a><a href="#notifications">{{ _("Notifications") }}</a><a href="#access">{{ _("Access") }}</a><a href="#integrations">{{ _("Integrations") }}</a><a href="#account">{{ _("Read-only account") }}</a><a href="#mqtt">{{ _("MQTT broker") }}</a><a href="#backup">{{ _("Backup") }}</a><a href="#transfer">{{ _("Export and import") }}</a><a href="/admin/sources">{{ _("Sources") }} →</a>
+  <a href="#server">{{ _("Server") }}</a><a href="#speed">{{ _("Speed") }}</a><a href="#notifications">{{ _("Notifications") }}</a><a href="#access">{{ _("Access") }}</a><a href="#integrations">{{ _("Integrations") }}</a><a href="#account">{{ _("Read-only account") }}</a><a href="#mqtt">{{ _("MQTT broker") }}</a><a href="#backup">{{ _("Backup") }}</a><a href="#transfer">{{ _("Export and import") }}</a><a href="/admin/sources">{{ _("Sources") }} →</a>
 </nav>
 
 <div class="searchbox" data-search-box hidden><label>{{ _("Find a setting") }} <input type="search" name="find" id="settings-search" placeholder="{{ _('Find a setting…') }}" autocomplete="off"></label></div>
@@ -22,6 +22,11 @@
     <label>{{ _("Name shown to devices") }} <input name="name" value="{{ file.name }}" maxlength="64" required aria-describedby="h-name"><small class="hint" id="h-name" aria-hidden="true">{{ _("Shown in the library list of the Lantern apps.") }}</small></label>
     <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}" aria-describedby="h-remote_rate"><small class="hint" id="h-remote_rate" aria-hidden="true">{{ _("Slows down the reading of files on network shares so they are not saturated. 0 reads at full speed.") }}</small></label>
     <label>{{ _("Warn below this free space for the index (MiB)") }} <input name="low_disk_mb" type="number" min="20" max="10000000" step="10" value="{{ file.low_disk_mb }}" aria-describedby="h-low_disk_mb"><small class="hint" id="h-low_disk_mb" aria-hidden="true">{{ _("Where the index lives: the overview warns when less than this is left.") }}</small></label>
+  </div>
+  <h3 id="speed">{{ _("Speed") }}</h3>
+  <div class="form-grid">
+    <label>{{ _("Files hashed at once (0: automatic)") }} <input name="hash_threads" type="number" min="0" max="64" step="1" value="{{ file.hash_threads }}" aria-describedby="h-hash_threads"><small class="hint" id="h-hash_threads" aria-hidden="true">{{ _("The hashing uses the processor's own SHA-256 instructions when it has them. Several files at once use several cores; on a spinning disk or a network share, one or two is kinder.") }}</small></label>
+    <label>{{ _("Threads for a conversion (0: automatic)") }} <input name="compress_threads" type="number" min="0" max="64" step="1" value="{{ file.compress_threads }}" aria-describedby="h-compress_threads"><small class="hint" id="h-compress_threads" aria-hidden="true">{{ _("nsz compresses on the processor, on every core by default: lower this to keep some for the rest. There is no graphics card path in the tool.") }}</small></label>
   </div>
   <h3 id="notifications">{{ _("Notifications") }}</h3>
   <div class="form-grid">

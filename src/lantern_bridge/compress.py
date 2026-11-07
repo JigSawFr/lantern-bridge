@@ -376,6 +376,9 @@ class Compressor:
         command = [*argv(tool), "-C" if job.action == "compress" else "-D", "--machine-readable"]
         command += ["--keys", str(self.state_dir)]
         command += ["-o", str(work), "-m", "1"]
+        threads = self.runtime.config.compress_threads if self.runtime is not None else 0
+        if threads > 0:
+            command += ["-t", str(threads)]
         if job.action == "compress":
             command += ["-l", str(job.level), "-B" if job.block else "-S"]
         if job.delete_original:
