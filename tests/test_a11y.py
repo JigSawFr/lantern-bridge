@@ -101,3 +101,23 @@ def test_dark_is_the_default_and_light_is_a_choice_kept_in_a_cookie(tmp_path: Pa
     assert 'data-theme="dark"' in client.get("/admin/").text
     client.post("/admin/theme", data={"theme": "purple"})  # anything else is the default
     assert 'data-theme="dark"' in client.get("/admin/").text
+
+
+def test_the_header_menu_depends_on_the_role_and_marks_where_you_are(tmp_path: Path) -> None:
+    from lantern_bridge.admin import nav
+
+    def tr(text: str) -> str:
+        return text
+
+    assert nav.build(None, False, tr).main == []
+    observer = nav.build("observer", True, tr)
+    assert [e.key for e in observer.main] == ["overview", "library", "activity"] and observer.manage == []
+    admin = nav.build("admin", True, tr)
+    assert [e.key for e in admin.main][-1] == "events" and admin.holds("config") and admin.holds("developer")
+    assert not nav.build("admin", False, tr).holds("developer")
+    client = _admin(_client(tmp_path, sources=True))
+    page = client.get("/admin/config").text
+    assert '<div class="more" data-here>' in page and page.count('aria-current="page"') == 1
+    assert 'aria-controls="more-list"' in page and 'id="more-list"' in page
+    assert 'class="more"' in client.get("/admin/").text and "data-here" not in client.get("/admin/").text
+    assert 'aria-label="Light theme"' in page

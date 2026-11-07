@@ -14,11 +14,17 @@
 <a class="skip" href="#content">{{ _("Skip to content") }}</a>
 <header class="top"><div class="bar">
   <a class="brand" href="/admin/"><img src="/admin/static/bridge.svg" alt="" width="34" height="34"><span>{{ name }}<small>lantern-bridge</small></span></a>
-  {% if session %}
+  {% if menu.main %}
   <nav aria-label="{{ _('Pages') }}">
-    {% for key, label, href in [("overview", _("Overview"), "/admin/"), ("library", _("Library"), "/admin/library"), ("activity", _("Activity"), "/admin/activity")] + ([] if session and session.role == "observer" else [("events", _("Journal"), "/admin/events"), ("pairings", _("Pairings"), "/admin/pairings"), ("devices", _("Devices"), "/admin/devices"), ("accounts", _("Accounts"), "/admin/accounts"), ("invitations", _("Invitations"), "/admin/invitations"), ("config", _("Settings"), "/admin/config"), ("logs", _("Logs"), "/admin/logs")]) + ([("developer", _("Developer"), "/admin/developer")] if developer and not (session and session.role == "observer") else []) %}
-    <a href="{{ href }}"{% if active == key %} aria-current="page"{% endif %}>{{ label }}</a>
-    {% endfor %}
+    {% for item in menu.main %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}
+    {% if menu.manage %}
+    <div class="more"{% if menu.holds(active) %} data-here{% endif %}>
+      <button type="button" class="more-btn" aria-expanded="false" aria-controls="more-list" hidden>{{ _("Manage") }}</button>
+      <div id="more-list" class="more-list">
+        {% for item in menu.manage %}<a href="{{ item.href }}"{% if active == item.key %} aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </nav>
   {% endif %}
   <div class="tools">
@@ -28,9 +34,10 @@
     </form>
     <form method="post" action="/admin/theme" class="theme">
       <input type="hidden" name="next" value="{{ here }}">
-      <button name="theme" value="{{ 'dark' if theme == 'light' else 'light' }}" class="link">{{ _("Dark theme") if theme == "light" else _("Light theme") }}</button>
+      {% set to = "dark" if theme == "light" else "light" %}
+      <button name="theme" value="{{ to }}" class="icon" aria-label="{{ _('Dark theme') if to == 'dark' else _('Light theme') }}" title="{{ _('Dark theme') if to == 'dark' else _('Light theme') }}"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">{% if to == "dark" %}<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>{% else %}<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>{% endif %}</svg></button>
     </form>
-    {% if session %}<form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="link">{{ _("Sign out") }}</button></form>{% endif %}
+    {% if session %}<form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="out">{{ _("Sign out") }}</button></form>{% endif %}
   </div>
 </div></header>
 <main id="content" tabindex="-1">

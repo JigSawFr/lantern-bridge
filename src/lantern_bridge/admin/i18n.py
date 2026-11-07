@@ -321,6 +321,7 @@ FR: dict[str, str] = {
     "Shop user (optional)": "Utilisateur du shop (facultatif)",
     "Sign in": "Se connecter",
     "Sign out": "Se déconnecter",
+    "Manage": "Gérer",
     "Source": "Source",
     "Sources": "Sources",
     "State": "État",

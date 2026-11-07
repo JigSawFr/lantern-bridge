@@ -61,6 +61,21 @@
     });
   }
 
+  // -- the settings pages sit under "Manage" on a wide screen; without script (or on a narrow one) they are a flat row -----
+  document.documentElement.classList.add("js");
+  const more = document.querySelector(".more-btn");
+  if (more) {
+    more.hidden = false;
+    const shut = (focus) => {
+      more.setAttribute("aria-expanded", "false");
+      if (focus) more.focus();
+    };
+    more.addEventListener("click", () => more.setAttribute("aria-expanded", String(more.getAttribute("aria-expanded") !== "true")));
+    document.addEventListener("click", (e) => { if (!e.target.closest(".more")) shut(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && more.getAttribute("aria-expanded") === "true") shut(true); });
+    document.querySelector(".more").addEventListener("focusout", (e) => { if (!e.currentTarget.contains(e.relatedTarget)) shut(false); });
+  }
+
   // -- the menu scrolls sideways on a narrow screen: the current page is brought into view ----------------
   const here = document.querySelector("nav a[aria-current]");
   if (here && here.scrollIntoView) here.scrollIntoView({ block: "nearest", inline: "center" });

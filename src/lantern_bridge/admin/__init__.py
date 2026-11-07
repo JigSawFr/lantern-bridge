@@ -40,7 +40,7 @@ from lantern.server.pairing import Limiter
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
-from lantern_bridge.admin import attention
+from lantern_bridge.admin import attention, nav
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -317,8 +317,10 @@ class Admin:
         self, request: Request, template: str, session: Session | None = None, status: int = 200, **ctx: Any
     ) -> HTMLResponse:
         lang = self.lang(request)
+        tr = translator(lang)
         html = self.env.get_template(template).render(
             session=session,
+            menu=nav.build(session.role if session else None, self.config.developer, tr),
             version=__version__,
             draft=SPEC_DRAFT,
             name=self.config.name,
@@ -327,7 +329,7 @@ class Admin:
             theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
             languages=LANGUAGES,
             here=request.url.path if request.url.path.startswith("/admin") else "/admin/",
-            _=translator(lang),
+            _=tr,
             **ctx,
         )
         return HTMLResponse(html, status_code=status, headers=_HEADERS)

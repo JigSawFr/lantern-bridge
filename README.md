@@ -128,7 +128,7 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 - **Invitations**: a code that pairs a device without approval, for 1, 7 or 30 days and a number of devices.
 - **Diagnostic**: a JSON file with versions, sources, counts and recent warnings, and no secret.
 
-The pages wear Boréale's night, in English and French (the browser's language, or the switch in the header), with the fonts served from the bridge. Dark is the look; a light theme is one click away in the header (a choice of that browser, kept in a cookie), and both keep to WCAG AA contrast.
+The pages wear Boréale's night, in English and French (the browser's language, or the switch in the header), with the fonts served from the bridge. Dark is the look; a light theme is one click away in the header (a choice of that browser, kept in a cookie). The header keeps the everyday pages in view and puts the settings ones under "Manage", and both keep to WCAG AA contrast.
 
 The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. `/metrics`, when the settings turn it on, follows the same rule (the local network only, whatever `admin_lan_only` says). The browser loads nothing from elsewhere.
 

@@ -33,13 +33,30 @@ code{background:rgb(255 255 255 / .06);border-radius:6px;padding:.05em .4em;font
 .top::after{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:var(--grad);opacity:.7}
 .bar{max-width:76rem;margin:0 auto;padding:.6rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center}
 .brand{display:flex;align-items:center;gap:.65rem;font:600 1.05rem var(--display);color:var(--snow);text-decoration:none}
-.brand img{width:34px;height:34px}
+.brand img{width:34px;height:34px;flex:none}
+.brand span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brand small{display:block;font:500 .7rem var(--mono);color:var(--dusk);letter-spacing:.04em}
-nav{display:flex;flex-wrap:wrap;gap:.15rem;flex:1}
+nav{display:flex;flex-wrap:wrap;align-items:center;gap:.15rem;flex:1}
 nav a{color:var(--mist);text-decoration:none;padding:.4rem .5rem;border-radius:999px;font-weight:500;font-size:.9rem;border:1px solid transparent}
 nav a:hover{color:var(--snow);background:rgb(255 255 255 / .05)}
 nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 .tools{display:flex;gap:.5rem;align-items:center}
+.tools form{margin:0}
+.icon,.out{background:none;border:1px solid var(--line);color:var(--mist);border-radius:999px;min-height:36px;cursor:pointer;font:500 .85rem var(--body)}
+.icon{width:36px;display:inline-grid;place-items:center;padding:0}
+.out{padding:0 .8rem}
+.icon:hover,.out:hover{color:var(--snow);border-color:var(--dusk)}
+.more,.more-list{display:contents}
+.more-btn{background:none;border:1px solid transparent;color:var(--mist);padding:.4rem .5rem .4rem .7rem;border-radius:999px;font:500 .9rem var(--body);cursor:pointer;min-height:36px}
+.more-btn::after{content:"";display:inline-block;margin-left:.4rem;border:.28rem solid transparent;border-top-color:currentColor;border-bottom:0;vertical-align:.12em}
+.more-btn:hover,.more-btn[aria-expanded="true"]{color:var(--snow);background:rgb(255 255 255 / .05)}
+.more[data-here] .more-btn{color:var(--abyss);background:var(--snow)}
+@media (min-width:40.01rem){
+  .js .more{display:block;position:relative}
+  .js .more-list{display:none;position:absolute;left:0;top:calc(100% + .4rem);min-width:11rem;flex-direction:column;gap:.1rem;padding:.4rem;background:var(--night);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 12px 32px rgb(0 0 0 / .35)}
+  .js .more-list a{border-radius:10px;padding:.5rem .7rem}
+  .js .more-btn[aria-expanded="true"]+.more-list{display:flex}
+}
 .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .lang button{background:none;color:var(--mist);border:0;padding:.35rem .7rem;font:500 .8rem var(--mono);cursor:pointer;min-height:36px}
 .lang button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
@@ -99,7 +116,7 @@ dt{color:var(--dusk)}dd{margin:0}
 .auth .mark{width:72px;height:72px;margin-bottom:1rem}
 :focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.tile,.card,button{transition:border-color .2s,box-shadow .2s}.tile:hover{border-color:rgb(0 255 204 / .4)}}
-@media (max-width:40rem){.tools{margin-left:auto}nav{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 1rem}nav::-webkit-scrollbar{display:none}nav a{white-space:nowrap}}
+@media (max-width:40rem){.more-btn{display:none}.brand{flex:1 1 0;min-width:0}.tools{margin-left:auto;gap:.35rem}.out{padding:0 .6rem}.brand small{display:none}nav{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 1rem}nav::-webkit-scrollbar{display:none}nav a{white-space:nowrap}}
 
 /* -- polish: skip link, toasts, dialog, logs, reveal ----------------------------------------------------- */
 .skip{position:absolute;left:.75rem;top:-4rem;z-index:20;background:var(--snow);color:var(--abyss);padding:.6rem 1rem;border-radius:12px;font-weight:600;text-decoration:none}
