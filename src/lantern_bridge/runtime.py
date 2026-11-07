@@ -67,6 +67,7 @@ class Stats:
 class Runtime:
     def __init__(self, config: Config, state_dir: Path, library: MemoryLibrary) -> None:
         self.config = config
+        self.state_dir = state_dir
         self.index = Index(state_dir / "index.sqlite3")
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}

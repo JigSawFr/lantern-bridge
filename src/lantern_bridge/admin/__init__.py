@@ -32,7 +32,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from lantern.server import LanternApp
 from lantern.server.pairing import Limiter
 
-from lantern_bridge import SPEC_DRAFT, __version__
+from lantern_bridge import SPEC_DRAFT, __version__, health
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -405,6 +405,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             "overview.html",
             session,
             active="overview",
+            checks=health.run(admin.runtime),
             state=admin.state(),
             uid=admin.config.uid,
             public=admin.config.public,

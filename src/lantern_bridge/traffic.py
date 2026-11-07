@@ -27,7 +27,7 @@ Send = Callable[[Message], Awaitable[None]]
 App = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 #: The requests of the administration pages are not the library's traffic.
-_OWN = "/admin"
+_OWN = ("/admin", "/healthz")
 WINDOW = 60  # seconds of history for the rates
 FLUSH = 15.0  # seconds between two writes to the history
 WHO_TTL = 60.0  # seconds a token's device is remembered (a revoked device is forgotten within a minute)

@@ -13,9 +13,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from lantern.server import LanternApp, SqliteAccounts
 from lantern.server.fastapi import include
 
+from lantern_bridge import health
 from lantern_bridge.admin import Admin, mount
 from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
@@ -78,5 +80,12 @@ def make_app(
         logging.getLogger("lantern_bridge.admin").warning(
             "no administrator yet: open /admin/ and enter the setup code %s", store.setup_code()
         )
+
+    @app.get("/healthz", include_in_schema=False)
+    async def healthz() -> JSONResponse:
+        """The whole status and nothing else: 200 when the bridge does its job (a warning included), 503 when not."""
+        status = health.overall(health.run(runtime))
+        return JSONResponse({"status": status}, status_code=503 if status == health.FAIL else 200)
+
     mount(app, Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml"))
     return app

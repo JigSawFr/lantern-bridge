@@ -10,6 +10,16 @@
   <a class="tile" href="/admin/pairings"><span class="n" data-bind="waiting">{{ state.waiting }}</span><span class="what">{{ _("pairings waiting") }}</span></a>
 </section>
 
+{% set bad = checks | rejectattr("status", "equalto", "ok") | list %}
+<h2>{{ _("Health") }}</h2>
+{% if bad %}
+<ul class="assoc">
+  {% for c in bad %}<li><span class="pill {{ 'wait' if c.status == 'warn' else 'bad' }}">{{ _("to check") if c.status == "warn" else _("failing") }}</span> <span>{{ c.name }}</span> <span class="dim small">{{ c.detail }}</span></li>{% endfor %}
+</ul>
+{% else %}
+<p><span class="pill ok">{{ _("all good") }}</span> <span class="dim small">{{ checks | length }} {{ _("checks") }} · <code>/healthz</code></span></p>
+{% endif %}
+
 <h2>{{ _("Hashing") }}</h2>
 <div class="card glow">
 <p class="muted">{{ _("Hashing is local and read-only: the files are read in place and never changed.") }}</p>
