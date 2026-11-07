@@ -9,7 +9,7 @@
 {% if can_undo %}<form method="post" action="/admin/config/undo" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" data-confirm="{{ _('Bring back the settings from before the last change?') }}">{{ _("Undo the last change") }}</button></form>{% endif %}
 
 <nav class="toc" aria-label="{{ _('On this page') }}">
-  <a href="#server">{{ _("Server") }}</a><a href="#notifications">{{ _("Notifications") }}</a><a href="#access">{{ _("Access") }}</a><a href="#integrations">{{ _("Integrations") }}</a><a href="#account">{{ _("Read-only account") }}</a><a href="#mqtt">{{ _("MQTT broker") }}</a><a href="#backup">{{ _("Backup") }}</a><a href="/admin/sources">{{ _("Sources") }} →</a>
+  <a href="#server">{{ _("Server") }}</a><a href="#notifications">{{ _("Notifications") }}</a><a href="#access">{{ _("Access") }}</a><a href="#integrations">{{ _("Integrations") }}</a><a href="#account">{{ _("Read-only account") }}</a><a href="#mqtt">{{ _("MQTT broker") }}</a><a href="#backup">{{ _("Backup") }}</a><a href="#transfer">{{ _("Export and import") }}</a><a href="/admin/sources">{{ _("Sources") }} →</a>
 </nav>
 
 <div class="searchbox" data-search-box hidden><label>{{ _("Find a setting") }} <input type="search" name="find" id="settings-search" placeholder="{{ _('Find a setting…') }}" autocomplete="off"></label></div>
@@ -83,4 +83,49 @@
   <p class="muted">{{ _("A zip with the settings and the hashes the bridge worked out (the pairings are not in it: a device pairs again). To restore it, stop the bridge and run: lantern-bridge restore FILE.") }}</p>
   <button>{{ _("Download a backup") }}</button>
 </form>
+
+<section class="card" id="transfer">
+  <h2>{{ _("Export and import") }}</h2>
+  <p class="muted">{{ _("The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.") }}</p>
+  <p><a class="button" href="/admin/config/export" download>{{ _("Export the settings") }}</a></p>
+  {% if preview %}
+  <form method="post" action="/admin/config/import">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="confirm" value="1">
+    <textarea name="toml" hidden>{{ imported }}</textarea>
+    <p><strong>{{ _("This file would change:") }}</strong></p>
+    <ul>{% for line in preview %}<li><code>{{ line }}</code></li>{% endfor %}</ul>
+    <button data-confirm="{{ _('Replace the settings with this file?') }}">{{ _("Import these settings") }}</button>
+    <a class="button ghost" href="/admin/config#transfer">{{ _("Cancel") }}</a>
+  </form>
+  {% else %}
+  <form method="post" action="/admin/config/import">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}">
+    <label>{{ _("An exported file") }} <input type="file" name="file" accept=".toml,text/plain" data-fill="toml-text" form=""></label>
+    <label>{{ _("Or its text") }} <textarea name="toml" id="toml-text" rows="6" spellcheck="false"></textarea></label>
+    <button>{{ _("See what would change") }}</button>
+  </form>
+  {% endif %}
+</section>
+<section class="card" id="transfer">
+  <h2>{{ _("Export and import") }}</h2>
+  <p class="muted">{{ _("The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.") }}</p>
+  <p><a class="button" href="/admin/config/export" download>{{ _("Export the settings") }}</a></p>
+  {% if preview %}
+  <form method="post" action="/admin/config/import">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="confirm" value="1">
+    <textarea name="toml" hidden>{{ imported }}</textarea>
+    <p><strong>{{ _("This file would change:") }}</strong></p>
+    <ul>{% for line in preview %}<li><code>{{ line }}</code></li>{% endfor %}</ul>
+    <button data-confirm="{{ _('Replace the settings with this file?') }}">{{ _("Import these settings") }}</button>
+    <a class="button ghost" href="/admin/config#transfer">{{ _("Cancel") }}</a>
+  </form>
+  {% else %}
+  <form method="post" action="/admin/config/import">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}">
+    <label>{{ _("An exported file") }} <input type="file" name="file" accept=".toml,text/plain" data-fill="toml-text" form=""></label>
+    <label>{{ _("Or its text") }} <textarea name="toml" id="toml-text" rows="6" spellcheck="false"></textarea></label>
+    <button>{{ _("See what would change") }}</button>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}

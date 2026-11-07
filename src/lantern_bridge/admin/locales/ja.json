@@ -518,5 +518,17 @@
  "read-only": "読み取り専用",
  "this one": "この端末",
  "Sign-ins blocked": "サインインをブロック",
- "Session ended": "セッション終了"
+ "Session ended": "セッション終了",
+ "Export and import": "エクスポートとインポート",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "設定を 1 つのファイルにまとめたものです。保管したり、別のブリッジに渡したりできます。パスワードは含まれず(ソースにはパスワードを持つ変数の名前だけが記されます)、ファイルをインポートしてもブリッジは自身のIDを保持します。",
+ "Export the settings": "設定をエクスポート",
+ "This file would change:": "このファイルで次が変更されます:",
+ "Replace the settings with this file?": "設定をこのファイルで置き換えますか?",
+ "Import these settings": "この設定をインポート",
+ "An exported file": "エクスポートしたファイル",
+ "Or its text": "またはそのテキスト",
+ "See what would change": "変更内容を確認",
+ "The settings were imported.": "設定をインポートしました。",
+ "The file cannot be used:": "このファイルは使用できません:",
+ "This file changes nothing.": "このファイルによる変更はありません。"
 }

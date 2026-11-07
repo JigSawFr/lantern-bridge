@@ -197,5 +197,15 @@
  "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "Quem está conectado a estas páginas, de onde e desde quando. Uma sessão encerrada é fechada na hora; ela também termina sozinha após um tempo sem uso.",
  "read-only": "somente leitura",
  "Sign-ins blocked": "Entradas bloqueadas",
- "Session ended": "Sessão encerrada"
+ "Session ended": "Sessão encerrada",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "As configurações em um único arquivo, para guardar ou passar para outra bridge. Ele não contém nenhuma senha (uma fonte apenas indica o nome da variável que a contém) e a bridge mantém a própria identidade quando um arquivo é importado.",
+ "Export the settings": "Exportar as configurações",
+ "This file would change:": "Este arquivo alteraria:",
+ "Replace the settings with this file?": "Substituir as configurações por este arquivo?",
+ "Import these settings": "Importar estas configurações",
+ "An exported file": "Um arquivo exportado",
+ "Or its text": "Ou o texto dele",
+ "The settings were imported.": "As configurações foram importadas.",
+ "The file cannot be used:": "Não é possível usar o arquivo:",
+ "This file changes nothing.": "Este arquivo não altera nada."
 }

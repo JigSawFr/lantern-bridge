@@ -63,6 +63,7 @@ from lantern_bridge.config import (
     check,
     load,
     parse_mqtt,
+    parse_text,
     parse_webhook,
     save,
 )
@@ -111,6 +112,7 @@ _DONE = {
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
+    "imported": "The settings were imported.",
 }
 #: The kinds of the journal, in the order of its filter.
 _JOURNAL = (
@@ -345,7 +347,7 @@ class Admin:
         back. Writing the same settings again keeps nothing new.
         """
         checked = check(config)
-        done: list[str] = []
+        done: list[str] = changes(self.config, checked)  # no file yet: the running settings are what changes
         if self.config_path.exists():
             try:
                 before = load(self.config_path)
@@ -1609,6 +1611,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         tested: dict[str, Any] | None = None,
         error: str | None = None,
         draft: dict[str, str] | None = None,
+        preview: list[str] | None = None,
+        imported: str = "",
     ) -> Response:
         t = admin.tr(request)
         sources_view = request.url.path.startswith(("/admin/sources", "/admin/config/sources"))
@@ -1632,6 +1636,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 atlas_info=None,
                 updates=None,
                 observer=None,
+                preview=None,
+                imported="",
             )
         sources = [
             {
@@ -1663,6 +1669,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             atlas_info=admin.runtime.atlas,
             updates=admin.runtime.updates,
             observer=admin.store.observer,
+            preview=preview,
+            imported=imported,
         )
 
     async def change(request: Request, edit: Any, done: str) -> Response:
@@ -1764,6 +1772,54 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return None
 
         return await change(request, edit, "saved")
+
+    @router.get("/config/export")
+    async def config_export(request: Request) -> Response:
+        """The settings as one file (the file itself holds no password: sources name the variable that does)."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        try:
+            text = admin.file().to_toml()
+        except ConfigError as error:
+            return Response(str(error), 500, headers=_HEADERS)
+        return Response(
+            text,
+            media_type="application/toml",
+            headers={**_HEADERS, "Content-Disposition": 'attachment; filename="lantern-bridge-settings.toml"'},
+        )
+
+    @router.post("/config/import")
+    async def config_import(request: Request) -> Response:
+        """Settings from an exported file: shown as a list of what would change, applied on a second step.
+
+        The bridge keeps its own identity (the `uid` the devices are paired with), whatever the file says.
+        """
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        text = fields.get("toml", "")
+        try:
+            current = admin.file()
+            incoming = check(parse_text(text, current.uid))
+            lines = changes(current, incoming)
+        except ConfigError as error:
+            return settings_page(request, session, 400, error=f"{t('The file cannot be used:')} {error}")
+        if not lines:
+            return settings_page(request, session, 200, error=t("This file changes nothing."))
+        if not fields.get("confirm"):
+            return settings_page(request, session, 200, preview=lines, imported=text)
+        try:
+            done = admin.write(incoming)
+        except ConfigError as error:
+            return settings_page(request, session, 400, error=str(error))
+        except OSError as error:
+            return settings_page(request, session, 500, error=f"{error.strerror or error}")
+        log.info("settings imported from a file")
+        admin.audit(session, done, "imported")
+        await admin.apply()
+        return redirect("/config?m=imported", request)
 
     @router.post("/config/backup")
     async def config_backup(request: Request) -> Response:

@@ -518,5 +518,17 @@
  "read-only": "sola lettura",
  "this one": "questa",
  "Sign-ins blocked": "Accessi bloccati",
- "Session ended": "Sessione terminata"
+ "Session ended": "Sessione terminata",
+ "Export and import": "Esportazione e importazione",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "Le impostazioni in un unico file, da conservare o da dare a un altro bridge. Non contiene alcuna password (una sorgente indica solo il nome della variabile che la contiene) e il bridge mantiene la propria identità quando si importa un file.",
+ "Export the settings": "Esporta le impostazioni",
+ "This file would change:": "Questo file modificherebbe:",
+ "Replace the settings with this file?": "Sostituire le impostazioni con questo file?",
+ "Import these settings": "Importa queste impostazioni",
+ "An exported file": "Un file esportato",
+ "Or its text": "Oppure il suo testo",
+ "See what would change": "Vedi cosa cambierebbe",
+ "The settings were imported.": "Le impostazioni sono state importate.",
+ "The file cannot be used:": "Il file non può essere usato:",
+ "This file changes nothing.": "Questo file non modifica nulla."
 }

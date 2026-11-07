@@ -518,5 +518,17 @@
  "read-only": "읽기 전용",
  "this one": "현재",
  "Sign-ins blocked": "로그인 차단됨",
- "Session ended": "세션 종료됨"
+ "Session ended": "세션 종료됨",
+ "Export and import": "내보내기 및 가져오기",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "설정을 하나의 파일로 저장해 보관하거나 다른 브리지에 전달할 수 있습니다. 비밀번호는 포함되지 않으며(소스에는 비밀번호를 담은 변수의 이름만 기록됩니다), 파일을 가져와도 브리지는 자체 ID를 유지합니다.",
+ "Export the settings": "설정 내보내기",
+ "This file would change:": "이 파일로 다음이 변경됩니다:",
+ "Replace the settings with this file?": "설정을 이 파일로 바꾸시겠습니까?",
+ "Import these settings": "이 설정 가져오기",
+ "An exported file": "내보낸 파일",
+ "Or its text": "또는 파일 내용",
+ "See what would change": "변경될 내용 보기",
+ "The settings were imported.": "설정을 가져왔습니다.",
+ "The file cannot be used:": "이 파일은 사용할 수 없습니다:",
+ "This file changes nothing.": "이 파일은 아무것도 변경하지 않습니다."
 }

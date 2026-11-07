@@ -518,5 +518,17 @@
  "read-only": "только чтение",
  "this one": "текущий",
  "Sign-ins blocked": "Вход заблокирован",
- "Session ended": "Сеанс завершён"
+ "Session ended": "Сеанс завершён",
+ "Export and import": "Экспорт и импорт",
+ "The settings as one file, to keep or to give to another bridge. It holds no password (a source only names the variable that does) and the bridge keeps its own identity when a file is imported.": "Настройки одним файлом, чтобы сохранить или передать другому мосту. Пароль в нём не хранится (источник лишь указывает имя переменной, в которой он находится), а при импорте файла мост сохраняет собственную идентичность.",
+ "Export the settings": "Экспортировать настройки",
+ "This file would change:": "Этот файл изменит:",
+ "Replace the settings with this file?": "Заменить настройки этим файлом?",
+ "Import these settings": "Импортировать эти настройки",
+ "An exported file": "Экспортированный файл",
+ "Or its text": "Или его текст",
+ "See what would change": "Посмотреть, что изменится",
+ "The settings were imported.": "Настройки импортированы.",
+ "The file cannot be used:": "Файл нельзя использовать:",
+ "This file changes nothing.": "Этот файл ничего не меняет."
 }
