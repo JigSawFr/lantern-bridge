@@ -62,24 +62,27 @@ def test_a_file_of_a_newer_schema_is_left_alone(tmp_path: Path) -> None:
 
 def test_the_bridge_writes_its_turning_points_not_every_pass(tmp_path: Path) -> None:
     client = _admin(_client(tmp_path, sources=True))
-    runtime = _runtime(client)
-    runtime.start()
-    try:
-        (tmp_path / "games" / "Calm Tide [0100CCCC00000000][v0].nsp").write_bytes(b"fine")
-        runtime.cycle(batch=10)
-        state = runtime.stats.sources["games"]
-        runtime._reach("games", state, OSError(2, "No such file or directory", "/secret/place/games"))
-        runtime._reach("games", state, OSError(2, "No such file or directory", "/secret/place/games"))  # still down
-        runtime._reach("games", state, None)
-        runtime._reach("games", state, None)  # still up
-    finally:
-        runtime._stop.set()
+    runtime = _runtime(client)  # not started: no thread reads the source behind the test's back
+    (tmp_path / "games" / "Calm Tide [0100CCCC00000000][v0].nsp").write_bytes(b"fine")
+    runtime.cycle(batch=10)
+    state = runtime.stats.sources["games"]
+    runtime._reach("games", state, OSError(2, "No such file or directory", "/secret/place/games"))
+    runtime._reach("games", state, OSError(2, "No such file or directory", "/secret/place/games"))  # still down
+    runtime._reach("games", state, None)
+    runtime._reach("games", state, None)  # still up
     kinds = [e.kind for e in reversed(runtime.history.events())]
-    assert kinds[0] == "started" and kinds.count("source_down") == 1 and kinds.count("source_up") == 1
-    assert "scan" in kinds
+    assert kinds.count("source_down") == 1 and kinds.count("source_up") == 1 and "scan" in kinds
     assert all("/secret" not in e.detail and "Calm Tide" not in e.detail for e in runtime.history.events())
     down = next(e for e in runtime.history.events() if e.kind == "source_down")
     assert down.subject == "games" and down.detail == "No such file or directory"
+
+
+def test_starting_the_bridge_leaves_a_line(tmp_path: Path) -> None:
+    runtime = _runtime(_client(tmp_path, sources=True))
+    runtime.start()
+    runtime._stop.set()
+    started = [e for e in runtime.history.events() if e.kind == "started"]
+    assert len(started) == 1 and started[0].detail
 
 
 def test_a_shop_that_does_not_answer_is_told_by_its_own_message(tmp_path: Path) -> None:
