@@ -76,17 +76,34 @@ def test_an_answer_that_is_not_a_release_is_ignored() -> None:
 
 
 def test_the_setting_is_off_by_default_and_kept_in_the_file(tmp_path: Path) -> None:
-    assert Config(uid="0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a").update_check is False
+    assert Config(uid="0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a").update_check is True
     path = tmp_path / "config.toml"
-    save(path, Config(uid="0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a", update_check=True))
-    assert "update_check = true" in path.read_text() and load(path).update_check is True
+    save(path, Config(uid="0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a", update_check=False))
+    assert "update_check = false" in path.read_text() and load(path).update_check is False
+    path.write_text('schema = 1\nuid = "0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a"\n')  # a file from before the setting
+    assert load(path).update_check is True
+
+
+def test_on_by_default_but_nothing_is_read_until_the_loop_runs(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    assert runtime.updates is not None and runtime.updates.checked is None  # the tests never start the loop
+    assert "newer version" not in client.get("/admin/").text and "update" not in state(runtime)
 
 
 def test_off_nothing_is_read_and_nothing_is_said(tmp_path: Path) -> None:
-    client = _admin(_client(tmp_path, sources=True))
+    from fastapi.testclient import TestClient
+    from lantern.uid import new_uid
+
+    from lantern_bridge.app import make_app
+
+    config = Config(uid=new_uid(), update_check=False)
+    client = _admin(
+        TestClient(make_app(config, tmp_path / "state", run=False), client=("127.0.0.1", 50000), follow_redirects=False)
+    )
     runtime = client.app.state.runtime  # type: ignore[attr-defined]
     assert runtime.updates is None and "newer version" not in client.get("/admin/").text
-    assert "update" not in state(runtime)
+    assert "update" not in state(runtime) and 'name="update_check"' in client.get("/admin/config").text
 
 
 def test_on_the_overview_and_the_state_say_a_newer_version_is_out(tmp_path: Path) -> None:
@@ -109,5 +126,8 @@ def test_the_settings_page_has_the_switch(tmp_path: Path) -> None:
     assert 'name="update_check"' in page.text
     csrf = re.search(r'name="csrf" value="([^"]+)"', page.text).group(1)  # type: ignore[union-attr]
     form = {"csrf": csrf, "name": "Shelf", "remote_rate": "10", "admin_lan_only": "on"}
+    assert 'name="update_check" checked' in page.text.replace("\n", " ") or " checked>" in page.text
+    assert client.post("/admin/config/settings", data=form).status_code == 303  # the box left unticked
+    assert load(path).update_check is False
     assert client.post("/admin/config/settings", data={**form, "update_check": "on"}).status_code == 303
     assert load(path).update_check is True
