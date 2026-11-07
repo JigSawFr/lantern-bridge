@@ -15,6 +15,10 @@
     <label>{{ _("Name shown to devices") }} <input name="name" value="{{ file.name }}" maxlength="64" required></label>
     <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}"></label>
   </div>
+  <div class="form-grid">
+    <label>{{ _("Address called when scans find changes (optional)") }} <input name="webhook" type="url" value="{{ file.webhook or '' }}" maxlength="512" autocomplete="off" placeholder="https://"></label>
+  </div>
+  <p class="dim small">{{ _("The bridge sends one POST of JSON with how many files were added, changed or removed per source (no path, no title), at most every ten seconds. A failed call is not repeated.") }}</p>
   <p><label class="check"><input type="checkbox" name="public"{% if file.public %} checked{% endif %}> {{ _("Public: anyone who reaches the server reads the library") }}</label></p>
   <p><label class="check"><input type="checkbox" name="atlas"{% if file.atlas %} checked{% endif %}> {{ _("Atlas: fill in genres, developer and publisher (the bridge fetches one public file from GitHub once a day)") }}</label></p>
   {% if atlas_info is not none %}<p class="dim small">{% if atlas_info.fetched %}{{ atlas_info | length }} {{ _("games") }} · {{ _("fetched") }} {{ atlas_info.fetched | when }}{% else %}{{ _("Not fetched yet.") }}{% endif %}{% if atlas_info.error %} · {{ _("last attempt failed") }}: {{ atlas_info.error }}{% endif %}</p>{% endif %}

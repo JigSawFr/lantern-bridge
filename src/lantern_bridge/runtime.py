@@ -29,6 +29,7 @@ from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 from lantern_bridge.traffic import Traffic
 from lantern_bridge.upstream import AeroRequests, AeroSaves, BridgeLibrary, Cheats, Ledger, Logins
+from lantern_bridge.webhook import Webhook
 
 log = logging.getLogger("lantern_bridge.runtime")
 
@@ -76,6 +77,7 @@ class Runtime:
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
         self.publisher: Publisher | None = None
+        self.webhook = Webhook(config.webhook, config.uid, config.name) if config.webhook else None
         self._shop_scanned: dict[str, float] = {}
         self._changed: set[str] = set()  # shops that said something changed
         self._watchers: list[threading.Thread] = []
@@ -141,6 +143,8 @@ class Runtime:
         ):
             for path in paths:
                 self.stats.changes.appendleft((now, source, kind, path.rsplit("#", 1)[-1]))
+        if self.webhook is not None:
+            self.webhook.note(source, result)
         if result.added or result.changed or result.removed:
             log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
 
@@ -324,6 +328,8 @@ class Runtime:
     def stop(self) -> None:
         if self.publisher is not None:
             self.publisher.stop()
+        if self.webhook is not None:
+            self.webhook.close()
         self._stop.set()
         self._wake.set()
         for thread in (self._thread, self._remote_thread, self._atlas_thread, *self._watchers):

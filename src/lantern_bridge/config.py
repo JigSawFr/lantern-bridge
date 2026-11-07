@@ -144,6 +144,8 @@ class Config:
     # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
     metrics: bool = False
     mqtt: Mqtt | None = None
+    # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
+    webhook: str | None = None
     sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -162,6 +164,8 @@ class Config:
         data["metrics"] = self.metrics
         if self.mqtt is not None:
             data["mqtt"] = self.mqtt.table()
+        if self.webhook is not None:
+            data["webhook"] = self.webhook
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -180,6 +184,20 @@ def _source_table(source: Source) -> dict[str, Any]:
             {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
         ]
     return table
+
+
+def parse_webhook(raw: object) -> str | None:
+    """The address that gets a POST, or None (an empty text is none)."""
+    if raw is None or raw == "":
+        return None
+    if not isinstance(raw, str):
+        raise ConfigError("`webhook` must be an address")
+    parsed = urlsplit(raw.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ConfigError("`webhook` must be an http or https address")
+    if parsed.username or parsed.password:
+        raise ConfigError("no credentials in the `webhook` address: put a secret in its path if the service wants one")
+    return raw.strip()
 
 
 def parse_mqtt(raw: object) -> Mqtt | None:
@@ -261,6 +279,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "atlas",
         "metrics",
         "mqtt",
+        "webhook",
         "sources",
     }
     extra = {k: v for k, v in data.items() if k not in known}
@@ -287,6 +306,7 @@ def _parse(data: dict[str, Any]) -> Config:
     if not isinstance(metrics, bool):
         raise ConfigError("`metrics` must be true or false")
     mqtt = parse_mqtt(data.get("mqtt"))
+    webhook = parse_webhook(data.get("webhook"))
     sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -337,6 +357,7 @@ def _parse(data: dict[str, Any]) -> Config:
         atlas=atlas,
         metrics=metrics,
         mqtt=mqtt,
+        webhook=webhook,
         sources=sources,
         _extra=extra,
         _extra_sources=extra_sources,
