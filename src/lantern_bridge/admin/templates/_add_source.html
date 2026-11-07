@@ -13,6 +13,7 @@
     <label data-shop-only>{{ _("Shop user (optional)") }} <input name="user" value="{{ prefill.user }}" maxlength="128"></label>
     <label data-shop-only>{{ _("Variable holding its password") }} <input name="password_env" value="{{ prefill.password_env }}" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
   </div>
+  <p data-folder-only><label class="check"><input type="checkbox" name="writable"{% if prefill.writable %} checked{% endif %}> {{ _("Allow this bridge to delete and compress files in this folder") }}</label><br><span class="dim small">{{ _("Off by default: the bridge then never writes in the folder, and a read-only volume is fine. On, the volume must be mounted for writing.") }}</span></p>
   <p class="dim" data-shop-only>{{ _("A password is never typed here: name the environment variable of the bridge that holds it.") }}</p>
   <div class="row"><button>{{ _("Add") }}</button> <button class="ghost" formaction="/admin/config/sources/probe" >{{ _("Try it first") }}</button></div>
   <p class="dim small">{{ _("Try it first reads the source without saving anything.") }}</p>

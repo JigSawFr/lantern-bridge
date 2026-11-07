@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Tasks") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Tasks") }}</h1>
+<p class="lede">{{ _("Conversions of packages with the nsz tool, one at a time. A task that fails or is cancelled leaves the folder as it was.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+<div id="live" data-live="/admin/tasks?fragment=1">{% include "_tasks.html" %}</div>
+{% endblock %}

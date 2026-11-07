@@ -18,6 +18,7 @@ from lantern.server.fastapi import include
 from lantern_bridge import health
 from lantern_bridge.admin import Admin, mount
 from lantern_bridge.admin.auth import AdminStore
+from lantern_bridge.compress import Compressor
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
 from lantern_bridge.metrics import render
@@ -45,20 +46,31 @@ def make_app(
         logging.getLogger("lantern_bridge.admin").warning(
             "no administrator yet: open /admin/ and enter the setup code %s", store.setup_code()
         )
-    return Reloadable(lambda cfg, shell: _build(cfg, state_dir, path, store, ring, shell), config, path, run=run)
+    compressor = Compressor(state_dir)  # shared: a job goes on through a settings reload
+    return Reloadable(
+        lambda cfg, shell: _build(cfg, state_dir, path, (store, ring, compressor), shell), config, path, run=run
+    )
 
 
-def _build(  # noqa: PLR0917  (what a reload needs to make the server again)
-    config: Config, state_dir: Path, config_path: Path, store: AdminStore, ring: LogRing, shell: Reloadable
+def _build(
+    config: Config,
+    state_dir: Path,
+    config_path: Path,
+    shared: tuple[AdminStore, LogRing, Compressor],
+    shell: Reloadable,
 ) -> FastAPI:
-    """One Lantern server for `config`: what a reload makes again. The administrator's sessions (`store`) and the
-    recent log (`ring`) outlive it."""
+    """One Lantern server for `config`: what a reload makes again. What outlives it is `shared`: the administrator's
+    sessions, the recent log and the compression jobs."""
+    store, ring, compressor = shared
     library = BridgeLibrary(base="/api/lantern")
     runtime = Runtime(config, state_dir, library)
     accounts = SqliteAccounts(state_dir / "accounts.sqlite3")
     app = FastAPI(title="lantern-bridge", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.runtime = runtime
     app.state.accounts = accounts
+    app.state.compressor = compressor
+    runtime.compressor = compressor
+    compressor.attach(runtime)
     lantern = LanternApp(
         library,
         uid=config.uid,

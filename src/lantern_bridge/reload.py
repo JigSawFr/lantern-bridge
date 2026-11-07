@@ -91,7 +91,9 @@ class Reloadable:
                         await watcher
                 for task in list(self._tasks):
                     await task
-                await asyncio.get_running_loop().run_in_executor(None, self._close, self.current)
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, self.current.state.compressor.close)  # a job's folder is left clean
+                await loop.run_in_executor(None, self._close, self.current)
                 await send({"type": "lifespan.shutdown.complete"})
                 return
 

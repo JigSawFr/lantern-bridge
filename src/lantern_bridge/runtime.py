@@ -16,14 +16,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from lantern.server import MemoryLibrary
-from lantern.server.file_index import SqliteIndex, SyncResult, hash_pending
+from lantern.server.file_index import Entry, SqliteIndex, SyncResult, hash_pending
 
 from lantern_bridge import __version__
 from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
+from lantern_bridge.compress import Compressor
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import scan_packages
 from lantern_bridge.history import History
+from lantern_bridge.identify import identify
 from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
 from lantern_bridge.notify import Notifier
@@ -103,6 +105,7 @@ class Runtime:
         self.notifier = Notifier(config.notify, config.name) if config.notify else None
         if self.notifier is not None:
             self.history.listeners.append(self.notifier.on_event)
+        self.compressor: Compressor | None = None  # set by the application: it outlives a reload
         self.pulse = Pulse()  # what the pages' live blocks wait on
         self.history.listeners.append(lambda _event: self.pulse.bump())
         self.traffic = Traffic(history=self.history, pulse=self.pulse)
@@ -334,6 +337,17 @@ class Runtime:
         self.browser.forget()
         self.wake()
         return done
+
+    def forget_file(self, source: str, path: str) -> None:
+        """A file of a folder was deleted from the pages: the index drops that row now, not at the next pass."""
+        rows = [r for r in self.index.rows(source) if r.path != path]
+        entries = []
+        for row in rows:
+            identity = identify(row.path)
+            entries.append(Entry(row.path, row.size, row.mtime_ns, identity.priority if identity else 0))
+        self.index.sync(source, entries)
+        self.browser.forget()
+        self.wake()
 
     def rescan(self) -> None:
         """Read every source again now: the shops too, which are otherwise read every few minutes."""

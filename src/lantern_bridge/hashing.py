@@ -10,6 +10,7 @@ from pathlib import Path
 
 from lantern.server.file_index import Entry, scan
 
+from lantern_bridge.compress import WORK
 from lantern_bridge.identify import identify
 
 #: What looks like a Switch package but that the name does not identify is reported, a few at most
@@ -25,6 +26,8 @@ def scan_packages(root: Path, ignored: list[tuple[str, int]] | None = None) -> I
     `ignored` as (path, size) when that list is given.
     """
     for entry in scan(root):
+        if WORK in entry.path:
+            continue  # a conversion in progress: its half-written file is not a package yet
         identity = identify(entry.path)
         if identity is not None:
             yield Entry(entry.path, entry.size, entry.mtime_ns, identity.priority)

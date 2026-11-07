@@ -62,18 +62,61 @@
 </section>
 {% endif %}
 
-<h2>{{ _("Versions and add-ons") }}</h2>
-<ul class="assoc">
-  {% for f in title.files %}
-  <li><span class="kind {{ f.type }}">{{ {"base": _("Game"), "update": _("Update"), "dlc": "DLC"}[f.type] }}</span>
-    <span>{% if f.type != "dlc" %}v{{ f.version }}{% else %}<code>{{ f.app_id }}</code>{% endif %}</span>
-    <span class="dim small">{{ f.size | size }} · {{ f.format }} · {{ f.source }}</span>
-    {% if f.sha256 %}<span class="pill ok">{{ _("hashed") }}</span>{% else %}<span class="pill wait">{{ _("waiting") }}</span>{% endif %}
-  </li>
-  {% endfor %}
-</ul>
+{% for kind, label in [("base", _("Game")), ("update", _("Updates")), ("dlc", "DLC")] %}
+{% set rows = title.files | selectattr("type", "equalto", kind) | sort(attribute="version", reverse=True) | list %}
+{% if rows %}
+<section class="card kindbox kind-{{ kind }}" id="{{ kind }}">
+  <h2>{{ label }} <span class="pill">{{ rows | length }}</span></h2>
+  <ul class="filelist">
+    {% for f in rows %}
+    <li class="filerow">
+      <div class="fmain">
+        <strong>{% if kind == "dlc" %}<code>{{ f.app_id }}</code>{% else %}v{{ f.version }}{% endif %}{% if kind == "update" and loop.first %} <span class="badge">{{ _("latest") }}</span>{% endif %}</strong>
+        <span class="dim small fname"><code>{{ f.name }}</code></span>
+      </div>
+      <div class="fmeta">
+        <span class="badge">{{ f.format | upper }}</span>
+        <span>{{ f.size | size }}</span>
+        <span class="dim">{{ f.source }}</span>
+        {% if f.sha256 %}<span class="pill ok">{{ _("hashed") }}</span>{% else %}<span class="pill wait">{{ _("waiting") }}</span>{% endif %}
+      </div>
+      {% if f.source in open_folders %}<div class="factions">
+        {% set conv = conversions.get(f.format) %}
+        {% if conv and compress_status == "ready" %}<details class="convert"><summary>{{ _("Convert…") }}</summary>
+          <form method="post" action="/admin/library/{{ title.title_id }}/convert" class="stack">
+            <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}">
+            {% if conv[1] == "compress" %}<label>{{ _("Compression level") }} <select name="level">{% for n in (3, 10, 18, 22) %}<option value="{{ n }}"{% if n == 18 %} selected{% endif %}>{{ n }}{% if n == 3 %} · {{ _("fast") }}{% elif n == 18 %} · {{ _("default") }}{% elif n == 22 %} · {{ _("smallest") }}{% endif %}</option>{% endfor %}</select></label>
+            <label>{{ _("Mode") }} <select name="mode"><option value="solid">{{ _("Solid: the smallest file") }}</option><option value="block">{{ _("Block: can be read without decompressing") }}</option></select></label>{% endif %}
+            <label class="check"><input type="checkbox" name="delete"> {{ _("Delete the original afterwards, once the result is checked") }}</label>
+            <button>{{ _("Compress to {format}", format=conv[0] | upper) if conv[1] == "compress" else _("Decompress to {format}", format=conv[0] | upper) }}</button>
+          </form></details>{% endif %}
+        <form method="post" action="/admin/library/{{ title.title_id }}/delete"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}"><button class="danger small" data-confirm="{{ _('Delete this file from the disk? This cannot be undone.') }}">{{ _("Delete") }}</button></form>
+      </div>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endfor %}
 
-<h2>{{ _("Files") }}</h2>
+{% if cheats %}
+<section class="card kindbox kind-cheats" id="cheats">
+  <h2>{{ _("Cheats") }} <span class="pill">{{ cheats | length }}</span></h2>
+  <ul class="filelist">
+    {% for c in cheats %}
+    <li class="filerow">
+      <div class="fmain"><strong>{{ _("Build") }} <code>{{ c.build_id or "–" }}</code></strong>{% if c.note %}<span class="dim small">{{ c.note }}</span>{% endif %}</div>
+      <div class="fmeta"><span>{{ c.size | size }}</span><span class="dim">{{ c.source or "–" }}</span><span class="dim">{{ c.updated or "–" }}</span></div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if open_folders and compress_status != "ready" %}<p class="dim small" id="compress-note">{{ _("Compression needs the nsz tool and your own prod.keys in the configuration folder.") }} {{ _("The nsz tool is not installed.") if compress_status == "no_tool" else _("No prod.keys in the configuration folder.") }}</p>{% endif %}
+
+<details class="fold" id="files">
+<summary>{{ _("Files") }} <span class="pill">{{ title.files | length }}</span></summary>
 <div class="scroll"><table>
   <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>SHA-256</th><th>{{ _("Hashed in") }}</th><th>{{ _("Served") }}</th><th></th></tr></thead>
   <tbody>
@@ -89,11 +132,5 @@
   </tbody>
 </table></div>
 
-{% if cheats %}
-<h2>{{ _("Cheats") }}</h2>
-<div class="scroll"><table>
-  <thead><tr><th>{{ _("Build") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>{{ _("Updated") }}</th></tr></thead>
-  <tbody>{% for c in cheats %}<tr><td><code>{{ c.build_id or "–" }}</code></td><td>{{ c.source or "–" }}</td><td>{{ c.size | size }}</td><td>{{ c.updated or "–" }}</td></tr>{% endfor %}</tbody>
-</table></div>
-{% endif %}
+</details>
 {% endblock %}
