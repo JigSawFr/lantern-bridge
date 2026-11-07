@@ -1,0 +1,68 @@
+# Known vulnerabilities, in what ships: the locked Python dependencies
+# (pip-audit, from uv.lock) and the container image (Trivy). Once a week, on
+# demand, and on a pull request that changes the lock or the Dockerfile. It is
+# not part of `all green`: a new advisory against an unchanged lock must not
+# block an unrelated pull request, so a failed weekly run is the report.
+name: audit
+
+on:
+  schedule:
+    - cron: "17 5 * * 2"
+  pull_request:
+    paths: [ "uv.lock", "pyproject.toml", "Dockerfile", ".github/workflows/audit.yml", "tools/audit-requirements.txt" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: 0.13.6
+
+jobs:
+  python:
+    name: python dependencies (pip-audit)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # sdk/: the Lantern SDK, the dependency (not its own submodules)
+          submodules: true
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+      # pip-audit and what it needs, by hash (tools/audit-requirements.txt)
+      - name: pip-audit
+        run: |
+          python -m venv "$RUNNER_TEMP/audit"
+          "$RUNNER_TEMP/audit/bin/pip" install --quiet --require-hashes -r tools/audit-requirements.txt
+          # What the image installs (no development tools); the SDK is ours, not on PyPI yet
+          uv export --locked --no-dev --no-emit-project --no-emit-local --no-hashes --quiet -o "$RUNNER_TEMP/locked.txt"
+          "$RUNNER_TEMP/audit/bin/pip-audit" --requirement "$RUNNER_TEMP/locked.txt" --no-deps --disable-pip --strict
+
+  image:
+    name: container image (Trivy)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Build
+        run: docker build --tag lantern-bridge:audit .
+      # Fixed vulnerabilities only, high and critical: what an update can remove
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: lantern-bridge:audit
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
