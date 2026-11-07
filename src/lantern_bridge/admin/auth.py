@@ -38,6 +38,8 @@ class Session:
     name: str
     csrf: str
     expires: float
+    #: "admin", or "observer": an account that looks at a few pages and changes nothing.
+    role: str = "admin"
 
 
 class AdminStore:
@@ -100,17 +102,64 @@ class AdminStore:
             self._setup_code = None
             return None
 
-    def check(self, name: str, password: str) -> bool:
+    @staticmethod
+    def _matches(entry: dict[str, Any], name: str, password: str) -> bool:
+        params = entry.get("scrypt", _SCRYPT)
+        candidate = _hash(password, bytes.fromhex(entry["salt"]), params["n"], params["r"], params["p"])
+        return secrets.compare_digest(name.strip(), entry["name"]) & secrets.compare_digest(candidate, entry["hash"])
+
+    def identify(self, name: str, password: str) -> str | None:
+        """The role of the account this name and password open ("admin" or "observer"), else None."""
         data = self._read()
         if not data.get("name"):
-            return False
-        params = data.get("scrypt", _SCRYPT)
-        candidate = _hash(password, bytes.fromhex(data["salt"]), params["n"], params["r"], params["p"])
-        return secrets.compare_digest(name.strip(), data["name"]) & secrets.compare_digest(candidate, data["hash"])
+            return None
+        admin = self._matches(data, name, password)
+        observer = isinstance(data.get("observer"), dict) and self._matches(data["observer"], name, password)
+        return "admin" if admin else "observer" if observer else None
 
-    def login(self, name: str) -> tuple[str, Session]:
+    def check(self, name: str, password: str) -> bool:
+        return self.identify(name, password) == "admin"
+
+    @property
+    def observer(self) -> str | None:
+        """The name of the observer account, if there is one."""
+        entry = self._read().get("observer")
+        return entry.get("name") if isinstance(entry, dict) else None
+
+    def set_observer(self, name: str, password: str) -> str | None:
+        """Make or replace the observer; the error to show, or None when it is done."""
+        name = name.strip()
+        with self._lock:
+            data = self._read()
+            if not data.get("name"):
+                return "There is no administrator yet."
+            if not name or len(name) > 64:
+                return "Pick a name of 64 characters at most."
+            if name.casefold() == str(data["name"]).casefold():
+                return "The observer needs a name of its own."
+            if len(password) < MIN_PASSWORD:
+                return f"Pick a password of at least {MIN_PASSWORD} characters."
+            salt = secrets.token_bytes(16)
+            data["observer"] = {
+                "name": name,
+                "salt": salt.hex(),
+                "hash": _hash(password, salt, **_SCRYPT),
+                "scrypt": _SCRYPT,
+            }
+            self._write(data)
+            self._sessions = {t: s for t, s in self._sessions.items() if s.role != "observer"}
+            return None
+
+    def clear_observer(self) -> None:
+        with self._lock:
+            data = self._read()
+            if data.pop("observer", None) is not None:
+                self._write(data)
+            self._sessions = {t: s for t, s in self._sessions.items() if s.role != "observer"}
+
+    def login(self, name: str, role: str = "admin") -> tuple[str, Session]:
         token = secrets.token_urlsafe(32)
-        session = Session(name, secrets.token_urlsafe(24), time.monotonic() + SESSION_SECONDS)
+        session = Session(name, secrets.token_urlsafe(24), time.monotonic() + SESSION_SECONDS, role)
         with self._lock:
             self._sessions = {t: s for t, s in self._sessions.items() if s.expires > time.monotonic()}
             self._sessions[token] = session

@@ -97,6 +97,18 @@ _DONE = {
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
 
+#: What an observer may read: the overview, the library with its checks and exports, the activity.
+_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/activity")
+_OBSERVER_PREFIXES = ("/admin/library", "/admin/static/")
+
+
+def _observer_may(request: Request) -> bool:
+    path = request.url.path
+    if request.method == "POST":
+        return path == "/admin/logout"
+    return request.method == "GET" and (path in _OBSERVER_PAGES or path.startswith(_OBSERVER_PREFIXES))
+
+
 def is_local(host: str | None) -> bool:
     """Whether an address is the machine itself or on a private network."""
     try:
@@ -381,11 +393,12 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 status=429,
                 error=admin.tr(request)("Too many tries: wait {wait} s.", wait=f"{wait:.0f}"),
             )
-        if not admin.store.check(fields.get("name", ""), fields.get("password", "")):
+        role = admin.store.identify(fields.get("name", ""), fields.get("password", ""))
+        if role is None:
             admin.attempts.record(key)
             log.warning("a sign-in failed from %s", key)
             return admin.page(request, "login.html", status=401, error=admin.tr(request)("Wrong name or password."))
-        token, _ = admin.store.login(fields["name"].strip())
+        token, _ = admin.store.login(fields["name"].strip(), role)
         return redirect("/", request, token)
 
     async def authed(request: Request) -> tuple[Session | None, dict[str, str], Response | None]:
@@ -395,6 +408,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         session = admin.session(request)
         if session is None:
             return None, {}, redirect("/login", request)
+        if session.role == "observer" and not _observer_may(request):
+            return None, {}, admin.page(request, "observer.html", session, status=403, active="")
         fields: dict[str, str] = {}
         if request.method == "POST":
             fields = await admin.form(request)
@@ -883,6 +898,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             tested=tested,
             atlas_info=admin.runtime.atlas,
             updates=admin.runtime.updates,
+            observer=admin.store.observer,
         )
 
     async def change(request: Request, edit: Any, done: str) -> Response:
@@ -960,6 +976,22 @@ def mount(app: FastAPI, admin: Admin) -> None:
             headers=_HEADERS,
             background=BackgroundTask(Path(scratch.name).unlink, missing_ok=True),
         )
+
+    @router.post("/config/observer")
+    async def config_observer(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        if fields.get("action") == "remove":
+            admin.store.clear_observer()
+            log.info("the observer account was removed")
+            return redirect("/config?m=done", request)
+        problem = admin.store.set_observer(fields.get("name", ""), fields.get("password", ""))
+        if problem is not None:
+            return settings_page(request, session, 400, error=t(problem))
+        log.info("an observer account was set")
+        return redirect("/config?m=saved", request)
 
     @router.post("/config/mqtt")
     async def config_mqtt(request: Request) -> Response:
