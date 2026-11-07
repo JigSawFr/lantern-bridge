@@ -881,3 +881,20 @@ pre code .tk-k { color: #7cc4ff; }
 .sim-json summary { cursor: pointer; color: var(--snow); min-height: 40px; display: flex; align-items: center; }
 .sim-json pre { max-height: 24rem; overflow: auto; }
 
+/* The hero's diagram: the sources, the Bridge, the clients. */
+.hero-split .hero-text { display: grid; gap: 14px; align-content: center; }
+.flow-bridge { margin: 0; display: grid; gap: 10px; align-items: center; grid-template-columns: minmax(0, 1fr); }
+.fb-box { padding: 14px 16px; border: 1px solid var(--night-line); border-radius: 14px; background: rgb(14 26 51 / 0.55); }
+.fb-title { margin: 0 0 6px; color: var(--aurora); font: 500 0.75rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.fb-box ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; color: var(--snow); font-size: 0.9375rem; }
+.fb-box p:not(.fb-title) { margin: 0; color: var(--snow); font-size: 0.9375rem; }
+.fb-core { border-color: rgb(0 255 204 / 0.45); background: rgb(0 255 204 / 0.06); }
+.fb-arrow { justify-self: center; width: 2px; height: 22px; background: var(--aurora); position: relative; }
+.fb-arrow::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: 8px; height: 8px; border-right: 2px solid var(--aurora); border-bottom: 2px solid var(--aurora); transform: translateX(-50%) rotate(45deg); }
+@media (min-width: 980px) {
+  .hero-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 14px 48px; align-items: center; }
+  .flow-bridge { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr); gap: 6px; }
+  .fb-arrow { width: 22px; height: 2px; }
+  .fb-arrow::after { left: auto; right: -1px; bottom: auto; top: 50%; transform: translateY(-50%) rotate(-45deg); }
+}
+

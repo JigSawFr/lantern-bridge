@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "实时变更",
   "sim_x_aerofoil": "存档、金手指、请求、内容分级",
   "sim_x_none": "除游戏库外没有其他内容",
-  "sim_json": "客户端读取的 /apps 响应"
+  "sim_json": "客户端读取的 /apps 响应",
+  "diag_sources": "你的来源",
+  "diag_bridge": "计算哈希、合并、提供",
+  "diag_clients": "Lantern 客户端",
+  "diag_alt": "你的来源进入桥接器，经过哈希与合并，以一个游戏库的形式提供给 Lantern 客户端。"
 }

@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "Changements en direct",
   "sim_x_aerofoil": "Sauvegardes, codes de triche, demandes, classification",
   "sim_x_none": "Rien de plus que la bibliothèque",
-  "sim_json": "La réponse de /apps, telle que la lit le client"
+  "sim_json": "La réponse de /apps, telle que la lit le client",
+  "diag_sources": "Vos sources",
+  "diag_bridge": "Calcule les empreintes, fusionne, sert",
+  "diag_clients": "Clients Lantern",
+  "diag_alt": "Vos sources entrent dans le pont, qui calcule les empreintes, les fusionne et sert une seule bibliothèque aux clients Lantern."
 }

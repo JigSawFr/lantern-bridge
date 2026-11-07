@@ -63,5 +63,9 @@
   "sim_x_ownfoil": "실시간 변경",
   "sim_x_aerofoil": "세이브, 치트, 요청, 연령 등급",
   "sim_x_none": "라이브러리 외에는 없음",
-  "sim_json": "클라이언트가 읽는 /apps 응답"
+  "sim_json": "클라이언트가 읽는 /apps 응답",
+  "diag_sources": "내 소스",
+  "diag_bridge": "해시·병합·제공",
+  "diag_clients": "Lantern 클라이언트",
+  "diag_alt": "소스가 브리지로 들어가 해시와 병합을 거쳐 하나의 라이브러리로 Lantern 클라이언트에 제공됩니다."
 }
