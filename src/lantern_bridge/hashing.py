@@ -38,15 +38,24 @@ def scan(root: Path) -> Iterator[Entry]:
             yield Entry(path=file.relative_to(root).as_posix(), size=info.st_size, mtime_ns=info.st_mtime_ns)
 
 
-def scan_packages(root: Path) -> Iterator[Entry]:
+#: What looks like a Switch package but that the name does not identify is reported, a few at most
+#: (the pages say why a file is missing from the library).
+IGNORED_LIMIT = 500
+_PACKAGE_SUFFIXES = (".nsp", ".nsz", ".xci", ".xcz")
+
+
+def scan_packages(root: Path, ignored: list[tuple[str, int]] | None = None) -> Iterator[Entry]:
     """The Switch packages under ``root`` the names identify, with their queue priority.
 
-    Other files are not hashed: nothing would list them.
+    Other files are not hashed: nothing would list them. A package the name does not identify is appended to
+    `ignored` as (path, size) when that list is given.
     """
     for entry in scan(root):
         identity = identify(entry.path)
         if identity is not None:
             yield Entry(entry.path, entry.size, entry.mtime_ns, identity.priority)
+        elif ignored is not None and entry.path.lower().endswith(_PACKAGE_SUFFIXES) and len(ignored) < IGNORED_LIMIT:
+            ignored.append((entry.path, entry.size))
 
 
 def hash_pending(

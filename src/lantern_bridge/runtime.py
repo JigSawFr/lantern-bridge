@@ -60,6 +60,8 @@ class Stats:
     sources: dict[str, SourceState] = field(default_factory=dict)
     #: (source, path) -> (seconds the last hashing took, unix time it finished); since the process started
     timings: dict[tuple[str, str], tuple[float, float]] = field(default_factory=dict)
+    #: source -> the packages of a folder its names do not identify, as (path, size) (the last scan)
+    ignored: dict[str, list[tuple[str, int]]] = field(default_factory=dict)
 
 
 class Runtime:
@@ -206,8 +208,10 @@ class Runtime:
         self._scan_shops()
         for source, root in self.roots.items():
             state = self.stats.sources.setdefault(source, SourceState())
+            skipped: list[tuple[str, int]] = []
             try:
-                result = self.index.sync(source, scan_packages(root))
+                result = self.index.sync(source, scan_packages(root, skipped))
+                self.stats.ignored[source] = skipped
             except OSError as error:
                 log.warning("source %s cannot be read: %s", source, error)
                 state.reachable, state.error = False, str(error)
