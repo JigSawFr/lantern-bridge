@@ -42,6 +42,7 @@ def build(role: str | None, developer: bool, _: Callable[..., str]) -> Menu:
         Entry("sources", _("Sources"), "/admin/sources"),
         Entry("config", _("Settings"), "/admin/config"),
         Entry("logs", _("Logs"), "/admin/logs"),
+        Entry("diagnostic", _("Diagnostic"), "/admin/diagnostic"),
     ]
     if developer:
         manage.append(Entry("developer", _("Developer"), "/admin/developer"))

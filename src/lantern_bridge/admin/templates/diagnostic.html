@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Diagnostic") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Diagnostic") }}</h1>
+<p class="lede">{{ _("The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.") }}</p>
+<div class="row">
+  <button type="button" data-copy-text="{{ report }}">{{ _("Copy the diagnostic") }}</button>
+  {% if full %}<a class="button ghost" href="/admin/diagnostic">{{ _("Hide addresses, paths and messages") }}</a>
+  {% else %}<a class="button ghost" href="/admin/diagnostic?full=1">{{ _("Include addresses, paths and messages") }}</a>{% endif %}
+  <a class="button ghost" href="/admin/diagnostic.json" download>{{ _("Download as JSON") }}</a>
+  <a class="button ghost" href="https://github.com/JigSawFr/lantern-bridge/issues/new">{{ _("Report a problem") }}</a>
+</div>
+<pre class="report" tabindex="0">{{ report }}</pre>
+{% endblock %}

@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "Hashes der ausgewählten Titel neu berechnen?",
  "Export the selection (CSV)": "Auswahl exportieren (CSV)",
  "Export this list (CSV)": "Diese Liste exportieren (CSV)",
- "Clear the selection": "Auswahl aufheben"
+ "Clear the selection": "Auswahl aufheben",
+ "Diagnostic": "Diagnose",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "Der Zustand dieser Bridge als Text, zum Einfügen in eine Support-Anfrage. Er enthält kein Passwort, kein Token, keine Adresse und keinen Pfad, außer Sie verlangen sie.",
+ "Copy the diagnostic": "Diagnose kopieren",
+ "Include addresses, paths and messages": "Adressen, Pfade und Meldungen einschließen",
+ "Hide addresses, paths and messages": "Adressen, Pfade und Meldungen ausblenden",
+ "Report a problem": "Problem melden"
 }

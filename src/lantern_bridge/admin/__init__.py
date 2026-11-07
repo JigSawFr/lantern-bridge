@@ -444,6 +444,84 @@ class Admin:
             ],
         }
 
+    def report(self, full: bool = False) -> str:
+        """The bridge's state as text to paste in a support request. Without `full` it holds no password, no
+        token, no address and no path, and none of the messages of the log (they name files)."""
+        import lantern
+
+        state = self.state()
+        config, runtime = self.config, self.runtime
+        out = [
+            f"lantern-bridge {__version__} · Lantern draft {SPEC_DRAFT} · SDK {getattr(lantern, '__version__', '?')}",
+            f"Python {platform.python_version()} on {platform.system()} {platform.machine()}"
+            f" · up {_duration(time.time() - runtime.stats.started)}",
+            "",
+            "Access: "
+            + ("public (no pairing)" if config.public else "devices pair first")
+            + f" · administration {'on the local network only' if config.admin_lan_only else 'open to any address'}"
+            + (" · developer mode" if config.developer else ""),
+            f"Library: {state['titles']} titles, {state['apps']} apps"
+            f" · {state['hashed']} of {state['total']} files hashed",
+            "",
+            f"Sources ({len(config.sources)}):",
+        ]
+        by_id = {row["id"]: row for row in state["sources"]}
+        for source in config.sources:
+            row = by_id.get(source.id, {})
+            kind = type(source).__name__.removesuffix("Source").lower()
+            seen = (
+                "reachable"
+                if row.get("reachable")
+                else "NOT reachable"
+                if row.get("reachable") is False
+                else "not read yet"
+            )
+            where = ""
+            if full:
+                where = " · " + (
+                    re.sub(r"//[^/@]*@", "//", source.url) if isinstance(source, ShopSource) else str(source.path)
+                )
+            out.append(
+                f"- {source.id}: {kind}, {seen}, {row.get('hashed', 0)} hashed, {row.get('pending', 0)} waiting{where}"
+            )
+            if row.get("error") and full:
+                out.append(f"    last error: {row['error']}")
+        out += ["", "Integrations:"]
+        out.append(
+            "- MQTT: "
+            + (
+                f"on ({config.mqtt.host}:{config.mqtt.port})"
+                if full and config.mqtt
+                else "on"
+                if config.mqtt
+                else "off"
+            )
+        )
+        out.append(
+            f"- webhook: {'set' if config.webhook else 'off'} · notifications: {'set' if config.notify else 'off'}"
+        )
+        out.append(
+            f"- Atlas: {'on' if config.atlas else 'off'} · update check: {'on' if config.update_check else 'off'}"
+            f" · metrics: {'on' if config.metrics else 'off'}"
+            f" · read-only account: {'yes' if self.store.observer else 'no'}"
+        )
+        out += ["", "Health:"]
+        for found in health.run(runtime):
+            out.append(f"- {found.status}: {found.name}" + (f" — {found.detail}" if full and found.detail else ""))
+        problem = getattr(self.reloader, "error", None)
+        out.append("")
+        out.append(
+            "Settings: "
+            + ("the last change was NOT applied" + (f": {problem}" if full else "") if problem else "applied")
+        )
+        warnings = self.ring.since(0, "WARNING", limit=200)
+        out.append("")
+        out.append(f"Warnings and errors since the start: {len(warnings)}")
+        if full:
+            for line in warnings[-20:]:
+                out.append(f"- {time.strftime('%H:%M:%S', time.localtime(line.time))} {line.level} {line.message}")
+        return "\n".join(out) + "\n"
+
     def cookie(self, response: Response, request: Request, token: str | None) -> None:
         if token is None:
             response.delete_cookie(_COOKIE, path="/admin")
@@ -1746,6 +1824,17 @@ def mount(app: FastAPI, admin: Admin) -> None:
         return redirect("/invitations", request)
 
     # -- diagnostic ------------------------------------------------------------
+
+    @router.get("/diagnostic")
+    async def diagnostic_page(request: Request) -> Response:
+        """The state of the bridge as text, to paste in a support request."""
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        full = request.query_params.get("full") == "1"
+        return admin.page(
+            request, "diagnostic.html", session, active="diagnostic", report=admin.report(full), full=full
+        )
 
     @router.get("/diagnostic.json")
     async def diagnostic(request: Request) -> Response:

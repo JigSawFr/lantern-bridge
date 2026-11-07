@@ -154,5 +154,7 @@
  "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Estas páginas gravam o arquivo de configuração. A ponte aplica uma alteração assim que ela é salva, ou quando o arquivo é editado à mão.",
  "Unsaved changes.": "Alterações não salvas.",
  "The source you added was not applied: see the note on the settings page.": "A fonte que você adicionou não foi aplicada: veja a nota na página de definições.",
- "Hash the selected titles again?": "Calcular novamente os hashes dos títulos selecionados?"
+ "Hash the selected titles again?": "Calcular novamente os hashes dos títulos selecionados?",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "O estado desta ponte em texto, para colar em um pedido de ajuda. Não contém senhas, tokens, endereços nem caminhos, a menos que você peça.",
+ "Report a problem": "Relatar um problema"
 }

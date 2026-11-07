@@ -434,5 +434,11 @@
  "Hash the selected titles again?": "선택한 타이틀의 해시를 다시 계산할까요?",
  "Export the selection (CSV)": "선택 항목 내보내기 (CSV)",
  "Export this list (CSV)": "이 목록 내보내기 (CSV)",
- "Clear the selection": "선택 해제"
+ "Clear the selection": "선택 해제",
+ "Diagnostic": "진단",
+ "The state of this bridge as text, to paste in a support request. It holds no password, token, address or path unless you ask for them.": "이 브리지의 상태를 텍스트로 보여 줍니다. 지원 요청에 붙여 넣으세요. 요청하지 않는 한 비밀번호, 토큰, 주소, 경로는 포함되지 않습니다.",
+ "Copy the diagnostic": "진단 복사",
+ "Include addresses, paths and messages": "주소, 경로, 메시지 포함",
+ "Hide addresses, paths and messages": "주소, 경로, 메시지 숨기기",
+ "Report a problem": "문제 신고"
 }
