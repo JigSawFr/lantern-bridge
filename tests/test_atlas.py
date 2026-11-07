@@ -36,7 +36,7 @@ DOC = {
 
 def _transport(
     document: object = DOC, *, status: int = 200, etag: str = '"v1"', seen: list[httpx.Request] | None = None
-):  # type: ignore[no-untyped-def]
+) -> httpx.MockTransport:
     def answer(request: httpx.Request) -> httpx.Response:
         if seen is not None:
             seen.append(request)
