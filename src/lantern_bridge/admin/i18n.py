@@ -11,6 +11,7 @@ COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
     "Library": "Bibliothèque",
+    "DLC": "DLC",
     "Everything the bridge knows, from every source: games, their updates and their DLC.": "Tout ce que le pont connaît, de toutes les sources : jeux, mises à jour et DLC.",
     "A name or a title id": "Un nom ou un identifiant de titre",
     "All sources": "Toutes les sources",
