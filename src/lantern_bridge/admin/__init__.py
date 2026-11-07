@@ -51,6 +51,7 @@ from lantern_bridge.config import (
     Login,
     OwnfoilSource,
     ShopSource,
+    Source,
     TinfoilSource,
     check,
     load,
@@ -94,6 +95,7 @@ _DONE = {
     "untied": "Login removed.",
     "queued": "Hashing again: these files go first.",
     "done": "Done.",
+    "undone": "The previous settings are back. Restart the bridge to apply them.",
 }
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
@@ -202,9 +204,34 @@ class Admin:
         """The settings as the file has them (the running ones when there is no file yet)."""
         return load(self.config_path) if self.config_path.exists() else deepcopy(self.config)
 
+    @property
+    def previous_path(self) -> Path:
+        return self.config_path.with_name(self.config_path.name + ".previous")
+
     def write(self, config: Config) -> None:
-        """Checks, then writes; ConfigError for what the reader would refuse."""
-        save(self.config_path, check(config))
+        """Checks, then writes; ConfigError for what the reader would refuse.
+
+        The file it replaces is kept beside it (`.previous`, one level) so that the pages can take the last change
+        back. Writing the same settings again keeps nothing new.
+        """
+        checked = check(config)
+        if self.config_path.exists():
+            try:
+                before = load(self.config_path)
+            except ConfigError:
+                before = None  # a file the reader refuses is not worth keeping: save() says why
+            if before is not None and before.to_toml() != checked.to_toml():
+                keep = self.previous_path
+                fd = os.open(keep, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+                with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                    handle.write(before.to_toml())
+        save(self.config_path, checked)
+
+    def undo(self) -> None:
+        """Brings the settings from before the last change back (and that change becomes the one to take back)."""
+        if not self.previous_path.exists():
+            raise ConfigError("There is nothing to undo.")
+        self.write(load(self.previous_path))
 
     def restart_needed(self) -> bool:
         try:
@@ -859,8 +886,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
         request: Request,
         session: Session | None,
         status: int = 200,
+        *,
         tested: dict[str, Any] | None = None,
         error: str | None = None,
+        draft: dict[str, str] | None = None,
     ) -> Response:
         t = admin.tr(request)
         try:
@@ -878,6 +907,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 message=None,
                 error=str(problem),
                 tested=None,
+                prefill={},
+                can_undo=False,
             )
         sources = [
             {
@@ -903,6 +934,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             message=t(done) if done else None,
             error=error,
             tested=tested,
+            prefill=draft or {},
+            can_undo=admin.previous_path.exists(),
             atlas_info=admin.runtime.atlas,
             updates=admin.runtime.updates,
             observer=admin.store.observer,
@@ -924,11 +957,17 @@ def mount(app: FastAPI, admin: Admin) -> None:
         except OSError as error:
             problem = f"{error.strerror or error}"
         if problem is not None:
-            return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem)
+            typed = {k: v for k, v in fields.items() if k != "csrf"}
+            return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
         log.info("settings changed from the pages: %s", done)
         return redirect(f"/{'start' if fields.get('back') == 'start' else 'config'}?m={done}", request)
 
-    _FIXED = {"No such source.", "Only an AeroFoil source has logins.", "Choose a number of devices from 1 to 20."}
+    _FIXED = {
+        "No such source.",
+        "Only an AeroFoil source has logins.",
+        "Choose a number of devices from 1 to 20.",
+        "There is nothing to undo.",
+    }
 
     @router.get("/start")
     async def start(request: Request) -> Response:
@@ -1061,23 +1100,58 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
         return await change(request, edit, "saved")
 
+    def build(f: dict[str, str]) -> Source:
+        """The source the add form describes (ConfigError for what it cannot be)."""
+        kind, sid, where = f.get("kind", ""), f.get("id", "").strip(), f.get("where", "").strip()
+        cls = _KINDS.get(kind)
+        if cls is None:
+            raise ConfigError("this kind of source is not supported")
+        if kind == "folder":
+            return FolderSource(id=sid, path=Path(where))
+        user, env = f.get("user", "").strip() or None, f.get("password_env", "").strip() or None
+        if env is not None and not _ENV_NAME.match(env):
+            raise ConfigError("a variable's name is letters, digits and _")
+        built: Source = cls(id=sid, url=where, user=user, password_env=env)
+        return built
+
     @router.post("/config/sources")
     async def config_add(request: Request) -> Response:
         def edit(config: Config, f: dict[str, str]) -> str | None:
-            kind, sid, where = f.get("kind", ""), f.get("id", "").strip(), f.get("where", "").strip()
-            cls = _KINDS.get(kind)
-            if cls is None:
-                raise ConfigError("this kind of source is not supported")
-            if kind == "folder":
-                config.sources.append(FolderSource(id=sid, path=Path(where)))
-                return None
-            user, env = f.get("user", "").strip() or None, f.get("password_env", "").strip() or None
-            if env is not None and not _ENV_NAME.match(env):
-                raise ConfigError("a variable's name is letters, digits and _")
-            config.sources.append(cls(id=sid, url=where, user=user, password_env=env))
+            config.sources.append(build(f))
             return None
 
         return await change(request, edit, "added")
+
+    @router.post("/config/sources/probe")
+    async def config_probe(request: Request) -> Response:
+        """Tries the source the form describes, without saving anything."""
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        typed = {k: v for k, v in fields.items() if k != "csrf"}
+        try:
+            source = build(fields)
+        except ConfigError as error:
+            return settings_page(request, session, 400, error=t(str(error)), draft=typed)
+        ok, text = await probe_source(source, t)
+        shown = {"id": source.id or t("New source"), "ok": ok, "text": text}
+        return settings_page(request, session, tested=shown, draft=typed)
+
+    @router.post("/config/undo")
+    async def config_undo(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        t = admin.tr(request)
+        try:
+            admin.undo()
+        except ConfigError as error:
+            return settings_page(request, session, 400, error=t(str(error)))
+        except OSError as error:
+            return settings_page(request, session, 500, error=f"{error.strerror or error}")
+        log.info("settings changed from the pages: the last change was taken back")
+        return redirect("/config?m=undone", request)
 
     def find(config: Config, sid: str) -> int | None:
         return next((n for n, x in enumerate(config.sources) if x.id == sid), None)
@@ -1126,10 +1200,14 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return settings_page(request, session, 500, error=str(error))
         if source is None:
             return settings_page(request, session, 404, error=t("No such source."))
+        ok, text = await probe_source(source, t)
+        return settings_page(request, session, tested={"id": sid, "ok": ok, "text": text})
+
+    async def probe_source(source: Source, t: Any) -> tuple[bool, str]:
+        """Whether a source can be read: a folder is looked at, a shop is asked for its listing."""
         if isinstance(source, FolderSource):
             ok = source.path.is_dir() and os.access(source.path, os.R_OK | os.X_OK)
-            text = t("The folder is there and can be read.") if ok else t("The folder cannot be read.")
-            return settings_page(request, session, tested={"id": sid, "ok": ok, "text": text})
+            return ok, t("The folder is there and can be read.") if ok else t("The folder cannot be read.")
         shop = admin.runtime.open_shop(source)
 
         def probe() -> tuple[bool, str]:
@@ -1143,8 +1221,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 shop.close()
             return True, t("The shop answers; it lists files.") if first else t("The shop answers; it lists no file.")
 
-        ok, text = await asyncio.to_thread(probe)
-        return settings_page(request, session, tested={"id": sid, "ok": ok, "text": text})
+        return await asyncio.to_thread(probe)
 
     # -- accounts --------------------------------------------------------------
 
