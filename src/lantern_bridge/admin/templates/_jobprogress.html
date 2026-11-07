@@ -1,5 +1,5 @@
 {% if j.state == "running" %}
-<div class="jobprogress"><progress max="100" value="{{ (j.progress * 100) | round(1) }}" aria-label="{{ _('Progress') }}"></progress> <strong>{{ "%.0f" | format(j.progress * 100) }} %</strong></div>
+<div class="jobprogress"><progress class="working" max="100" value="{{ (j.progress * 100) | round(1) }}" aria-label="{{ _('Progress') }}"></progress> <strong>{{ "%.0f" | format(j.progress * 100) }} %</strong></div>
 <span class="dim small">{{ j.size_out | size }}{% if j.expected %} / ~{{ j.expected | size }}{% endif %}{% set left = j.eta(now) %}{% if left is not none %} · {{ _("about {time} left", time=(left | duration)) }}{% endif %}{% set speed = j.speed(now) %}{% if speed %} · {{ speed | size }}/s{% endif %}{% if j.step %} · {{ j.step }}{% endif %}</span>
 {% elif j.state == "queued" %}
 <span class="dim small">{% if j.expected %}{{ _("expected") }} ~{{ j.expected | size }}{% else %}–{% endif %}</span>

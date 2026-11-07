@@ -16,12 +16,12 @@
 <p>{% if bad %}<span class="pill wait">{{ bad | length }} {{ _("to check") }}</span> <span class="dim small">{{ _("listed at the top of this page") }}{% else %}<span class="pill ok">{{ _("all good") }}</span> <span class="dim small">{{ checks | length }} {{ _("checks") }}{% endif %} · <code>/healthz</code></span></p>
 
 <h2>{{ _("Hashing") }}</h2>
-<div class="card glow">
+<div class="card glow{% if state.pending %} working{% endif %}">
 <p class="muted">{{ _("Hashing is local and read-only: the files are read in place and never changed.") }}</p>
 <p class="muted" data-idle{% if state.total %} hidden{% endif %}>{{ _("Nothing to hash yet: add a source that holds games, then scan.") }}</p>
-<progress id="progress" data-hashing{% if not state.pending %} hidden{% endif %} max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
+<progress id="progress" data-hashing{% if not state.pending %} hidden{% else %} class="working"{% endif %} max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
 <p class="muted" data-done{% if not state.total or state.pending %} hidden{% endif %}>✓ {{ _("Everything is hashed:") }} <span data-bind="total">{{ state.total }}</span> {{ _("files") }}</p>
-<p data-hashing{% if not state.pending %} hidden{% endif %}><span data-bind="hashed">{{ state.hashed }}</span> / <span data-bind="total">{{ state.total }}</span> {{ _("files hashed") }} ·
+<p data-hashing{% if not state.pending %} hidden{% endif %}><span class="pill wait live">{{ _("running") }}</span> <span data-bind="hashed">{{ state.hashed }}</span> / <span data-bind="total">{{ state.total }}</span> {{ _("files hashed") }} ·
   <span data-bind="pending_size_text">{{ state.pending_bytes | size }}</span> {{ _("to go") }} ·
   {{ _("rate") }} <span data-bind="rate_text">{{ (state.rate | size) ~ "/s" if state.rate else "–" }}</span> ·
   {{ _("time left") }} <span data-bind="eta_text">–</span></p>

@@ -32,6 +32,7 @@
   </nav>
   {% endif %}
   <div class="tools">
+    {% if session %}<span class="livestate" data-livestate data-on="{{ _('live') }}" data-off="{{ _('reconnecting…') }}" role="status" hidden><span class="txt">{{ _("live") }}</span></span>{% endif %}
     <details class="langmenu" data-menu>
       <summary aria-label="{{ _('Language') }}" title="{{ _('Language') }}"><span class="flag" aria-hidden="true">{{ lang_flag }}</span><span class="lc">{{ lang_code }}</span></summary>
       <form method="post" action="/admin/lang" class="langs" aria-label="{{ _('Language') }}">

@@ -344,3 +344,47 @@ details.convert form{position:absolute;right:0;top:calc(100% + .4rem);z-index:10
 nav a .dot{margin-left:.35rem}
 .jobprogress{display:flex;align-items:center;gap:.5rem}.jobprogress progress{flex:1;min-width:6rem}
 .estimate strong{color:var(--snow)}
+
+/* -- live and motion: the header says whether the pages follow the server; what is going on breathes, what changed
+   lights up once, the page settles in. Everything that moves stays still for who asked the system for less motion. */
+.livestate{display:inline-flex;align-items:center;gap:.4rem;height:2rem;padding:0 .65rem;border:1px solid color-mix(in srgb,var(--aurora) 35%,transparent);border-radius:999px;font:500 .74rem var(--mono);color:var(--aurora);white-space:nowrap;--pulse:var(--aurora)}
+.livestate::before{content:"";flex:none;width:.5rem;height:.5rem;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.livestate.down{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.livestate[hidden]{display:none}
+@media (max-width:40rem){.livestate{width:2rem;padding:0;justify-content:center}.livestate .txt{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}}
+.pill.live.ok{--pulse:var(--aurora)}.pill.live.wait{--pulse:var(--warn)}.pill.live.bad{--pulse:var(--danger)}
+.beat{display:inline-block;width:.5rem;height:.5rem;margin-right:.5rem;border-radius:50%;background:var(--aurora);box-shadow:0 0 8px var(--aurora);vertical-align:.08em;--pulse:var(--aurora)}
+td.daybar{width:24%;min-width:6rem}
+td.daybar progress{height:.55rem;display:block}
+progress.mini{display:block;width:100%;max-width:7rem;height:.35rem;margin-top:.35rem}
+progress.working::-webkit-progress-value{background:repeating-linear-gradient(-45deg,rgb(255 255 255 / .22) 0 .45rem,transparent .45rem .9rem),var(--grad);background-size:1.27rem 100%,100% 100%}
+progress.working::-moz-progress-bar{background:repeating-linear-gradient(-45deg,rgb(255 255 255 / .22) 0 .45rem,transparent .45rem .9rem),var(--grad);background-size:1.27rem 100%,100% 100%}
+button[aria-busy="true"]:not(.link)::after{content:"";display:inline-block;width:.8em;height:.8em;margin-left:.5em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-.1em}
+@keyframes lb-rise{from{opacity:0;transform:translateY(8px)}}
+@keyframes lb-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pulse) 60%,transparent)}70%,100%{box-shadow:0 0 0 .5rem transparent}}
+@keyframes lb-blink{50%{opacity:.35}}
+@keyframes lb-flash{from{background-color:color-mix(in srgb,var(--aurora) 24%,transparent)}to{background-color:transparent}}
+@keyframes lb-pop{40%{transform:scale(1.08)}}
+@keyframes lb-stripes{to{background-position:1.27rem 0,0 0}}
+@keyframes lb-spin{to{transform:rotate(1turn)}}
+@keyframes lb-glow{50%{border-color:color-mix(in srgb,var(--aurora) 45%,var(--line))}}
+@media (prefers-reduced-motion:no-preference){
+  main>*{animation:lb-rise .45s cubic-bezier(.2,.7,.2,1) backwards}
+  main>:nth-child(2){animation-delay:.03s}main>:nth-child(3){animation-delay:.06s}main>:nth-child(4){animation-delay:.09s}
+  main>:nth-child(5){animation-delay:.12s}main>:nth-child(6){animation-delay:.15s}main>:nth-child(n+7){animation-delay:.18s}
+  .cards>*{animation:lb-rise .45s cubic-bezier(.2,.7,.2,1) backwards}
+  .cards>:nth-child(2){animation-delay:.05s}.cards>:nth-child(3){animation-delay:.1s}.cards>:nth-child(n+4){animation-delay:.15s}
+  .livestate:not(.down)::before,.pill.live::before,.beat{animation:lb-pulse 1.8s ease-out infinite}
+  .livestate.down::before{animation:lb-blink 1s ease-in-out infinite}
+  .card.working{animation:lb-glow 2.4s ease-in-out infinite}
+  progress.working::-webkit-progress-value{animation:lb-stripes .9s linear infinite}
+  progress.working::-moz-progress-bar{animation:lb-stripes .9s linear infinite}
+  .flash{animation:lb-flash 1.6s ease-out}
+  .pop{animation:lb-pop .45s ease-out}span.pop:not(.n){display:inline-block}.tile .n.pop{display:block;transform-origin:left center}
+  tr.enter{animation:lb-rise .4s ease-out backwards,lb-flash 1.8s ease-out}
+  button[aria-busy="true"]:not(.link)::after{animation:lb-spin .7s linear infinite}
+  .toast{animation:lb-rise .35s cubic-bezier(.2,.7,.2,1) backwards}
+  dialog.ask[open]{animation:lb-rise .2s ease-out}
+  details.fold[open]>:not(summary){animation:lb-rise .25s ease-out backwards}
+  a.tile{transition:border-color .2s,box-shadow .2s,transform .2s}a.tile:hover{transform:translateY(-2px)}
+}
