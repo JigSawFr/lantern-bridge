@@ -36,7 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
     invite.add_argument("--devices", type=int, default=1, help="how many devices may use the code")
     invite.add_argument("--hours", type=int, default=24, help="how long the code is good for")
     invite.add_argument("--admin", action="store_true", help="give the account every scope, administration included")
-    for command in (status, rehash, invite):
+    backup = commands.add_parser("backup", help="write a backup of the settings and the index (the bridge may run)")
+    backup.add_argument("-o", "--output", type=Path, help="the file to write (default: lantern-bridge-backup.zip)")
+    restore = commands.add_parser("restore", help="restore a backup (stop the bridge first)")
+    restore.add_argument("file", type=Path)
+    for command in (status, rehash, invite, backup, restore):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
     return parser
 
@@ -89,6 +93,24 @@ def _inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def _backup(args: argparse.Namespace) -> int:
+    from lantern_bridge import backup
+
+    config = args.config.resolve()
+    try:
+        if args.command == "backup":
+            out = (args.output or Path("lantern-bridge-backup.zip")).resolve()
+            names = backup.make(config.parent, config, out)
+            print(f"{out}: {', '.join(names)}")
+        else:
+            names = backup.restore(args.file, config.parent, config)
+            print(f"restored {', '.join(names)}; what was replaced is kept beside it as .before-restore")
+    except (backup.BackupError, ConfigError, OSError) as error:
+        print(f"lantern-bridge: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _invite(args: argparse.Namespace) -> int:
     from datetime import UTC, datetime, timedelta
 
@@ -116,6 +138,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _inspect(args)
     if args.command == "invite":
         return _invite(args)
+    if args.command in {"backup", "restore"}:
+        return _backup(args)
     if args.command != "serve":
         build_parser().print_help()
         return 0

@@ -138,6 +138,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **Webhook.** Set an address in *Settings* (or `webhook` in `config.toml`) and the bridge sends it one POST of JSON when scans found changes, at most every ten seconds: `schema` 1, `event` `scan`, the bridge (id, name, version) and, per source, how many files were `added`, `changed` or `removed`. No path and no title. A call that fails is logged and not repeated. A secret the receiver wants goes in the address's path (no credentials in the address).
 
+**Backup.** *Settings › Backup* downloads a zip, and `lantern-bridge backup -o file.zip` writes one (the bridge may run): the settings (`config.toml`, no secret in it: passwords are read from the environment), the index with the hashes already computed and the activity history. Pairings are not in it, so a device pairs again. To restore, stop the bridge and run `lantern-bridge restore file.zip` (in a container, with the file in the `./config` volume: `docker run --rm -v ./config:/config lantern-bridge restore file.zip`); it refuses an archive of a newer schema, and keeps what it replaces beside it as `.before-restore`.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.
