@@ -144,6 +144,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **Disk space.** The overview shows the room left on the volume of each folder, and the health warns when the volume of the state (the index) has less than `low_disk_mb` free (500 MiB by default, *Settings*; it fails below 20 MiB). A folder full of games is not a fault, so a folder's room is shown and not judged.
 
+**Changing the settings safely.** Each save keeps the file it replaces beside it (`config.toml.previous`, one level, same permissions); *Settings › Undo the last change* brings it back, and pressing it again brings the change back. *Try it first*, under *Add a source*, reads a folder or asks a shop for its listing without saving anything, and a refused form keeps what was typed. *Setup guide* (`/admin/start`) walks an empty bridge through its first source, its first read and its first pairing.
+
 **Read-only account.** *Settings › Read-only account* makes a second sign-in for someone who only looks: it opens the overview, the library (with its checks and exports) and the activity, and nothing else. It cannot change a setting, a pairing or a source, take a backup, or read the settings, the logs or the developer page, and every request that is not a page it may read is refused on the server, not only hidden. Removing it closes its sessions at once. The administrator's name and the observer's must differ.
 
 ### 🐳 In a container

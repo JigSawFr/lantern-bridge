@@ -1,18 +1,19 @@
-<form method="post" action="/admin/config/sources" class="card">
+{% set prefill = prefill | default({}) %}<form method="post" action="/admin/config/sources" class="card">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
-  {% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
+  {% if back or prefill.back %}<input type="hidden" name="back" value="{{ back or prefill.back }}">{% endif %}
   <h2>{{ _("Add a source") }}</h2>
   <div class="form-grid">
     <label>{{ _("Kind") }} <select name="kind" data-kind>
-      <option value="folder">{{ _("folder: a folder of games on this machine") }}</option>
-      <option value="tinfoil">{{ _("tinfoil: any Tinfoil shop") }}</option>
-      <option value="ownfoil">Ownfoil</option>
-      <option value="aerofoil">AeroFoil</option></select></label>
-    <label>{{ _("Name (letters, digits, - and _)") }} <input name="id" maxlength="32" required pattern="[A-Za-z0-9_-]+"></label>
-    <label>{{ _("Folder, or address of the shop") }} <input name="where" maxlength="500" required placeholder="/games" data-ph-folder="/games" data-ph-shop="http://shop:8465/"></label>
-    <label data-shop-only>{{ _("Shop user (optional)") }} <input name="user" maxlength="128"></label>
-    <label data-shop-only>{{ _("Variable holding its password") }} <input name="password_env" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
+      <option value="folder"{% if prefill.kind == "folder" %} selected{% endif %}>{{ _("folder: a folder of games on this machine") }}</option>
+      <option value="tinfoil"{% if prefill.kind == "tinfoil" %} selected{% endif %}>{{ _("tinfoil: any Tinfoil shop") }}</option>
+      <option value="ownfoil"{% if prefill.kind == "ownfoil" %} selected{% endif %}>Ownfoil</option>
+      <option value="aerofoil"{% if prefill.kind == "aerofoil" %} selected{% endif %}>AeroFoil</option></select></label>
+    <label>{{ _("Name (letters, digits, - and _)") }} <input name="id" value="{{ prefill.id }}" maxlength="32" required pattern="[A-Za-z0-9_-]+"></label>
+    <label>{{ _("Folder, or address of the shop") }} <input name="where" value="{{ prefill.where }}" maxlength="500" required placeholder="/games" data-ph-folder="/games" data-ph-shop="http://shop:8465/"></label>
+    <label data-shop-only>{{ _("Shop user (optional)") }} <input name="user" value="{{ prefill.user }}" maxlength="128"></label>
+    <label data-shop-only>{{ _("Variable holding its password") }} <input name="password_env" value="{{ prefill.password_env }}" maxlength="128" pattern="[A-Za-z_][A-Za-z0-9_]*"></label>
   </div>
   <p class="dim" data-shop-only>{{ _("A password is never typed here: name the environment variable of the bridge that holds it.") }}</p>
-  <button>{{ _("Add") }}</button>
+  <div class="row"><button>{{ _("Add") }}</button> <button class="ghost" formaction="/admin/config/sources/probe" >{{ _("Try it first") }}</button></div>
+  <p class="dim small">{{ _("Try it first reads the source without saving anything.") }}</p>
 </form>

@@ -10,6 +10,15 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "The previous settings are back. Restart the bridge to apply them.": "Les réglages précédents sont revenus. Redémarrez le pont pour les appliquer.",
+    "There is nothing to undo.": "Il n'y a rien à annuler.",
+    "Try it first": "Essayer d'abord",
+    "Try it first reads the source without saving anything.": "« Essayer d'abord » lit la source sans rien enregistrer.",
+    "Bring back the settings from before the last change?": "Remettre les réglages d'avant le dernier changement ?",
+    "Undo the last change": "Annuler le dernier changement",
+    "New source": "Nouvelle source",
+    "this kind of source is not supported": "ce type de source n'est pas pris en charge",
+    "a variable's name is letters, digits and _": "le nom d'une variable est fait de lettres, de chiffres et de _",
     "Restart the bridge to apply the source you added.": "Redémarrez le pont pour appliquer la source ajoutée.",
     "Start the setup": "Démarrer la configuration",
     "No device is paired yet": "Aucun appareil n'est encore appairé",
