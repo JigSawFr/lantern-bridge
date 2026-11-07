@@ -335,26 +335,26 @@ class Compressor:
             return
         work = source.parent / f"{WORK}{job.id}"
         work.mkdir(exist_ok=True)
+        stopped: tuple[str, str] | None = None  # said only once the work folder is gone: a job seen as over is over
         try:
             ok, why = self._tool(job, tool, source, work)
-            if job.cancel:
-                self._finish(job, "cancelled", "Cancelled.")
-                return
-            if not ok:
-                self._finish(job, "failed", why)
-                return
             made = sorted(p for p in work.iterdir() if p.is_file() and p.suffix.lower() == f".{job.target}")
-            if len(made) != 1 or made[0].stat().st_size == 0:
-                self._finish(job, "failed", "The tool made no file.")
-                return
-            final = source.with_name(made[0].name)
-            if final.exists():
-                self._finish(job, "failed", "A file of that name is already there: nothing was replaced.")
-                return
-            job.size_out = made[0].stat().st_size
-            os.replace(made[0], final)  # the same volume: a rename
+            if job.cancel:
+                stopped = ("cancelled", "Cancelled.")
+            elif not ok:
+                stopped = ("failed", why)
+            elif len(made) != 1 or made[0].stat().st_size == 0:
+                stopped = ("failed", "The tool made no file.")
+            elif (final := source.with_name(made[0].name)).exists():
+                stopped = ("failed", "A file of that name is already there: nothing was replaced.")
+            else:
+                job.size_out = made[0].stat().st_size
+                os.replace(made[0], final)  # the same volume: a rename
         finally:
             shutil.rmtree(work, ignore_errors=True)
+        if stopped is not None:
+            self._finish(job, *stopped)
+            return
         removed = False
         if job.delete_original:
             try:
@@ -376,6 +376,9 @@ class Compressor:
         command = [*argv(tool), "-C" if job.action == "compress" else "-D", "--machine-readable"]
         command += ["--keys", str(self.state_dir)]
         command += ["-o", str(work), "-m", "1"]
+        threads = self.runtime.config.compress_threads if self.runtime is not None else 0
+        if threads > 0:
+            command += ["-t", str(threads)]
         if job.action == "compress":
             command += ["-l", str(job.level), "-B" if job.block else "-S"]
         if job.delete_original:

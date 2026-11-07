@@ -543,5 +543,12 @@
  "This browser cannot show alerts.": "Este navegador não consegue mostrar alertas.",
  "Alerts on this device": "Alertas neste dispositivo",
  "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "As páginas podem ser instaladas como aplicação (a partir do menu do navegador) e mostram um alerta quando algo precisa de atenção: uma fonte que não responde, um dispositivo à espera de emparelhar, uma conversão falhada. Os alertas chegam enquanto as páginas estão abertas, num separador ou na aplicação; nada é enviado através de terceiros.",
- "Turn alerts on": "Ativar os alertas"
+ "Turn alerts on": "Ativar os alertas",
+ "Speed": "Velocidade",
+ "Files hashed at once (0: automatic)": "Ficheiros processados em simultâneo (0: automático)",
+ "The hashing uses the processor's own SHA-256 instructions when it has them. Several files at once use several cores; on a spinning disk or a network share, one or two is kinder.": "O cálculo do hash usa as instruções SHA-256 do próprio processador, quando existem. Vários ficheiros em simultâneo usam vários núcleos; num disco rotativo ou numa partilha de rede, um ou dois é mais prudente.",
+ "Threads for a conversion (0: automatic)": "Threads por conversão (0: automático)",
+ "nsz compresses on the processor, on every core by default: lower this to keep some for the rest. There is no graphics card path in the tool.": "O nsz comprime no processador, por predefinição em todos os núcleos: reduza este valor para guardar alguns para o resto. A ferramenta não tem nenhum caminho pela placa gráfica.",
+ "The settings file cannot be read.": "Não é possível ler o ficheiro de definições.",
+ "the threads are a number, 0 for automatic": "as threads são um número, 0 para automático"
 }

@@ -145,6 +145,7 @@ def test_a_failed_conversion_leaves_the_folder_as_it_was(
     _convert(client, UPDATE, delete="on")
     job = _wait(runtime.compressor, "failed")
     assert job.message == "keys are wrong" and (games / UPDATE).exists()
+    # a job seen as failed is over: its work folder is already gone (the state is said after the clean-up)
     assert sorted(p.name for p in games.iterdir()) == sorted([BASE, UPDATE, OTHER])  # nothing new, no work folder
     monkeypatch.delenv("FAKE_NSZ")
     (games / UPDATE.replace(".nsp", ".nsz")).write_bytes(b"already")

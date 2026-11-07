@@ -543,5 +543,12 @@
  "This browser cannot show alerts.": "此瀏覽器無法顯示通知。",
  "Alerts on this device": "此裝置上的通知",
  "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "這些頁面可以安裝為應用程式（透過瀏覽器選單），並會在有需要查看的情況時顯示通知：來源沒有回應、裝置正在等待配對、轉換失敗。通知會在頁面開啟期間（在分頁或應用程式中）送達；不會透過第三方傳送任何內容。",
- "Turn alerts on": "開啟通知"
+ "Turn alerts on": "開啟通知",
+ "Speed": "速度",
+ "Files hashed at once (0: automatic)": "同時計算雜湊的檔案數(0:自動)",
+ "The hashing uses the processor's own SHA-256 instructions when it has them. Several files at once use several cores; on a spinning disk or a network share, one or two is kinder.": "處理器內建 SHA-256 指令時,雜湊計算會使用它。同時處理多個檔案會佔用多個核心;對於機械硬碟或網路共用,同時處理一兩個檔案較為合適。",
+ "Threads for a conversion (0: automatic)": "每次轉換的執行緒數(0:自動)",
+ "nsz compresses on the processor, on every core by default: lower this to keep some for the rest. There is no graphics card path in the tool.": "nsz 在處理器上壓縮,預設使用所有核心:調低此值可為其他工作保留一些核心。此工具不支援使用顯示卡。",
+ "The settings file cannot be read.": "無法讀取設定檔。",
+ "the threads are a number, 0 for automatic": "執行緒數為數字,0 表示自動"
 }

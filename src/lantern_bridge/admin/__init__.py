@@ -67,6 +67,7 @@ from lantern_bridge.config import (
     parse_webhook,
     save,
 )
+from lantern_bridge.hashing import sha_instructions, workers
 from lantern_bridge.history import MAX_EVENTS
 from lantern_bridge.logs import LEVELS, LogRing
 from lantern_bridge.runtime import Runtime
@@ -540,6 +541,11 @@ class Admin:
             + (" · developer mode" if config.developer else ""),
             f"Library: {state['titles']} titles, {state['apps']} apps"
             f" · {state['hashed']} of {state['total']} files hashed",
+            f"Processor: {os.cpu_count() or '?'} cores · SHA-256 on {sha_instructions()}"
+            f" · {workers(config.hash_threads)} file(s) hashed at once"
+            f"{'' if config.hash_threads else ' (automatic)'}"
+            f" · conversions on {config.compress_threads or 'every core'}"
+            f"{'' if config.compress_threads else ' (automatic)'}",
             "",
             f"Sources ({len(config.sources)}):",
         ]
@@ -1780,6 +1786,11 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 config.low_disk_mb = int(f.get("low_disk_mb", "500") or 500)
             except ValueError as error:
                 raise ConfigError("the disk limit is a number of megabytes") from error
+            try:
+                config.hash_threads = int(f.get("hash_threads", "0") or 0)
+                config.compress_threads = int(f.get("compress_threads", "0") or 0)
+            except ValueError as error:
+                raise ConfigError("the threads are a number, 0 for automatic") from error
             config.webhook = parse_webhook(f.get("webhook", "").strip())
             config.notify = parse_webhook(f.get("notify", "").strip(), "notify")
             return None
@@ -1795,7 +1806,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         try:
             text = admin.file().to_toml()
         except ConfigError as error:
-            return Response(str(error), 500, headers=_HEADERS)
+            log.warning("the settings could not be exported: %s", error)
+            return Response("The settings file cannot be read.", 500, headers=_HEADERS)
         return Response(
             text,
             media_type="application/toml",
