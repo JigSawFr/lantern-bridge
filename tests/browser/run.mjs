@@ -174,6 +174,21 @@ await test("settings: one bar saves every edited card, and a box finds a setting
   assert.equal(page.url(), before, "a refused value stays on the page");
 });
 
+for (const [scheme, expected] of [["light", "light"], ["dark", "dark"]]) {
+  await test(`automatic theme follows a ${scheme} browser`, { width: 1200, height: 800 }, async (page) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto(`${BASE}/`);
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), expected);
+    const other = scheme === "light" ? "dark" : "light";
+    await page.emulateMedia({ colorScheme: other });
+    await page.waitForFunction((t) => document.documentElement.dataset.theme === t, other); // and when it changes
+    await page.getByRole("button", { name: scheme === "light" ? "Dark theme" : "Light theme" }).click();
+    await page.waitForLoadState();
+    await page.emulateMedia({ colorScheme: scheme });
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), other, "a choice wins over the browser");
+  });
+}
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);
