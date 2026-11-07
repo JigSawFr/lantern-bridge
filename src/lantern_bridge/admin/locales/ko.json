@@ -421,5 +421,10 @@
  "simple requests, apart": "simple 요청 (별도)",
  "Health checks, browsers and scanners: not counted above.": "상태 점검, 브라우저, 스캐너: 위 집계에 포함되지 않습니다.",
  "Health checks, browsers and scanners: not counted in the activity.": "상태 점검, 브라우저, 스캐너: 활동 집계에 포함되지 않습니다.",
- "simple": "simple"
+ "simple": "simple",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "설정 파일이 변경되었지만 적용되지 않았습니다. 브리지는 현재 설정으로 계속 실행됩니다.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "이 페이지는 구성 파일을 기록합니다. 브리지는 변경 사항이 저장되는 즉시, 또는 파일을 직접 편집할 때 적용합니다.",
+ "Unsaved changes.": "저장되지 않은 변경 사항.",
+ "card(s).": "카드.",
+ "The source you added was not applied: see the note on the settings page.": "추가한 소스가 적용되지 않았습니다. 설정 페이지의 안내를 확인하세요."
 }

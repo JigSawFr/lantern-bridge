@@ -12,5 +12,6 @@
  "Add": "Agregir",
  "Nothing to hash yet: add a source that holds games, then scan.": "Nada que procesar todavía: agrega una fuente que contenga juegos y analice.",
  "The server wrote a one-time code in its log (administrator setup code). Enter it here with the name and the password you want.": "El servidor ha escrito un código de un solo uso en su registro (código de configuración del administrador). Ingréscalo aquí con el nombre y la contraseña que desee.",
- "Source added.": "Fuente agregida."
+ "Source added.": "Fuente agregida.",
+ "The source you added was not applied: see the note on the settings page.": "La fuente que agregó no se aplicó: consulte la nota en la página de ajustes."
 }

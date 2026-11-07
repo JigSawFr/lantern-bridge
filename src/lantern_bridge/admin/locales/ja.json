@@ -421,5 +421,10 @@
  "simple requests, apart": "simple リクエスト（別集計）",
  "Health checks, browsers and scanners: not counted above.": "ヘルスチェック、ブラウザー、スキャナー: 上には含まれません。",
  "Health checks, browsers and scanners: not counted in the activity.": "ヘルスチェック、ブラウザー、スキャナー: アクティビティには含まれません。",
- "simple": "simple"
+ "simple": "simple",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "設定ファイルが変更されましたが、適用されませんでした。ブリッジは現在の設定のまま動作し続けます。",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "これらのページは設定ファイルに書き込みます。ブリッジは、変更が保存されるとすぐに、またはファイルが手動で編集されたときに適用します。",
+ "Unsaved changes.": "未保存の変更があります。",
+ "card(s).": "カード。",
+ "The source you added was not applied: see the note on the settings page.": "追加したソースは適用されませんでした。設定ページの注記をご確認ください。"
 }

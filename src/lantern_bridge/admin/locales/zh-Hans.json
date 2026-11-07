@@ -421,5 +421,10 @@
  "simple requests, apart": "简单请求，另计",
  "Health checks, browsers and scanners: not counted above.": "健康检查、浏览器和扫描器：不计入上方统计。",
  "Health checks, browsers and scanners: not counted in the activity.": "健康检查、浏览器和扫描器：不计入活动。",
- "simple": "简单"
+ "simple": "简单",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "设置文件已更改但未应用：桥接器仍使用当前的设置运行。",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "这些页面会写入配置文件。桥接器会在更改保存后立即应用，或在文件被手动编辑时应用。",
+ "Unsaved changes.": "有未保存的更改。",
+ "card(s).": "张卡片。",
+ "The source you added was not applied: see the note on the settings page.": "添加的来源未被应用：请查看设置页面上的提示。"
 }

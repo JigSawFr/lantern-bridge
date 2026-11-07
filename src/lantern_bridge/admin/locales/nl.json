@@ -421,5 +421,10 @@
  "simple requests, apart": "eenvoudige verzoeken, apart",
  "Health checks, browsers and scanners: not counted above.": "Health checks, browsers en scanners: hierboven niet meegeteld.",
  "Health checks, browsers and scanners: not counted in the activity.": "Health checks, browsers en scanners: niet meegeteld in de activiteit.",
- "simple": "eenvoudig"
+ "simple": "eenvoudig",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "Het instellingenbestand is gewijzigd maar niet toegepast: de bridge blijft draaien met de instellingen die hij heeft.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Deze pagina's schrijven het configuratiebestand. De bridge past een wijziging toe zodra die is opgeslagen, of wanneer het bestand met de hand is bewerkt.",
+ "Unsaved changes.": "Niet-opgeslagen wijzigingen.",
+ "card(s).": "kaart(en).",
+ "The source you added was not applied: see the note on the settings page.": "De toegevoegde bron is niet toegepast: zie de melding op de instellingenpagina."
 }

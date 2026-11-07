@@ -421,5 +421,10 @@
  "simple requests, apart": "richieste semplici, a parte",
  "Health checks, browsers and scanners: not counted above.": "Controlli di salute, browser e scanner: non conteggiati sopra.",
  "Health checks, browsers and scanners: not counted in the activity.": "Controlli di salute, browser e scanner: non conteggiati nell'attività.",
- "simple": "semplice"
+ "simple": "semplice",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "Il file delle impostazioni è cambiato ma non è stato applicato: il bridge continua a funzionare con le impostazioni che ha.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Queste pagine scrivono il file di configurazione. Il bridge applica una modifica non appena viene salvata, o quando il file viene modificato a mano.",
+ "Unsaved changes.": "Modifiche non salvate.",
+ "card(s).": "riquadro/i.",
+ "The source you added was not applied: see the note on the settings page.": "La sorgente aggiunta non è stata applicata: vedere la nota nella pagina delle impostazioni."
 }

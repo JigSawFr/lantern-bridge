@@ -421,5 +421,10 @@
  "simple requests, apart": "простые запросы отдельно",
  "Health checks, browsers and scanners: not counted above.": "Проверки работоспособности, браузеры и сканеры: не учитываются выше.",
  "Health checks, browsers and scanners: not counted in the activity.": "Проверки работоспособности, браузеры и сканеры: не учитываются в активности.",
- "simple": "простые"
+ "simple": "простые",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "Файл настроек изменился, но не был применён: шлюз продолжает работать с прежними настройками.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Эти страницы записывают файл конфигурации. Шлюз применяет изменение сразу после сохранения или когда файл правят вручную.",
+ "Unsaved changes.": "Несохранённые изменения.",
+ "card(s).": "карточка(и).",
+ "The source you added was not applied: see the note on the settings page.": "Добавленный источник не был применён: см. примечание на странице настроек."
 }

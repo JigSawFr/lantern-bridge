@@ -421,5 +421,10 @@
  "simple requests, apart": "pedidos simples, à parte",
  "Health checks, browsers and scanners: not counted above.": "Verificações de estado, navegadores e scanners: não contabilizados acima.",
  "Health checks, browsers and scanners: not counted in the activity.": "Verificações de estado, navegadores e scanners: não contabilizados na atividade.",
- "simple": "simples"
+ "simple": "simples",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "O ficheiro de definições mudou, mas não foi aplicado: a ponte continua a funcionar com as definições que tem.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Estas páginas escrevem o ficheiro de configuração. A ponte aplica uma alteração assim que é guardada, ou quando o ficheiro é editado à mão.",
+ "Unsaved changes.": "Alterações por guardar.",
+ "card(s).": "cartão(ões).",
+ "The source you added was not applied: see the note on the settings page.": "A fonte que adicionou não foi aplicada: veja a nota na página de definições."
 }

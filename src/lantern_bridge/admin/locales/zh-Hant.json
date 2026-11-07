@@ -421,5 +421,10 @@
  "simple requests, apart": "簡單請求，另計",
  "Health checks, browsers and scanners: not counted above.": "健康檢查、瀏覽器與掃描器：不計入上方統計。",
  "Health checks, browsers and scanners: not counted in the activity.": "健康檢查、瀏覽器與掃描器：不計入活動。",
- "simple": "簡單"
+ "simple": "簡單",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "設定檔已變更但未套用：橋接器仍以目前的設定執行。",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "這些頁面會寫入設定檔。橋接器會在變更儲存後立即套用，或在檔案被手動編輯時套用。",
+ "Unsaved changes.": "有未儲存的變更。",
+ "card(s).": "張卡片。",
+ "The source you added was not applied: see the note on the settings page.": "新增的來源未被套用：請查看設定頁面上的提示。"
 }

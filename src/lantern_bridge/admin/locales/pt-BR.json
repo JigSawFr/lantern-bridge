@@ -149,5 +149,9 @@
  "Only an AeroFoil source has logins.": "Só uma fonte AeroFoil tem logins.",
  "The shop answers; it lists files.": "A loja responde; lista arquivos.",
  "The shop answers; it lists no file.": "A loja responde; não lista nenhum arquivo.",
- "simple requests, apart": "solicitações simples, à parte"
+ "simple requests, apart": "solicitações simples, à parte",
+ "The settings file changed but was not applied: the bridge keeps running with the settings it has.": "O arquivo de definições mudou, mas não foi aplicado: a ponte continua funcionando com as definições que tem.",
+ "These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.": "Estas páginas gravam o arquivo de configuração. A ponte aplica uma alteração assim que ela é salva, ou quando o arquivo é editado à mão.",
+ "Unsaved changes.": "Alterações não salvas.",
+ "The source you added was not applied: see the note on the settings page.": "A fonte que você adicionou não foi aplicada: veja a nota na página de definições."
 }
