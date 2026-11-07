@@ -30,7 +30,7 @@
   {% endif %}
   <div class="tools">
     <details class="langmenu" data-menu>
-      <summary aria-label="{{ _('Language') }}" title="{{ _('Language') }}"><span class="flag" aria-hidden="true">{{ lang_flag }}</span><span class="code">{{ lang_code }}</span></summary>
+      <summary aria-label="{{ _('Language') }}" title="{{ _('Language') }}"><span class="flag" aria-hidden="true">{{ lang_flag }}</span><span class="lc">{{ lang_code }}</span></summary>
       <form method="post" action="/admin/lang" class="langs" aria-label="{{ _('Language') }}">
         <input type="hidden" name="next" value="{{ here }}">
         {% for code, name, flag in languages %}<button name="lang" value="{{ code }}" lang="{{ code }}"{% if code == lang %} aria-current="true"{% endif %}><span class="flag" aria-hidden="true">{{ flag }}</span>{{ name }}</button>{% endfor %}
