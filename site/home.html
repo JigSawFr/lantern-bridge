@@ -55,6 +55,47 @@ uv run lantern-bridge serve --port 8080</code></pre>
     <p class="note">{{bridge_run_note}}</p>
   </section>
 
+  <section class="section" id="generator" hidden>
+    <h2>{{gen_title}}</h2>
+    <p class="section-lede">{{gen_lede}}</p>
+    <form class="gen" autocomplete="off">
+      <div class="gen-grid">
+        <label class="gen-field"><span>{{gen_name}}</span><input name="name" type="text" value="Lantern Bridge" maxlength="60"></label>
+        <label class="gen-field"><span>{{gen_port}}</span><input name="port" type="number" value="8080" min="1" max="65535" inputmode="numeric"></label>
+        <label class="gen-field gen-wide"><span>{{gen_games}}</span><input name="games" type="text" value="/srv/games" spellcheck="false"></label>
+      </div>
+      <fieldset class="gen-shops">
+        <legend>{{gen_shops}}</legend>
+        <div class="gen-shop" data-shop="tinfoil">
+          <label class="gen-check"><input type="checkbox" name="use-tinfoil"> <span>{{bridge_src_tinfoil_t}}</span></label>
+          <div class="gen-more" hidden>
+            <label class="gen-field"><span>{{gen_url}}</span><input name="url-tinfoil" type="url" placeholder="http://192.168.1.20:8000" spellcheck="false"></label>
+            <label class="gen-field"><span>{{gen_user}}</span><input name="user-tinfoil" type="text" spellcheck="false"></label>
+          </div>
+        </div>
+        <div class="gen-shop" data-shop="ownfoil">
+          <label class="gen-check"><input type="checkbox" name="use-ownfoil"> <span>{{bridge_src_ownfoil_t}}</span></label>
+          <div class="gen-more" hidden>
+            <label class="gen-field"><span>{{gen_url}}</span><input name="url-ownfoil" type="url" placeholder="http://192.168.1.20:8465" spellcheck="false"></label>
+            <label class="gen-field"><span>{{gen_user}}</span><input name="user-ownfoil" type="text" spellcheck="false"></label>
+          </div>
+        </div>
+        <div class="gen-shop" data-shop="aerofoil">
+          <label class="gen-check"><input type="checkbox" name="use-aerofoil"> <span>{{bridge_src_aerofoil_t}}</span></label>
+          <div class="gen-more" hidden>
+            <label class="gen-field"><span>{{gen_url}}</span><input name="url-aerofoil" type="url" placeholder="http://192.168.1.20:5000" spellcheck="false"></label>
+            <label class="gen-field"><span>{{gen_user}}</span><input name="user-aerofoil" type="text" spellcheck="false"></label>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+    <div class="gen-out">
+      <div><h3>{{gen_compose}}</h3><pre tabindex="0"><code class="language-yaml"></code></pre></div>
+      <div><h3>{{gen_config}}</h3><pre tabindex="0"><code class="language-toml"></code></pre></div>
+    </div>
+    <p class="note">{{gen_note}}</p>
+  </section>
+
   <section class="section" id="trust">
     <h2>{{bridge_trust_title}}</h2>
     <ul class="cards cards-small trust">

@@ -71,5 +71,16 @@
   "lost_title": "迷失在夜色中",
   "lost_text": "此页面不存在，或已不存在。",
   "lost_back": "返回首页",
-  "lost_page_title": "找不到页面 · Lantern Bridge"
+  "lost_page_title": "找不到页面 · Lantern Bridge",
+  "gen_title": "生成你的配置",
+  "gen_lede": "填入你已有的信息：页面会写出可复制的 docker-compose.yml 和 config.toml。内容不会离开你的浏览器，密码也不会写进文件：桥接器从环境变量读取每个密码。",
+  "gen_name": "设备看到的名称",
+  "gen_port": "端口",
+  "gen_games": "本机的游戏文件夹",
+  "gen_shops": "要读取的商店",
+  "gen_url": "地址",
+  "gen_user": "用户",
+  "gen_compose": "docker-compose.yml",
+  "gen_config": "config.toml",
+  "gen_note": "启动容器前，请在 compose 文件指明的环境变量中设置每个密码。"
 }

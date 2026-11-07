@@ -902,3 +902,23 @@ pre code .tk-k { color: #7cc4ff; }
 .lost { padding-block: clamp(64px, 12vw, 140px); display: grid; gap: 18px; justify-items: start; }
 .lost h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); font-weight: 600; letter-spacing: -0.03em; }
 .lost p { color: var(--mist); max-width: 50ch; }
+
+/* The configuration writer (config.js): a few fields, two files to copy. */
+#generator[hidden] { display: none; }
+.gen { margin-top: 20px; display: grid; gap: 16px; }
+.gen-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px 16px; }
+.gen-wide { grid-column: 1 / -1; }
+@media (max-width: 600px) { .gen-grid { grid-template-columns: minmax(0, 1fr); } }
+.gen-field { display: grid; gap: 4px; color: var(--mist); font-size: 0.875rem; }
+.gen-field input[type="text"], .gen-field input[type="url"], .gen-field input[type="number"] { min-height: 44px; padding: 0 12px; border: 1px solid var(--night-line); border-radius: 10px; background: rgb(14 26 51 / 0.6); color: var(--snow); font: inherit; font-size: 1rem; }
+.gen-field input:focus-visible, .gen-check input:focus-visible { outline: 2px solid var(--aurora); outline-offset: 2px; }
+.gen-shops { margin: 0; padding: 12px 16px; border: 1px solid var(--night-line); border-radius: 12px; display: grid; gap: 8px; }
+.gen-shops legend { padding: 0 6px; color: var(--snow); font: 600 1.0625rem/1.4 var(--display); }
+.gen-check { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--snow); cursor: pointer; }
+.gen-check input { width: 20px; height: 20px; accent-color: var(--ice); }
+.gen-more { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px 16px; padding: 0 0 8px 30px; }
+.gen-more[hidden] { display: none; }
+@media (max-width: 600px) { .gen-more { grid-template-columns: minmax(0, 1fr); padding-left: 0; } }
+.gen-out { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 32px; margin-top: 20px; }
+@media (max-width: 900px) { .gen-out { grid-template-columns: minmax(0, 1fr); } }
+.gen-out h3 { margin: 0 0 8px; color: var(--snow); font: 600 1.0625rem/1.4 var(--display); }

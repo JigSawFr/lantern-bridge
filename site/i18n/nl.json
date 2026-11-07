@@ -71,5 +71,16 @@
   "lost_title": "Verdwaald in de nacht",
   "lost_text": "Deze pagina bestaat niet, of niet meer.",
   "lost_back": "Terug naar de startpagina",
-  "lost_page_title": "Pagina niet gevonden · Lantern Bridge"
+  "lost_page_title": "Pagina niet gevonden · Lantern Bridge",
+  "gen_title": "Schrijf je configuratie",
+  "gen_lede": "Vul in wat je hebt: de pagina schrijft een docker-compose.yml en een config.toml om te kopiëren. Niets verlaat je browser en geen wachtwoord komt in de bestanden: de bridge leest elk uit een omgevingsvariabele.",
+  "gen_name": "Naam die apparaten zien",
+  "gen_port": "Poort",
+  "gen_games": "Map met games op deze machine",
+  "gen_shops": "Shops om te lezen",
+  "gen_url": "Adres",
+  "gen_user": "Gebruiker",
+  "gen_compose": "docker-compose.yml",
+  "gen_config": "config.toml",
+  "gen_note": "Zet elk wachtwoord in de omgevingsvariabele die in het compose-bestand staat voordat je de container start."
 }
