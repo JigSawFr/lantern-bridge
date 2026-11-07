@@ -591,6 +591,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         now = time.monotonic()
         days = admin.runtime.history.days(14)
         return {
+            "changes": list(admin.runtime.stats.changes)[:30],
             "days": days,
             "days_max": max((d.sent for d in days), default=0),
             "transfers": transfers,

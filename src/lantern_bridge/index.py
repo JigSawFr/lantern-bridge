@@ -63,6 +63,13 @@ class SyncResult:
     added: int
     changed: int
     removed: int
+    #: The paths behind the counts, kept for the pages (`NAMED` of each kind at most).
+    added_paths: tuple[str, ...] = ()
+    changed_paths: tuple[str, ...] = ()
+    removed_paths: tuple[str, ...] = ()
+
+
+NAMED = 25
 
 
 class Index:
@@ -125,7 +132,8 @@ class Index:
         and a file that is gone disappears.
         """
         seen = {entry.path: entry for entry in entries}
-        added = changed = 0
+        added: list[str] = []
+        changed: list[str] = []
         with self._transaction() as db:
             known = {
                 path: (size, mtime)
@@ -139,17 +147,24 @@ class Index:
                         "INSERT INTO files (source, path, size, mtime_ns, priority) VALUES (?, ?, ?, ?, ?)",
                         (source, path, entry.size, entry.mtime_ns, entry.priority),
                     )
-                    added += 1
+                    added.append(path)
                 elif known[path] != (entry.size, entry.mtime_ns):
                     db.execute(
                         "UPDATE files SET size = ?, mtime_ns = ?, sha256 = NULL, priority = ? "
                         "WHERE source = ? AND path = ?",
                         (entry.size, entry.mtime_ns, entry.priority, source, path),
                     )
-                    changed += 1
+                    changed.append(path)
             gone = [(source, path) for path in known if path not in seen]
             db.executemany("DELETE FROM files WHERE source = ? AND path = ?", gone)
-        return SyncResult(added=added, changed=changed, removed=len(gone))
+        return SyncResult(
+            len(added),
+            len(changed),
+            len(gone),
+            tuple(added[:NAMED]),
+            tuple(changed[:NAMED]),
+            tuple(path for _, path in gone[:NAMED]),
+        )
 
     def pending(self, limit: int = 100, sources: Collection[str] | None = None) -> list[Row]:
         """Files to hash: the lowest priority number first, then the smallest; of `sources` when given."""

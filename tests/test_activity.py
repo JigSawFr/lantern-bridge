@@ -140,3 +140,23 @@ def test_a_history_of_a_newer_version_is_left_alone(tmp_path: Path) -> None:
     db.close()
     history = History(path)
     assert not history.usable and history.days(2) == [] and history.machines() == []
+
+
+def test_the_scans_say_what_they_found(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    games = tmp_path / "games"
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    (games / "Night [0100BBBB00000000][v0].nsp").write_bytes(b"night")
+    runtime.cycle(batch=5)
+    (games / "Night [0100BBBB00000000][v0].nsp").unlink()
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base, changed")
+    runtime.cycle(batch=5)
+    seen = [(kind, path) for _, _, kind, path in runtime.stats.changes]
+    assert set(seen[:2]) == {
+        ("changed", "Aurora Quest [0100AAAA00000000][v0].nsp"),
+        ("removed", "Night [0100BBBB00000000][v0].nsp"),
+    }  # the newest scan comes first
+    assert ("added", "Night [0100BBBB00000000][v0].nsp") in seen
+    page = client.get("/admin/activity")
+    assert "Recent changes" in page.text and "Aurora Quest" in page.text and "removed" in page.text
