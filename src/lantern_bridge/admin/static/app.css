@@ -4,7 +4,7 @@
 @font-face{font-family:"Figtree";src:url("/admin/static/figtree.woff2") format("woff2");font-weight:300 900;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url("/admin/static/jetbrains-mono.woff2") format("woff2");font-weight:100 800;font-display:swap}
 :root{
-  --abyss:#0b1424;--night:#0e1a33;--line:#22324f;--snow:#e8eef7;--mist:#a9b6cc;--dusk:#6f7e9c;
+  --abyss:#0b1424;--night:#0e1a33;--line:#22324f;--snow:#e8eef7;--mist:#a9b6cc;--dusk:#7d8cab;
   --aurora:#00ffcc;--ice:#33bbff;--violet:#8a5cff;--danger:#ff8a80;--warn:#ffd166;
   --grad:linear-gradient(100deg,var(--aurora) 0%,var(--ice) 55%,var(--violet) 100%);
   --surface:rgb(14 26 51 / .72);--radius:16px;
@@ -201,3 +201,14 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 .steps li.done{opacity:.8}
 .steps .what{flex:1}
 .steps p{margin:.2rem 0 .6rem}
+
+/* -- contrast and colour modes: the secondary text clears 4.5:1 on every surface (tests/test_a11y.py checks it);
+   more contrast asked for, the secondary text takes the main muted tone and the lines are drawn firmer;
+   forced colours, the system's own are used and every box keeps a border --------------------------------- */
+@media (prefers-contrast:more){:root{--dusk:var(--mist);--line:#5a729b;--snow:#fff}}
+@media (forced-colors:active){
+  .tile,.card,.todo li,.steps li,.assoc li,input,select,button,.button,.pill,.badge{border:1px solid CanvasText}
+  .pill::before{background:CanvasText}
+  a{color:LinkText}
+  :focus-visible{outline:2px solid Highlight}
+}
