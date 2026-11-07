@@ -57,6 +57,17 @@ class Projection:
         """How many apps and how many titles the library offers now."""
         return len(self._shown), len({identity.title_id for _, identity in self._shown.values()})
 
+    def serving(self, row: Row) -> bool:
+        """Is this very file the one that serves its app (not a copy of it in another source)?"""
+        if row.sha256 is None:
+            return False
+        shown = self._shown.get("a_" + row.sha256[:12])
+        return shown is not None and shown[0] == row
+
+    def title(self, title_id: str) -> Title | None:
+        """The sheet the library gives a title now."""
+        return self._titles.get(title_id)
+
     def _rank(self, row: Row) -> tuple[int, int, str]:
         return (row.source not in self.roots, self.order.get(row.source, len(self.order)), row.path)
 

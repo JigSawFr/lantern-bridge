@@ -35,6 +35,7 @@ from lantern_bridge import SPEC_DRAFT, __version__
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
+from lantern_bridge.catalog import search
 from lantern_bridge.config import (
     AerofoilSource,
     Config,
@@ -433,6 +434,53 @@ def mount(app: FastAPI, admin: Admin) -> None:
             log.info("a new pass was requested from the pages")
         admin.runtime.wake()
         return redirect("/", request)
+
+    @router.get("/library")
+    async def library_page(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        q = request.query_params
+        catalog = admin.runtime.browser.catalog()
+        number = q.get("page", "1")
+        found = search(
+            catalog,
+            q=q.get("q", "")[:100],
+            kind=q.get("type", ""),
+            source=q.get("source", ""),
+            state=q.get("state", ""),
+            sort=q.get("sort", "name"),
+            page=int(number) if number.isdigit() else 1,
+        )
+        return admin.page(
+            request,
+            "library.html",
+            session,
+            active="library",
+            found=found,
+            counts=catalog.counts(),
+            sources=[s.id for s in admin.config.sources],
+            f={k: q.get(k, "") for k in ("q", "type", "source", "state", "sort")},
+        )
+
+    @router.get("/library/{title_id}")
+    async def title_page(title_id: str, request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        title = admin.runtime.browser.catalog().titles.get(title_id.upper())
+        if title is None:
+            return admin.page(request, "missing.html", session, status=404, active="library")
+        cheats = [c for c in admin.runtime.projection.library.cheats() if c.title_id.upper() == title.title_id]
+        return admin.page(
+            request,
+            "title.html",
+            session,
+            active="library",
+            title=title,
+            sheet=admin.runtime.projection.title(title.title_id),
+            cheats=cheats,
+        )
 
     @router.get("/pairings")
     async def pairings(request: Request) -> Response:
