@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -227,7 +228,10 @@ def test_the_library_can_be_exported_as_json_and_as_csv(tmp_path: Path) -> None:
 
 def test_columns_sort_both_ways_and_a_tie_goes_by_name(tmp_path: Path) -> None:
     catalog = _catalog(_shelf(tmp_path))
-    names = lambda **kw: [t.name for t in search(catalog, **kw).titles]  # noqa: E731
+
+    def names(**kw: Any) -> list[str]:
+        return [t.name for t in search(catalog, **kw).titles]
+
     assert names(sort="name") == ["Aurora Quest", "Zebra Run"] and names(sort="name", descending=True) == [
         "Zebra Run",
         "Aurora Quest",
