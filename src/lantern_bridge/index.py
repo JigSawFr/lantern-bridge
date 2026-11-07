@@ -210,6 +210,16 @@ class Index:
             ).fetchall()
         return {source: {"hashed": int(done), "pending": int(todo)} for source, done, todo in rows}
 
+    def rehash_files(self, files: Collection[tuple[str, str]]) -> int:
+        """Forget the hash of these files (source, path) and queue them before everything else; returns how many."""
+        done = 0
+        with self._transaction() as db:
+            for source, path in files:
+                done += db.execute(
+                    "UPDATE files SET sha256 = NULL, priority = -1 WHERE source = ? AND path = ?", (source, path)
+                ).rowcount
+        return done
+
     def rehash(self, source: str | None = None) -> int:
         """Forget the hashes of a source (or of all), so they are computed again; returns how many."""
         query = "UPDATE files SET sha256 = NULL WHERE sha256 IS NOT NULL"

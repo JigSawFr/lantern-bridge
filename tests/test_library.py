@@ -85,3 +85,48 @@ def test_the_library_page_is_french_too(tmp_path: Path) -> None:
     client.post("/admin/lang", data={"lang": "fr", "next": "/admin/library"})
     page = client.get("/admin/library")
     assert "Bibliothèque" in page.text and "Mises à jour" in page.text
+
+
+def _post(client: TestClient, url: str, **data: str) -> object:
+    token = client.get("/admin/library/0100AAAA00000000").text.split('name="csrf" value="')[1].split('"')[0]
+    return client.post(url, data={"csrf": token, **data})
+
+
+def test_one_file_can_be_hashed_again_first_in_line(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    before = {f.name: f.sha256 for f in _catalog(client).titles["0100AAAA00000000"].files}
+    reply = _post(client, "/admin/library/0100AAAA00000000/rehash", source="games", path=UPDATE)
+    assert reply.status_code == 200 and "Hashing again" in reply.text  # type: ignore[attr-defined]
+    runtime.browser.forget()
+    files = {f.name: f for f in _catalog(client).titles["0100AAAA00000000"].files}
+    assert files[UPDATE].sha256 is None and files[BASE].sha256 == before[BASE]  # only that file was forgotten
+    assert runtime.index.pending(1)[0].path == UPDATE
+    runtime.cycle(batch=5)
+    runtime.browser.forget()
+    again = {f.name: f for f in _catalog(client).titles["0100AAAA00000000"].files}
+    assert again[UPDATE].sha256 == before[UPDATE] and again[UPDATE].served  # the same bytes, the same hash
+    assert ("games", UPDATE) in runtime.stats.timings
+    assert " s" in client.get("/admin/library/0100AAAA00000000").text
+
+
+def test_a_whole_title_can_be_hashed_again_and_only_its_own_files(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    assert _post(client, "/admin/library/0100AAAA00000000/rehash").status_code == 200  # type: ignore[attr-defined]
+    assert runtime.index.counts() == {"hashed": 1, "pending": 3}  # the other title keeps its hash
+    stranger = _post(client, "/admin/library/0100AAAA00000000/rehash", source="games", path=OTHER)
+    assert stranger.status_code == 404  # type: ignore[attr-defined]
+    assert _post(client, "/admin/library/0100FFFF00000000/rehash").status_code == 404  # type: ignore[attr-defined]
+
+
+def test_the_command_line_hashes_one_title_again(tmp_path: Path, capsys: object) -> None:
+    from lantern_bridge.__main__ import main
+
+    client = _shelf(tmp_path)
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    config = tmp_path / "state" / "config.toml"
+    config.write_text(client.app.state.runtime.config.to_toml())  # type: ignore[attr-defined]
+    runtime.index.close()
+    assert main(["rehash", "--title", "0100bbbb00000000", "--config", str(config)]) == 0
+    assert main(["rehash", "--title", "0100FFFF00000000", "--config", str(config)]) == 1

@@ -62,6 +62,11 @@
     });
   }
 
+  // -- a title with files waiting to be hashed refreshes itself until they are done ---------------------
+  if (document.querySelector("[data-watch-pending]")) {
+    setTimeout(() => { if (!document.querySelector("dialog[open]")) location.reload(); }, 3000);
+  }
+
   // -- logs -------------------------------------------------------------------------------------------
   const log = document.getElementById("log");
   if (log && window.EventSource) {

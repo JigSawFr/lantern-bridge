@@ -12,6 +12,12 @@ COOKIE = "lb_lang"
 FR: dict[str, str] = {
     "Library": "Bibliothèque",
     "DLC": "DLC",
+    "Hashing again: these files go first.": "Nouveau hachage : ces fichiers passent en premier.",
+    "Hash again": "Hacher à nouveau",
+    "Hash all again": "Tout hacher à nouveau",
+    "Hashed in": "Haché en",
+    "Hash this file again?": "Hacher ce fichier à nouveau ?",
+    "The title leaves the library until its files are hashed.": "Le titre quitte la bibliothèque jusqu'à ce que ses fichiers soient hachés.",
     "Everything the bridge knows, from every source: games, their updates and their DLC.": "Tout ce que le pont connaît, de toutes les sources : jeux, mises à jour et DLC.",
     "A name or a title id": "Un nom ou un identifiant de titre",
     "All sources": "Toutes les sources",
