@@ -20,7 +20,7 @@ import httpx
 from lantern_bridge import __version__
 
 if TYPE_CHECKING:
-    from lantern_bridge.index import SyncResult
+    from lantern.server.file_index import SyncResult
 
 log = logging.getLogger("lantern_bridge.webhook")
 

@@ -17,9 +17,9 @@ from typing import Any
 from urllib.parse import unquote, urljoin, urlsplit
 
 import httpx
+from lantern.server.file_index import Entry
 
 from lantern_bridge.identify import identify
-from lantern_bridge.index import Entry
 
 log = logging.getLogger("lantern_bridge.tinfoil")
 

@@ -64,10 +64,10 @@ def test_status_needs_an_index(tmp_path: Path, capsys: pytest.CaptureFixture[str
 
 
 def test_status_and_rehash_follow_the_index(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from lantern_bridge.index import Entry, Index
+    from lantern.server.file_index import Entry, SqliteIndex
 
     config = _config_with_source(tmp_path)
-    with Index(tmp_path / "index.sqlite3") as index:
+    with SqliteIndex(tmp_path / "index.sqlite3") as index:
         index.sync("games", [Entry("a", 1, 1), Entry("b", 1, 1)])
         [first, *_] = index.pending()
         index.set_hash(first, "a" * 64)
@@ -80,10 +80,10 @@ def test_status_and_rehash_follow_the_index(tmp_path: Path, capsys: pytest.Captu
 
 
 def test_rehash_refuses_an_unknown_source(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from lantern_bridge.index import Index
+    from lantern.server.file_index import SqliteIndex
 
     config = _config_with_source(tmp_path)
-    Index(tmp_path / "index.sqlite3").close()
+    SqliteIndex(tmp_path / "index.sqlite3").close()
     assert main(["rehash", "nope", "--config", str(config)]) == 1
     assert "no source 'nope'" in capsys.readouterr().err
 

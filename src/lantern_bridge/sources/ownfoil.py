@@ -23,11 +23,11 @@ from typing import Any
 from urllib.parse import urljoin, urlsplit
 
 import httpx
+from lantern.server.file_index import Entry
 from websockets.exceptions import WebSocketException
 from websockets.sync.client import connect
 
 from lantern_bridge.identify import identify
-from lantern_bridge.index import Entry
 from lantern_bridge.sources.tinfoil import (
     MAX_DEPTH,
     MAX_FILES,
