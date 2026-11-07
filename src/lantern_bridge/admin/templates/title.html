@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ title.name }}{% endblock %}
 {% block body %}
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 <p class="crumb"><a href="/admin/library">← {{ _("Library") }}</a></p>
 <section class="hero tone-{{ title.tone }}">
   <div class="cover big" aria-hidden="true"><span>{{ title.initials }}</span></div>
@@ -21,6 +22,12 @@
   <div class="tile"><span class="n small">{{ title.size | size }}</span><span class="what">{{ title.sources | join(", ") }}</span></div>
 </section>
 
+<form method="post" action="/admin/library/{{ title.title_id }}/rehash" class="row actions"{% if title.pending %} data-watch-pending{% endif %}>
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <button class="ghost" data-confirm="{{ _('The title leaves the library until its files are hashed.') }}">{{ _("Hash all again") }}</button>
+  {% if title.pending %}<span class="pill wait">{{ title.pending }} {{ _("waiting") }}</span>{% endif %}
+</form>
+
 <h2>{{ _("Versions and add-ons") }}</h2>
 <ul class="assoc">
   {% for f in title.files %}
@@ -34,13 +41,15 @@
 
 <h2>{{ _("Files") }}</h2>
 <div class="scroll"><table>
-  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>SHA-256</th><th>{{ _("Served") }}</th></tr></thead>
+  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Size") }}</th><th>SHA-256</th><th>{{ _("Hashed in") }}</th><th>{{ _("Served") }}</th><th></th></tr></thead>
   <tbody>
   {% for f in title.files %}
   <tr>
     <td><code>{{ f.name }}</code></td><td>{{ f.source }}</td><td>{{ f.size | size }}</td>
     <td>{% if f.sha256 %}<code title="{{ f.sha256 }}">{{ f.sha256[:16] }}…</code> <button type="button" class="link" data-copy-text="{{ f.sha256 }}">{{ _("Copy") }}</button>{% else %}<span class="dim">{{ _("waiting") }}</span>{% endif %}</td>
+    <td>{% set t = timings.get((f.source, f.path)) %}{% if t %}{{ "%.1f"|format(t[0]) }} s{% if t[0] > 0 %} · {{ (f.size / t[0]) | size }}/s{% endif %}{% else %}–{% endif %}</td>
     <td>{% if f.served %}<span class="pill ok">{{ _("yes") }}</span>{% elif f.sha256 %}<span class="pill">{{ _("a copy serves it") }}</span>{% else %}–{% endif %}</td>
+    <td><form method="post" action="/admin/library/{{ title.title_id }}/rehash"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}"><button class="ghost small" data-confirm="{{ _('Hash this file again?') }}">{{ _("Hash again") }}</button></form></td>
   </tr>
   {% endfor %}
   </tbody>

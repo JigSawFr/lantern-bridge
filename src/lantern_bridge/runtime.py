@@ -55,6 +55,8 @@ class Stats:
     hashed_bytes: int = 0
     hashing_seconds: float = 0.0  # time spent hashing, so the rate ignores idle time
     sources: dict[str, SourceState] = field(default_factory=dict)
+    #: (source, path) -> (seconds the last hashing took, unix time it finished); since the process started
+    timings: dict[tuple[str, str], tuple[float, float]] = field(default_factory=dict)
 
 
 class Runtime:
@@ -183,6 +185,7 @@ class Runtime:
                 self._remote_failed[(row.source, row.path)] = time.monotonic() + REMOTE_RETRY
                 continue
             if self.index.set_hash(row, digest.hexdigest()):
+                self.stats.timings[(row.source, row.path)] = (time.monotonic() - began, time.time())
                 self.stats.hashed_files += 1
                 self.stats.hashed_bytes += total
                 self.stats.hashing_seconds += time.monotonic() - began
@@ -207,7 +210,13 @@ class Runtime:
         sizes = {(row.source, row.path): row.size for row in self.index.pending(batch)}
         began = time.monotonic()
 
+        mark = time.monotonic()
+
         def hashed(source: str, path: str) -> None:
+            nonlocal mark
+            now = time.monotonic()
+            self.stats.timings[(source, path)] = (now - mark, time.time())
+            mark = now
             self.stats.hashed_files += 1
             self.stats.hashed_bytes += sizes.get((source, path), 0)
 
@@ -238,6 +247,15 @@ class Runtime:
                 busy = False
             if not busy:
                 self._stop.wait(30)
+
+    def rehash(self, files: list[tuple[str, str]]) -> int:
+        """Hash these files again, first in line; returns how many were queued."""
+        done = self.index.rehash_files(files)
+        for key in files:
+            self._remote_failed.pop(key, None)
+        self.browser.forget()
+        self.wake()
+        return done
 
     def wake(self) -> None:
         """Run the next pass now rather than after the idle wait."""

@@ -83,6 +83,7 @@ _DONE = {
     "moved": "Source moved.",
     "tied": "Login tied.",
     "untied": "Login removed.",
+    "queued": "Hashing again: these files go first.",
 }
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
@@ -463,11 +464,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             f={k: q.get(k, "") for k in ("q", "type", "source", "state", "sort")},
         )
 
-    @router.get("/library/{title_id}")
-    async def title_page(title_id: str, request: Request) -> Response:
-        session, _, refused = await authed(request)
-        if refused is not None:
-            return refused
+    def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:
         title = admin.runtime.browser.catalog().titles.get(title_id.upper())
         if title is None:
             return admin.page(request, "missing.html", session, status=404, active="library")
@@ -480,7 +477,35 @@ def mount(app: FastAPI, admin: Admin) -> None:
             title=title,
             sheet=admin.runtime.projection.title(title.title_id),
             cheats=cheats,
+            timings=admin.runtime.stats.timings,
+            message=admin.tr(request)(_DONE[done]) if done else None,
         )
+
+    @router.get("/library/{title_id}")
+    async def title_page(title_id: str, request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        return title_view(request, session, title_id)
+
+    @router.post("/library/{title_id}/rehash")
+    async def title_rehash(title_id: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        title = admin.runtime.browser.catalog().titles.get(title_id.upper())
+        if title is None:
+            return admin.page(request, "missing.html", session, status=404, active="library")
+        mine = {(f.source, f.path) for f in title.files}
+        if fields.get("path"):  # one file; it has to be one of this title's
+            wanted = [(fields.get("source", ""), fields["path"])]
+            if wanted[0] not in mine:
+                return Response("No such file in this title.", 404, headers=_HEADERS)
+        else:
+            wanted = sorted(mine)
+        count = admin.runtime.rehash(wanted)
+        log.info("rehash of %s requested from the pages: %d file(s)", title.title_id, count)
+        return title_view(request, session, title.title_id, "queued")
 
     @router.get("/pairings")
     async def pairings(request: Request) -> Response:

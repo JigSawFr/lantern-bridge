@@ -30,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     status = commands.add_parser("status", help="show the sources and the hashing progress")
     rehash = commands.add_parser("rehash", help="compute the hashes of a source (or of all) again")
     rehash.add_argument("source", nargs="?", help="a source id (default: all)")
+    rehash.add_argument("--title", help="only the files of this title id (to test with one game)")
     invite = commands.add_parser("invite", help="print a code that pairs a new device")
     invite.add_argument("--user", default="family", help="the account the device joins (made if absent)")
     invite.add_argument("--devices", type=int, default=1, help="how many devices may use the code")
@@ -63,6 +64,20 @@ def _inspect(args: argparse.Namespace) -> int:
                     file=sys.stderr,
                 )
                 return 1
+            if args.title:
+                from lantern_bridge.identify import identify
+
+                wanted = args.title.upper()
+                files = [
+                    (row.source, row.path)
+                    for row in index.rows(args.source)
+                    if (identity := identify(row.path)) is not None and identity.title_id == wanted
+                ]
+                if not files:
+                    print(f"lantern-bridge: no file of the title {wanted} in the index", file=sys.stderr)
+                    return 1
+                print(f"{index.rehash_files(files)} hashes of {wanted} forgotten; the server computes them again.")
+                return 0
             print(f"{index.rehash(args.source)} hashes forgotten; the server computes them again.")
             return 0
         counts = index.counts_by_source()
