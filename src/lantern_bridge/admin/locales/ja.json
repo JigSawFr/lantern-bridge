@@ -588,5 +588,7 @@
  "lantern.json is not valid JSON.": "lantern.json は有効な JSON ではありません。",
  "lantern.json is too big.": "lantern.json が大きすぎます。",
  "not yet": "まだ",
- "pre-releases": "先行リリース"
+ "pre-releases": "先行リリース",
+ "Variable holding its host check (optional)": "ホスト検証の値を保持する変数（任意）",
+ "Only for a shop served over HTTPS that checks its host (the Hauth of Tinfoil): the variable holds that value.": "ホストを検証する HTTPS のショップ（Tinfoil の Hauth）専用です。変数にはその値を入れます。"
 }

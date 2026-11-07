@@ -588,5 +588,7 @@
  "lantern.json is not valid JSON.": "lantern.json이 올바른 JSON이 아닙니다.",
  "lantern.json is too big.": "lantern.json이 너무 큽니다.",
  "not yet": "아직 아님",
- "pre-releases": "프리릴리스"
+ "pre-releases": "프리릴리스",
+ "Variable holding its host check (optional)": "호스트 검증 값을 담은 변수(선택)",
+ "Only for a shop served over HTTPS that checks its host (the Hauth of Tinfoil): the variable holds that value.": "호스트를 검증하는 HTTPS 상점(Tinfoil의 Hauth)에만 필요합니다. 변수에 그 값을 넣으세요."
 }

@@ -588,5 +588,7 @@
  "lantern.json is not valid JSON.": "lantern.json 不是有效的 JSON。",
  "lantern.json is too big.": "lantern.json 太大。",
  "not yet": "尚未",
- "pre-releases": "預先發佈"
+ "pre-releases": "預先發佈",
+ "Variable holding its host check (optional)": "保存主機驗證值的變數（選用）",
+ "Only for a shop served over HTTPS that checks its host (the Hauth of Tinfoil): the variable holds that value.": "僅適用於透過 HTTPS 提供且會驗證主機的商店（Tinfoil 的 Hauth）：變數保存該值。"
 }

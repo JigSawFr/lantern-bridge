@@ -85,6 +85,28 @@ def test_a_refused_source_comes_back_with_its_fields_and_its_reason(tmp_path: Pa
     assert twice.status_code == 400 and 'value="games"' in twice.text  # a duplicate name keeps the form filled
 
 
+def test_a_shop_added_from_the_pages_keeps_its_host_check_variable(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    csrf = _csrf(client.get("/admin/config").text)
+    bad = client.post(
+        "/admin/config/sources",
+        data={"csrf": csrf, "kind": "aerofoil", "id": "aero", "where": "https://aero.example.org/", "hauth_env": "a b"},
+    )
+    assert bad.status_code == 400
+    good = client.post(
+        "/admin/config/sources",
+        data={
+            "csrf": csrf,
+            "kind": "aerofoil",
+            "id": "aero",
+            "where": "https://aero.example.org/",
+            "hauth_env": "AERO_HAUTH",
+        },
+    )
+    assert good.status_code in (200, 303)
+    assert "AERO_HAUTH" in client.get("/admin/sources").text
+
+
 def test_every_new_text_has_its_french() -> None:
     for text in (
         "Try it first",

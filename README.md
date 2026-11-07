@@ -105,7 +105,7 @@ password_env = "AEROFOIL_ALICE"
 The shop is read like any Tinfoil shop (the bridge introduces itself as a Tinfoil client, which AeroFoil needs to
 answer its index). An AeroFoil reached over HTTPS that checks its host (Tinfoil's `Hauth`) also needs
 `hauth_env = "AEROFOIL_HAUTH"`: the variable holds the value AeroFoil stored from its first administrator
-connection (*Settings › Shop*), and the `url` must use the host name AeroFoil is set up with. On top of it, the first `aerofoil` source of the file also gives:
+connection (*Settings › Shop*), and the `url` must use the host name AeroFoil is set up with. The *Add a source* form has a field for it too. On top of it, the first `aerofoil` source of the file also gives:
 
 - **Saves.** The bridge keeps its own copy of each account's backups and mirrors it both ways: a backup made
   through Lantern is uploaded (`account` and `device` kinds, as AeroFoil's save types), and one that only

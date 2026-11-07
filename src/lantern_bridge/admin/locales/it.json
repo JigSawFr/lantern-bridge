@@ -588,5 +588,7 @@
  "lantern.json is not valid JSON.": "lantern.json non è un JSON valido.",
  "lantern.json is too big.": "lantern.json è troppo grande.",
  "not yet": "non ancora",
- "pre-releases": "pre-release"
+ "pre-releases": "pre-release",
+ "Variable holding its host check (optional)": "Variabile che contiene la verifica dell'host (facoltativa)",
+ "Only for a shop served over HTTPS that checks its host (the Hauth of Tinfoil): the variable holds that value.": "Solo per uno shop in HTTPS che verifica il proprio host (l'Hauth di Tinfoil): la variabile contiene quel valore."
 }
