@@ -92,3 +92,26 @@ def test_the_observer_sees_the_list_but_not_the_buttons(tmp_path: Path) -> None:
     page = eye.get("/admin/").text
     assert "A source does not answer" in page and "Read again" not in page and SEE not in page
     assert "Read again" in boss.get("/admin/").text
+
+
+def test_the_overview_blocks_come_alone_to_follow_the_server(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    runtime = _runtime(client)
+    runtime.cycle(batch=1)
+    page = client.get("/admin/").text
+    assert 'data-live="/admin/?fragment=todo"' in page and 'data-live="/admin/?fragment=sources"' in page
+    quiet = client.get("/admin/?fragment=todo")
+    assert quiet.status_code == 200 and "<html" not in quiet.text and "Needs your attention" not in quiet.text
+    runtime.stats.sources["games"] = SourceState(reachable=False, error="gone")
+    todo = client.get("/admin/?fragment=todo").text
+    assert "A source does not answer" in todo and "<html" not in todo
+    sources = client.get("/admin/?fragment=sources").text
+    assert "gone" in sources and "<html" not in sources and "<table>" in sources
+    assert "<html" in client.get("/admin/?fragment=nothing").text  # an unknown block is the whole page
+
+
+def test_the_observer_may_follow_the_blocks_too(tmp_path: Path) -> None:
+    boss, eye = _with_observer(tmp_path)
+    _runtime(boss).cycle(batch=1)
+    reply = eye.get("/admin/?fragment=sources")
+    assert reply.status_code == 200 and "<table>" in reply.text and "Rehash" in reply.text

@@ -433,9 +433,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if refused is not None:
             return refused
         state = admin.state()
+        part = {"todo": "_todo.html", "sources": "_sources.html"}.get(request.query_params.get("fragment", ""))
         return admin.page(
             request,
-            "overview.html",
+            part or "overview.html",
             session,
             active="overview",
             checks=health.run(admin.runtime),

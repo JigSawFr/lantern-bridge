@@ -1,0 +1,15 @@
+{% if todo %}
+<section class="todo" aria-labelledby="todo-title">
+  <h2 id="todo-title">{{ _("Needs your attention") }} <span class="count">{{ todo | length }}</span></h2>
+  <ul>
+    {% for t in todo %}
+    <li class="{{ t.level }}">
+      <span class="pill {{ t.level if t.level != 'info' else 'ok' }}">{{ _("failing") if t.level == "bad" else _("to check") if t.level == "wait" else _("for your information") }}</span>
+      <span class="what">{{ _(t.text) }}{% if t.detail %} <span class="dim small">{{ t.detail }}</span>{% endif %}</span>
+      {% if t.scan and session.role != "observer" %}<form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ t.scan }}"><button class="ghost small" name="action" value="scan">{{ _("Read again") }}</button></form>{% endif %}
+      {% if t.href and (t.external or session.role != "observer") %}<a href="{{ t.href }}"{% if t.external %} rel="noreferrer"{% endif %}>{{ _(t.link) }}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
