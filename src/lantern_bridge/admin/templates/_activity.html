@@ -39,6 +39,18 @@
   </tbody>
 </table></div>
 
+<h2>{{ _("Recent changes in the sources") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("When") }}</th><th>{{ _("Source") }}</th><th>{{ _("Change") }}</th><th>{{ _("File") }}</th></tr></thead>
+  <tbody>
+  {% for when, source, kind, path in changes %}
+  <tr><td>{{ when | when }}</td><td>{{ source }}</td><td><span class="pill {{ 'ok' if kind == 'added' else 'wait' if kind == 'changed' else 'bad' }}">{{ {"added": _("added"), "changed": _("changed"), "removed": _("removed")}[kind] }}</span></td><td><code>{{ path[-64:] }}</code></td></tr>
+  {% else %}
+  <tr><td colspan="4">{{ _("No change since the bridge started. A new pass can be asked for on the overview.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
 <h2>{{ _("Hashing") }}</h2>
 <div class="card">
   <progress max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>

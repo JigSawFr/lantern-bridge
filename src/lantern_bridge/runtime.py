@@ -9,6 +9,7 @@ import logging
 import os
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,7 +21,7 @@ from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
 from lantern_bridge.history import History
-from lantern_bridge.index import Index
+from lantern_bridge.index import Index, SyncResult
 from lantern_bridge.library import Projection
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
@@ -62,6 +63,8 @@ class Stats:
     timings: dict[tuple[str, str], tuple[float, float]] = field(default_factory=dict)
     #: source -> the packages of a folder its names do not identify, as (path, size) (the last scan)
     ignored: dict[str, list[tuple[str, int]]] = field(default_factory=dict)
+    #: The last changes the scans found, newest first: (unix time, source, "added|changed|removed", path)
+    changes: deque[tuple[float, str, str, str]] = field(default_factory=lambda: deque(maxlen=100))
 
 
 class Runtime:
@@ -126,6 +129,19 @@ class Runtime:
         """A client for a shop of the configuration (the caller closes it)."""
         return self._shop(source)
 
+    def _note(self, source: str, result: SyncResult) -> None:
+        """What a scan found goes to the list the pages show (and to the log, as before)."""
+        now = time.time()
+        for kind, paths in (
+            ("added", result.added_paths),
+            ("changed", result.changed_paths),
+            ("removed", result.removed_paths),
+        ):
+            for path in paths:
+                self.stats.changes.appendleft((now, source, kind, path.rsplit("#", 1)[-1]))
+        if result.added or result.changed or result.removed:
+            log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+
     def _scan_shops(self) -> None:
         for source, shop in self.shops.items():
             waited = time.monotonic() - self._shop_scanned.get(source, -REMOTE_EVERY)
@@ -141,8 +157,7 @@ class Runtime:
                 state.reachable, state.error = False, str(error)
                 continue
             state.reachable, state.scanned, state.error = True, time.time(), None
-            if result.added or result.changed or result.removed:
-                log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+            self._note(source, result)
             if source == (self.aero.id if self.aero else None):
                 self._mirror(shop)
             if isinstance(shop, Ownfoil):
@@ -218,8 +233,7 @@ class Runtime:
                 state.reachable, state.error = False, str(error)
                 continue
             state.reachable, state.scanned, state.error = True, time.time(), None
-            if result.added or result.changed or result.removed:
-                log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+            self._note(source, result)
         sizes = {(row.source, row.path): row.size for row in self.index.pending(batch)}
         began = time.monotonic()
 
