@@ -39,6 +39,8 @@ log = logging.getLogger("lantern_bridge.runtime")
 
 #: Seconds between two scans once the queue is empty.
 IDLE = 60.0
+# While files wait to be hashed, the sources are read again at most this often (a big library takes seconds per pass).
+RESCAN_WHILE_BUSY = 30.0
 #: Seconds between two reads of a shop's index.
 REMOTE_EVERY = 300.0
 #: The shortest time between two reads of a shop that said something changed.
@@ -88,6 +90,7 @@ class Runtime:
         self._updates_thread: threading.Thread | None = None
         self.webhook = Webhook(config.webhook, config.uid, config.name) if config.webhook else None
         self._shop_scanned: dict[str, float] = {}
+        self._scanned_at: float | None = None  # None: read the sources on the next pass
         self._changed: set[str] = set()  # shops that said something changed
         self._watchers: list[threading.Thread] = []
         self._remote_failed: dict[tuple[str, str], float] = {}
@@ -252,10 +255,10 @@ class Runtime:
                 return True
         return False
 
-    def cycle(self, batch: int = 20) -> int:
-        """One pass: scan every source, hash a batch, update the library; returns the files hashed."""
+    def cycle(self, batch: int = 20, *, scan: bool = True) -> int:
+        """One pass: scan the sources (unless `scan` is off), hash a batch, refresh the library."""
         self._scan_shops()
-        for source, root in self.roots.items():
+        for source, root in self.roots.items() if scan else ():
             state = self.stats.sources.setdefault(source, SourceState())
             skipped: list[tuple[str, int]] = []
             try:
@@ -291,9 +294,14 @@ class Runtime:
         return done + taken
 
     def _loop(self) -> None:
+        busy = False
         while not self._stop.is_set():
             try:
-                busy = self.cycle() > 0
+                now = time.monotonic()
+                scan = self._scanned_at is None or not busy or now - self._scanned_at >= RESCAN_WHILE_BUSY
+                if scan:
+                    self._scanned_at = now
+                busy = self.cycle(scan=scan) > 0
             except Exception:
                 log.exception("a pass failed; trying again")
                 busy = False
@@ -324,6 +332,7 @@ class Runtime:
     def rescan(self) -> None:
         """Read every source again now: the shops too, which are otherwise read every few minutes."""
         self._shop_scanned.clear()
+        self._scanned_at = None
         self.browser.forget()
         self.wake()
 

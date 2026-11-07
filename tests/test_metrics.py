@@ -56,3 +56,12 @@ def test_metrics_gives_the_figures_without_names_or_paths(tmp_path: Path) -> Non
     assert 'lantern_bridge_health{status="ok"} 1' in text
     assert "Aurora" not in text and "games/" not in text and "127.0.0.1" not in text
     assert text.endswith("\n") and "# TYPE lantern_bridge_requests_total counter" in text
+
+
+def test_a_pass_without_scan_leaves_the_sources_alone(tmp_path: Path) -> None:
+    client = _metrics(tmp_path)
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    runtime.cycle(batch=5)
+    (tmp_path / "games" / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    assert runtime.cycle(batch=5, scan=False) == 0  # the new file is not read yet
+    assert runtime.cycle(batch=5) == 1
