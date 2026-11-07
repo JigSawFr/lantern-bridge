@@ -33,7 +33,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from lantern.server import LanternApp
 from lantern.server.pairing import Limiter
 
-from lantern_bridge import SPEC_DRAFT, __version__, health
+from lantern_bridge import SPEC_DRAFT, __version__, health, selfcheck
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -678,6 +678,25 @@ def mount(app: FastAPI, admin: Admin) -> None:
             "apps": [a.to_json() for a in apps],
         }
         return Response(json.dumps(body, indent=2), media_type="application/json", headers=_HEADERS)
+
+    @router.get("/developer/check")
+    async def developer_check(request: Request) -> Response:
+        """What a console would meet asking for one title (see selfcheck.py)."""
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        developer_only()
+        title_id = request.query_params.get("id", "").strip().upper()
+        if not re.fullmatch(r"[0-9A-F]{16}", title_id):
+            raise HTTPException(404)
+        return admin.page(
+            request,
+            "check.html",
+            session,
+            active="developer",
+            title_id=title_id,
+            steps=selfcheck.check(admin.runtime, title_id),
+        )
 
     @router.post("/developer/{action}")
     async def developer_action(action: str, request: Request) -> Response:

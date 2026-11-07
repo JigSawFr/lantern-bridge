@@ -160,3 +160,25 @@ def test_the_scans_say_what_they_found(tmp_path: Path) -> None:
     assert ("added", "Night [0100BBBB00000000][v0].nsp") in seen
     page = client.get("/admin/activity")
     assert "Recent changes" in page.text and "Aurora Quest" in page.text and "removed" in page.text
+
+
+def test_the_check_of_a_title_tells_what_a_console_would_meet(tmp_path: Path) -> None:
+    from lantern_bridge import selfcheck
+
+    client = _dev(tmp_path)
+    games = tmp_path / "games"
+    runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    assert [s.status for s in selfcheck.check(runtime, "0100AAAA00000000")] == [selfcheck.FAIL]  # unknown
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"base" * 40000)
+    runtime.cycle(batch=5)
+    runtime.browser.forget()  # the catalogue is cached for a few seconds
+    steps = selfcheck.check(runtime, "0100AAAA00000000")
+    assert all(s.status == selfcheck.OK for s in steps) and len(steps) == 3  # index, sheet, the one app
+    page = client.get("/admin/developer/check?id=0100AAAA00000000")
+    assert page.status_code == 200 and "readable at both ends" in page.text
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").write_bytes(b"short")  # changed under the index's feet
+    broken = selfcheck.check(runtime, "0100AAAA00000000")
+    assert any(s.status == selfcheck.FAIL and "scan again" in s.detail for s in broken)
+    (games / "Aurora Quest [0100AAAA00000000][v0].nsp").unlink()
+    assert any("cannot be read" in s.detail for s in selfcheck.check(runtime, "0100AAAA00000000"))
+    assert client.get("/admin/developer/check?id=nonsense").status_code == 404

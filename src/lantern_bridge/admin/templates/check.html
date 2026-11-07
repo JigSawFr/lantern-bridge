@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ _("What a console would meet") }}{% endblock %}
+{% block body %}
+<p class="crumb"><a href="/admin/developer">← {{ _("Developer") }}</a></p>
+<h1>{{ _("What a console would meet") }}</h1>
+<p class="lede"><code>{{ title_id }}</code> · <a href="/admin/library/{{ title_id }}">{{ _("Library") }}</a></p>
+<ul class="assoc">
+  {% for step in steps %}
+  <li><span class="pill {{ 'ok' if step.status == 'ok' else 'bad' if step.status == 'fail' else 'wait' }}">{{ _("ok") if step.status == "ok" else _("failing") if step.status == "fail" else _("note") }}</span> <span>{{ step.what }}</span> <span class="dim small">{{ step.detail }}</span></li>
+  {% endfor %}
+</ul>
+{% endblock %}

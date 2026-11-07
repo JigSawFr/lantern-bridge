@@ -29,6 +29,15 @@
   </form>
 </div>
 
+<div class="card">
+  <h2>{{ _("What a console would meet") }}</h2>
+  <p class="dim small">{{ _("Asks the library for a title as the protocol would: the sheet, each app, and the start and end of each file. Nothing is downloaded and no device is paired.") }}</p>
+  <form method="get" action="/admin/developer/check" class="row">
+    <label class="grow">{{ _("Title id") }} <input name="id" placeholder="0100AAAA00000000" pattern="[0-9A-Fa-f]{16}" required></label>
+    <button class="ghost">{{ _("Check") }}</button>
+  </form>
+</div>
+
 <h2>{{ _("Slowest hashing since the start") }}</h2>
 <div class="scroll"><table>
   <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Took") }}</th><th>{{ _("When") }}</th></tr></thead>
