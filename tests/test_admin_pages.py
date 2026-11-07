@@ -85,7 +85,7 @@ def test_every_text_of_a_page_has_its_french() -> None:
 def test_the_settings_page_lists_the_sources_and_adds_and_removes_one(tmp_path: Path) -> None:
     client, path = _settings(tmp_path)
     page = client.get("/admin/sources")
-    assert page.status_code == 200 and "games" in page.text and "The settings file changed" not in page.text
+    assert page.status_code == 200 and "games" in page.text and "was not applied" not in page.text
     assert (
         "games" not in client.get("/admin/config").text.split("</nav>", 1)[-1].split("<form", 1)[0]
     )  # its own page now
@@ -108,16 +108,17 @@ def test_the_settings_page_lists_the_sources_and_adds_and_removes_one(tmp_path: 
     assert onpage.headers["location"] == "/sources?m=moved" or onpage.headers["location"].endswith("/sources?m=moved")
     client.post("/admin/config/sources/shop/down", data={"csrf": csrf})
     after = client.get("/admin/sources?m=added")
-    assert "Source added." in after.text and "The settings file changed" in after.text
+    assert "Source added." in after.text and "was not applied" not in after.text
     assert "SHOP_PW" in after.text and "not set" in after.text  # the variable's name, never a value
-    assert "The settings file changed" in client.get("/admin/").text
+    assert "was not applied" not in client.get("/admin/").text
+    assert [x.id for x in client.app.state.runtime.config.sources] == ["games", "shop"]  # type: ignore[attr-defined]  # applied at once
     client.post("/admin/config/sources/shop/up", data={"csrf": csrf})
     assert [s.id for s in load(path).sources] == ["shop", "games"]
     client.post("/admin/config/sources/shop/down", data={"csrf": csrf})
     assert [s.id for s in load(path).sources] == ["games", "shop"]
     client.post("/admin/config/sources/shop/remove", data={"csrf": csrf})
     assert [s.id for s in load(path).sources] == ["games"]
-    assert "The settings file changed" not in client.get("/admin/config").text
+    assert "was not applied" not in client.get("/admin/config").text
 
 
 def test_a_setting_the_reader_would_refuse_is_refused_and_nothing_is_written(tmp_path: Path) -> None:

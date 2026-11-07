@@ -372,6 +372,13 @@ class Runtime:
                 self._watchers.append(watcher)
 
     def stop(self) -> None:
+        self.halt()
+        self.close()
+
+    def halt(self) -> None:
+        """Stops what runs by itself (the passes, the broker, the notifications) and keeps the stores open, so a
+        request still being answered can read them: a settings reload halts the old runtime, lets its last requests
+        finish, then closes it."""
         if self.publisher is not None:
             self.publisher.stop()
         if self.webhook is not None:
@@ -385,6 +392,8 @@ class Runtime:
         for thread in (self._thread, self._remote_thread, self._atlas_thread, self._updates_thread, *self._watchers):
             if thread is not None:
                 thread.join(timeout=10)
+
+    def close(self) -> None:
         for shop in self.shops.values():
             shop.close()
         if self.atlas is not None:

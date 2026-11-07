@@ -45,7 +45,8 @@ def test_an_empty_bridge_starts_with_the_form_and_leads_back_to_the_guide(tmp_pa
     after = client.get("/admin/start").text
     assert 'name="back"' not in after  # the form is gone once a source is saved
     assert re.search(r'class="done"[^>]*>\s*<span class="pill ok">done', after)
-    assert "Restart the bridge to apply the source you added." in after  # it runs after the restart
+    assert "was not applied" not in after  # the source runs at once: no restart
+    assert [x.id for x in client.app.state.runtime.config.sources] == ["games"]  # type: ignore[attr-defined]
 
 
 def test_the_form_in_the_settings_still_leads_to_the_settings(tmp_path: Path) -> None:

@@ -239,6 +239,7 @@ class Admin:
     ) -> None:
         self.config, self.runtime, self.lantern, self.ring, self.store = config, runtime, lantern, ring, store
         self.config_path = config_path
+        self.reloader: Any = None  # the server that swaps itself for a new one when the settings change
         self.networks = netguard.parse_networks(config.admin_allow)
         self.proxies = netguard.parse_networks(config.trusted_proxies)
         self.attempts = Limiter(5, 300.0)  # wrong passwords, per address
@@ -326,6 +327,11 @@ class Admin:
             raise ConfigError("There is nothing to undo.")
         self.write(load(self.previous_path))
 
+    async def apply(self) -> None:
+        """Puts the settings file just written into effect, without a restart (see reload.py)."""
+        if self.reloader is not None:
+            await self.reloader.reload()
+
     def restart_needed(self) -> bool:
         try:
             return self.file().to_toml() != self.config.to_toml()
@@ -355,6 +361,7 @@ class Admin:
             draft=SPEC_DRAFT,
             name=self.config.name,
             developer=self.config.developer,
+            reload_error=getattr(self.reloader, "error", None),
             lang=lang,
             theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
             mode=request.cookies.get(_THEME_COOKIE)
@@ -1199,6 +1206,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 tested=None,
                 prefill={},
                 can_undo=False,
+                atlas_info=None,
+                updates=None,
+                observer=None,
             )
         sources = [
             {
@@ -1251,6 +1261,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
         log.info("settings changed from the pages: %s", done)
         admin.runtime.history.event("settings", detail=done)
+        await admin.apply()
         back = fields.get("back")
         return redirect(f"/{back if back in ('start', 'sources') else 'config'}?m={done}", request)
 
@@ -1450,6 +1461,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return settings_page(request, session, 500, error=f"{error.strerror or error}")
         log.info("settings changed from the pages: the last change was taken back")
         admin.runtime.history.event("settings", detail="undone")
+        await admin.apply()
         return redirect(f"/{'sources' if fields.get('back') == 'sources' else 'config'}?m=undone", request)
 
     def find(config: Config, sid: str) -> int | None:

@@ -2,8 +2,8 @@
 {% block title %}{{ _("Settings") }}{% endblock %}
 {% block body %}
 <h1>{{ _("Settings") }}</h1>
-<p class="lede">{{ _("These pages write the configuration file. The bridge reads it when it starts: a change waits for a restart.") }}</p>
-{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
+<p class="lede">{{ _("These pages write the configuration file. The bridge applies a change as soon as it is saved, or when the file is edited by hand.") }}</p>
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed but was not applied: the bridge keeps running with the settings it has.") }}{% if reload_error %} <code>{{ reload_error }}</code>{% endif %}</p>{% endif %}
 {% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 {% if can_undo %}<form method="post" action="/admin/config/undo" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small" data-confirm="{{ _('Bring back the settings from before the last change?') }}">{{ _("Undo the last change") }}</button></form>{% endif %}
@@ -44,7 +44,7 @@
   <fieldset class="group"><legend>{{ _("Advanced") }}</legend>
   <p><label class="check"><input type="checkbox" name="developer"{% if file.developer %} checked{% endif %}> {{ _("Developer mode: add a page with the requests, the raw JSON and the timings") }}</label></p>
   </fieldset>
-  <div class="savebar"><span class="dim small" data-dirty-note hidden>{{ _("Unsaved changes — applied at the next restart.") }}</span><button>{{ _("Save") }}</button></div>
+  <div class="savebar"><span class="dim small" data-dirty-note hidden>{{ _("Unsaved changes.") }}</span><button>{{ _("Save") }}</button></div>
 </form>
 
 <form method="post" action="/admin/config/observer" class="card" data-dirty data-solo>
@@ -72,10 +72,10 @@
     <label>{{ _("Topic prefix") }} <input name="prefix" value="{{ file.mqtt.prefix if file.mqtt else 'lantern-bridge' }}" maxlength="128" aria-describedby="h-prefix"><small class="hint" id="h-prefix" aria-hidden="true">{{ _("Topics start with this, then the bridge's id. Change it only to keep several bridges apart.") }}</small></label>
   </div>
   <p><label class="check"><input type="checkbox" name="tls"{% if file.mqtt and file.mqtt.tls %} checked{% endif %}> {{ _("Encrypt the connection (TLS)") }}</label></p>
-  <div class="savebar"><span class="dim small" data-dirty-note hidden>{{ _("Unsaved changes — applied at the next restart.") }}</span><button>{{ _("Save") }}</button></div>
+  <div class="savebar"><span class="dim small" data-dirty-note hidden>{{ _("Unsaved changes.") }}</span><button>{{ _("Save") }}</button></div>
 </form>
 
-<div class="savebar all" data-saveall data-failed="{{ _('The settings could not be saved.') }}" hidden><span class="dim small">{{ _("Unsaved changes in") }} <b data-count>0</b> {{ _("card(s) — applied at the next restart.") }}</span><button type="button">{{ _("Save all") }}</button></div>
+<div class="savebar all" data-saveall data-failed="{{ _('The settings could not be saved.') }}" hidden><span class="dim small">{{ _("Unsaved changes in") }} <b data-count>0</b> {{ _("card(s).") }}</span><button type="button">{{ _("Save all") }}</button></div>
 
 <form method="post" action="/admin/config/backup" class="card">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">

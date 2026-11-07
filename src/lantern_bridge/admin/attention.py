@@ -60,7 +60,7 @@ def collect(runtime: Runtime, waiting: int, restart: bool, paired: int | None = 
         items.append(
             Item(
                 WAIT,
-                "The settings file changed: restart the bridge to apply it.",
+                "The settings file changed but was not applied: the bridge keeps running with the settings it has.",
                 href="/admin/config",
                 link="Settings",
             )
@@ -81,7 +81,7 @@ def guide(
     runtime: Runtime, state: dict[str, Any], paired: int, uid: str, *, saved: list[str], restart: bool
 ) -> list[dict[str, Any]]:
     """The four steps from an empty bridge to a console that reads the library, each ticked by what the bridge sees."""
-    has_source = bool(saved)  # the settings file: a source just added is there before the restart
+    has_source = bool(saved)  # the settings file: a source just added is there, applied or not
     read = state["total"] > 0
     served = state["titles"] > 0
     open_access = runtime.config.public
@@ -94,7 +94,7 @@ def guide(
         },
         {
             "title": "Let the bridge read the files",
-            "text": "Restart the bridge to apply the source you added."
+            "text": "The source you added was not applied: see the note on the settings page."
             if restart
             else "It reads them in place and never changes them.",
             "detail": f"{state['hashed']} / {state['total']}" if read else "",

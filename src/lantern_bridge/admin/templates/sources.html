@@ -3,7 +3,7 @@
 {% block body %}
 <h1>{{ _("Sources") }}</h1>
 <p class="lede">{{ _("Where the bridge reads its games from: folders on this machine, or Tinfoil, Ownfoil and AeroFoil shops.") }}</p>
-{% if restart %}<p class="note" role="status">{{ _("The settings file changed: restart the bridge to apply it.") }}</p>{% endif %}
+{% if restart %}<p class="note" role="status">{{ _("The settings file changed but was not applied: the bridge keeps running with the settings it has.") }}{% if reload_error %} <code>{{ reload_error }}</code>{% endif %}</p>{% endif %}
 {% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 {% if can_undo %}<form method="post" action="/admin/config/undo" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="back" value="sources"><button class="ghost small" data-confirm="{{ _('Bring back the settings from before the last change?') }}">{{ _("Undo the last change") }}</button></form>{% endif %}

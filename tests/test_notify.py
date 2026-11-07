@@ -85,7 +85,7 @@ def test_the_settings_page_sets_it_and_the_runtime_listens(tmp_path: Path) -> No
     assert load(tmp_path / "state" / "config.toml").notify == URL
     assert client.post("/admin/config/settings", data={**form, "notify": "ftp://nope"}).status_code == 400
     runtime = client.app.state.runtime  # type: ignore[attr-defined]
-    assert runtime.notifier is None  # taken at the next start, like the other settings
+    assert runtime.notifier is not None and runtime.config.notify == URL  # applied at once, with no restart
 
 
 def test_a_runtime_with_an_address_sends_what_its_journal_says(tmp_path: Path) -> None:

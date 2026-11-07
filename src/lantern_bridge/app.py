@@ -8,8 +8,6 @@ its accounts, kept in the state directory.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -23,6 +21,7 @@ from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
 from lantern_bridge.metrics import render
+from lantern_bridge.reload import Reloadable
 from lantern_bridge.runtime import Runtime
 from lantern_bridge.traffic import TrafficMiddleware
 from lantern_bridge.upstream import BridgeLibrary
@@ -30,29 +29,36 @@ from lantern_bridge.upstream import BridgeLibrary
 
 def make_app(
     config: Config, state_dir: Path, *, run: bool = True, json_logs: bool = False, config_path: Path | None = None
-) -> FastAPI:
+) -> Reloadable:
     """A Lantern server for `config`; its state (index, accounts) lives in `state_dir`.
 
-    `config_path` is the file the settings pages write (by default `config.toml` in `state_dir`).
+    `config_path` is the file the settings pages write (by default `config.toml` in `state_dir`). The server it
+    returns builds a new one from that file when the settings change (see `reload.py`), with no restart.
     `run=False` leaves the background pass off (tests call `app.state.runtime.cycle()`).
     """
     state_dir.mkdir(parents=True, exist_ok=True)
+    path = config_path or state_dir / "config.toml"
+    ring = LogRing()
+    install(ring, json_lines=json_logs)
+    store = AdminStore(state_dir / "admin.json")
+    if store.setup_code() is not None:
+        logging.getLogger("lantern_bridge.admin").warning(
+            "no administrator yet: open /admin/ and enter the setup code %s", store.setup_code()
+        )
+    return Reloadable(lambda cfg, shell: _build(cfg, state_dir, path, store, ring, shell), config, path, run=run)
+
+
+def _build(  # noqa: PLR0917  (what a reload needs to make the server again)
+    config: Config, state_dir: Path, config_path: Path, store: AdminStore, ring: LogRing, shell: Reloadable
+) -> FastAPI:
+    """One Lantern server for `config`: what a reload makes again. The administrator's sessions (`store`) and the
+    recent log (`ring`) outlive it."""
     library = BridgeLibrary(base="/api/lantern")
     runtime = Runtime(config, state_dir, library)
     accounts = SqliteAccounts(state_dir / "accounts.sqlite3")
-
-    @asynccontextmanager
-    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        if run:
-            runtime.start()
-        try:
-            yield
-        finally:
-            runtime.stop()
-            accounts.close()
-
-    app = FastAPI(title="lantern-bridge", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+    app = FastAPI(title="lantern-bridge", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.runtime = runtime
+    app.state.accounts = accounts
     lantern = LanternApp(
         library,
         uid=config.uid,
@@ -72,15 +78,8 @@ def make_app(
 
     runtime.traffic.identify = identify
     app.add_middleware(TrafficMiddleware, traffic=runtime.traffic)
-    ring = LogRing()
-    install(ring, json_lines=json_logs)
-    store = AdminStore(state_dir / "admin.json")
     app.state.admin = store
     app.state.logs = ring
-    if store.setup_code() is not None:
-        logging.getLogger("lantern_bridge.admin").warning(
-            "no administrator yet: open /admin/ and enter the setup code %s", store.setup_code()
-        )
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> JSONResponse:
@@ -88,7 +87,8 @@ def make_app(
         status = health.overall(health.run(runtime))
         return JSONResponse({"status": status}, status_code=503 if status == health.FAIL else 200)
 
-    pages = Admin(config, runtime, lantern, ring, store, config_path=config_path or state_dir / "config.toml")
+    pages = Admin(config, runtime, lantern, ring, store, config_path=config_path)
+    pages.reloader = shell
     app.state.admin_pages = pages
     mount(app, pages)
 
