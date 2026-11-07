@@ -30,6 +30,7 @@ from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
 from lantern_bridge.notify import Notifier
 from lantern_bridge.pulse import Pulse
+from lantern_bridge.releases import Releases
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
@@ -105,6 +106,11 @@ class Runtime:
         self.notifier = Notifier(config.notify, config.name) if config.notify else None
         if self.notifier is not None:
             self.history.listeners.append(self.notifier.on_event)
+        self.releases: Releases | None = None
+        if config.homebrew:
+            token = os.environ.get(config.github_token_env or "") if config.github_token_env else None
+            self.releases = Releases(state_dir, library, list(config.homebrew), token=token or None)
+        self._releases_thread: threading.Thread | None = None
         self.compressor: Compressor | None = None  # set by the application: it outlives a reload
         self.pulse = Pulse()  # what the pages' live blocks wait on
         self.history.listeners.append(lambda _event: self.pulse.bump())
@@ -377,6 +383,11 @@ class Runtime:
         if self.shops:
             self._remote_thread = threading.Thread(target=self._remote_loop, name="lantern-bridge-remote", daemon=True)
             self._remote_thread.start()
+        if self.releases is not None:
+            self._releases_thread = threading.Thread(
+                target=self.releases.run, args=(self._stop,), name="lantern-bridge-homebrew", daemon=True
+            )
+            self._releases_thread.start()
         if self.atlas is not None:
             self._atlas_thread = threading.Thread(
                 target=self.atlas.run, args=(self._stop, self.wake), name="lantern-bridge-atlas", daemon=True
@@ -411,7 +422,14 @@ class Runtime:
             self.updates.close()
         self._stop.set()
         self._wake.set()
-        for thread in (self._thread, self._remote_thread, self._atlas_thread, self._updates_thread, *self._watchers):
+        for thread in (
+            self._thread,
+            self._remote_thread,
+            self._atlas_thread,
+            self._updates_thread,
+            self._releases_thread,
+            *self._watchers,
+        ):
             if thread is not None:
                 thread.join(timeout=10)
 
@@ -420,6 +438,8 @@ class Runtime:
             shop.close()
         if self.atlas is not None:
             self.atlas.close()
+        if self.releases is not None:
+            self.releases.close()
         self.traffic.close()
         self.history.close()
         self.index.close()

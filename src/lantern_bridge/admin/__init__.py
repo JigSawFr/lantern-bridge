@@ -42,7 +42,7 @@ from lantern.server.pairing import Limiter
 from markupsafe import Markup
 from starlette.background import BackgroundTask
 
-from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
+from lantern_bridge import SPEC_DRAFT, __version__, backup, health, releases, selfcheck
 from lantern_bridge.admin import attention, nav, netguard
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
@@ -54,6 +54,7 @@ from lantern_bridge.config import (
     Config,
     ConfigError,
     FolderSource,
+    HomebrewRepo,
     Login,
     OwnfoilSource,
     ShopSource,
@@ -118,6 +119,9 @@ _DONE = {
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
     "imported": "The settings were imported.",
+    "homebrew_added": "The repository is added: its latest release is read in a moment.",
+    "homebrew_removed": "The repository is removed.",
+    "homebrew_checking": "Reading GitHub again.",
 }
 #: The kinds of the journal, in the order of its filter.
 _JOURNAL = (
@@ -509,13 +513,16 @@ class Admin:
         put("library", len(runtime.browser.catalog().flagged()), "wait")
         put("pairings", waiting, "wait")
         put("sources", sum(1 for state in runtime.stats.sources.values() if state.reachable is False), "bad")
+        put(
+            "homebrew", sum(1 for row in (runtime.releases.status() if runtime.releases else []) if row["error"]), "bad"
+        )
         jobs = runtime.compressor.jobs() if runtime.compressor is not None else []
         failed = sum(1 for j in jobs if j.state == "failed" and time.time() - j.finished < 3600)
         busy = sum(1 for j in jobs if j.state in ("queued", "running"))
         put("tasks", failed or busy, "bad" if failed else "info")
         if role == "observer":
             return {k: v for k, v in found.items() if k in ("overview", "activity", "library")}
-        held = [found[k] for k in ("pairings", "sources", "tasks") if k in found]
+        held = [found[k] for k in ("pairings", "sources", "homebrew", "tasks") if k in found]
         put(
             "manage",
             sum(b["n"] for b in held),
@@ -1710,18 +1717,24 @@ def mount(app: FastAPI, admin: Admin) -> None:
             problem = f"{error.strerror or error}"
         if problem is not None:
             typed = {k: v for k, v in fields.items() if k != "csrf"}
-            return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
+            said = t(problem) if problem in _FIXED or problem in releases.FIXED else problem
+            if fields.get("back") == "homebrew":
+                return homebrew_view(request, session, 400, error=said)
+            return settings_page(request, session, 400, error=said, draft=typed)
         log.info("settings changed from the pages: %s", done)
         admin.audit(session, done_keys, done)
         await admin.apply()
         back = fields.get("back")
-        return redirect(f"/{back if back in ('start', 'sources') else 'config'}?m={done}", request)
+        return redirect(f"/{back if back in ('start', 'sources', 'homebrew') else 'config'}?m={done}", request)
 
     _FIXED = {
         "No such source.",
         "Only an AeroFoil source has logins.",
         "Choose a number of devices from 1 to 20.",
         "There is nothing to undo.",
+        "That repository is already there.",
+        "Choose a kind from the list.",
+        "That repository is not there.",
     }
 
     @router.get("/start")
@@ -1972,6 +1985,87 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     def find(config: Config, sid: str) -> int | None:
         return next((n for n, x in enumerate(config.sources) if x.id == sid), None)
+
+    def homebrew_view(
+        request: Request, session: Session | None, status: int = 200, *, error: str | None = None
+    ) -> Response:
+        """The GitHub repositories whose releases are served as homebrew, and what became of each."""
+        t = admin.tr(request)
+        done = _DONE.get(request.query_params.get("m", ""))
+        status_of = {row["repo"]: row for row in admin.runtime.releases.status()} if admin.runtime.releases else {}
+        try:
+            file = admin.file()
+        except ConfigError:
+            file = admin.config
+        rows = []
+        for r in file.homebrew:
+            row = {
+                "repo": r.repo,
+                "asset": r.asset,
+                "kind": r.kind,
+                "prerelease": r.prerelease,
+                **status_of.get(r.repo, {}),
+            }
+            if row.get("error") in releases.FIXED:
+                row["error"] = t(row["error"])
+            rows.append(row)
+        return admin.page(
+            request,
+            "homebrew.html",
+            session,
+            status=status,
+            active="homebrew",
+            rows=rows,
+            kinds=releases.KINDS,
+            token_set=bool(file.github_token_env and file.github_token_env in os.environ),
+            message=t(done) if done else None,
+            error=error,
+        )
+
+    @router.get("/homebrew")
+    async def homebrew_page(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        return homebrew_view(request, session)
+
+    @router.post("/homebrew/add")
+    async def homebrew_add(request: Request) -> Response:
+        def edit(config: Config, f: dict[str, str]) -> str | None:
+            try:
+                name = releases.parse_repo(f.get("repo", ""))
+            except releases.ReleaseError as error:
+                return str(error)
+            if any(r.repo.lower() == name.lower() for r in config.homebrew):
+                return "That repository is already there."
+            kind = f.get("kind", "") or None
+            if kind is not None and kind not in releases.KINDS:
+                return "Choose a kind from the list."
+            asset = f.get("asset", "").strip() or None
+            config.homebrew.append(HomebrewRepo(name, asset, kind, "prerelease" in f))
+            return None
+
+        return await change(request, edit, "homebrew_added")
+
+    @router.post("/homebrew/remove")
+    async def homebrew_remove(request: Request) -> Response:
+        def edit(config: Config, f: dict[str, str]) -> str | None:
+            keep = [r for r in config.homebrew if r.repo != f.get("repo", "")]
+            if len(keep) == len(config.homebrew):
+                return "That repository is not there."
+            config.homebrew = keep
+            return None
+
+        return await change(request, edit, "homebrew_removed")
+
+    @router.post("/homebrew/check")
+    async def homebrew_check(request: Request) -> Response:
+        _, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        if admin.runtime.releases is not None:
+            admin.runtime.releases.recheck(fields.get("repo") or None)
+        return redirect("/homebrew?m=homebrew_checking", request)
 
     @router.post("/config/sources/{sid}/remove")
     async def config_remove(sid: str, request: Request) -> Response:

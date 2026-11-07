@@ -41,6 +41,7 @@ def build(role: str | None, developer: bool, _: Callable[..., str]) -> Menu:
         Entry("sessions", _("Sessions"), "/admin/sessions"),
         Entry("invitations", _("Invitations"), "/admin/invitations"),
         Entry("sources", _("Sources"), "/admin/sources"),
+        Entry("homebrew", _("Homebrew"), "/admin/homebrew"),
         Entry("tasks", _("Tasks"), "/admin/tasks"),
         Entry("config", _("Settings"), "/admin/config"),
         Entry("logs", _("Logs"), "/admin/logs"),

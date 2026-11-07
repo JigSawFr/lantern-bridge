@@ -51,6 +51,26 @@ _HOSTS = ("github.com", "githubusercontent.com")
 _FIELDS = ("name", "kind", "summary", "description", "author", "license", "tags", "genres", "language")
 
 
+#: The sentences of this module that say the same thing every time: the pages translate them.
+FIXED = frozenset(
+    {
+        "Only a repository of github.com can be added.",
+        "Give a repository as owner/name or its github.com address.",
+        "No release was found: is the repository public, and does it have one?",
+        "No release was found.",
+        "The release has no .nro or .zip asset.",
+        "Several assets could be served: name the one to serve.",
+        "The asset is empty or bigger than the bridge takes.",
+        "The asset is bigger than the bridge takes.",
+        "The asset is not on GitHub: it is not downloaded.",
+        "Too many redirects for the asset.",
+        "lantern.json is too big.",
+        "lantern.json is not valid JSON.",
+        "GitHub could not be read or the answer was not understood.",
+    }
+)
+
+
 class ReleaseError(Exception):
     """A repository cannot be served; said in a sentence for the page."""
 
@@ -410,6 +430,15 @@ class Releases:
     # -- the thread -------------------------------------------------------------------------------------
 
     def wake(self) -> None:
+        self._wake.set()
+
+    def recheck(self, repo: str | None = None) -> None:
+        """Read again, at once, one repository or all (the ETag is not used: what is there is read afresh)."""
+        with self._lock:
+            for watch in self.watches.values():
+                if repo is None or watch.repo == repo:
+                    watch.next = 0.0
+                    watch.etag = ""
         self._wake.set()
 
     def run(self, stop: threading.Event) -> None:
