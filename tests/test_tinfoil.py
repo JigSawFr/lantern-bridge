@@ -406,3 +406,17 @@ def test_when_the_best_folder_vanishes_another_serves_the_app(tmp_path: Path) ->
         runtime.cycle()
         (item,) = _items(client)
         assert client.get(str(item["file"])).content == PAYLOAD  # now served from the other folder
+
+
+def test_every_call_names_the_bridge_as_a_tinfoil_client() -> None:
+    seen: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers.get("user-agent", ""))
+        return httpx.Response(200, content=b"{}")
+
+    shop = Shop("http://shop.example.org/", client=httpx.Client(transport=httpx.MockTransport(handle)))
+    shop.get("http://shop.example.org/")
+    list(shop.stream("a.nsp"))
+    assert seen
+    assert all("tinfoil" in agent.lower() for agent in seen)

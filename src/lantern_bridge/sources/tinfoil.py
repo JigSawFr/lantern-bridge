@@ -31,6 +31,9 @@ MAX_DIRECTORIES = 64
 MAX_REDIRECTS = 3
 MAX_NAME = 255
 TIMEOUT = httpx.Timeout(10.0, read=30.0)
+#: Sent on every call: AeroFoil (and other shops) serve their JSON index only to a client that names itself
+#: a Tinfoil one in its User-Agent, and answer a web page to anything else.
+USER_AGENT = "Tinfoil-compatible lantern-bridge"
 
 
 class UpstreamError(Exception):
@@ -171,7 +174,7 @@ class Shop:
             if origin(url) != here:
                 raise UpstreamError("the shop sent the bridge to another origin")
             try:
-                headers = {"Accept": accept}
+                headers = {"Accept": accept, "User-Agent": USER_AGENT}
                 if body is not None:
                     headers["Content-Type"] = "application/json"
                 method = "GET" if body is None else "POST"
@@ -198,7 +201,7 @@ class Shop:
         UpstreamError, so that nothing is taken for the whole file.
         """
         url = self.address(path)
-        headers = {}
+        headers = {"User-Agent": USER_AGENT}
         if first or length is not None:
             headers["Range"] = f"bytes={first}-" + ("" if length is None else str(first + length - 1))
         for _ in range(MAX_REDIRECTS + 1):
