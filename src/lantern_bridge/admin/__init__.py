@@ -415,6 +415,16 @@ class Admin:
             request.url.scheme, self.peer(request), request.headers.get("x-forwarded-proto"), self.proxies
         )
 
+    def own_form(self, request: Request) -> bool:
+        """Whether a form without a session (sign-in, preferences) comes from one of our own pages."""
+        trusted = netguard.within(self.peer(request), self.proxies)
+        return netguard.same_site_request(
+            request.headers.get("sec-fetch-site"),
+            request.headers.get("origin"),
+            request.headers.get("host"),
+            request.headers.get("x-forwarded-host") if trusted else None,
+        )
+
     def allowed(self, request: Request) -> bool:
         return not self.config.admin_lan_only or self.reachable(request)
 
@@ -466,6 +476,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/lang")
     async def language(request: Request) -> Response:
+        if not admin.own_form(request):
+            return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         target = fields.get("next", "")
         back = target if target.startswith("/admin") and "//" not in target and "\\" not in target else "/admin/"
@@ -485,6 +497,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
     @router.post("/theme")
     async def theme(request: Request) -> Response:
         """Dark is the look of the pages; light is a choice of this browser, kept in a cookie."""
+        if not admin.own_form(request):
+            return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         target = fields.get("next", "")
         back = target if target.startswith("/admin") and "//" not in target and "\\" not in target else "/admin/"
@@ -511,6 +525,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/setup")
     async def setup_post(request: Request) -> Response:
+        if not admin.own_form(request):
+            return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         key = admin.client(request)
         if wait := admin.attempts.wait(key):
@@ -535,6 +551,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/login")
     async def login_post(request: Request) -> Response:
+        if not admin.own_form(request):
+            return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         key = admin.client(request)
         who = "name:" + fields.get("name", "").strip().lower()
