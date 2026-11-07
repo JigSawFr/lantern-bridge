@@ -142,6 +142,7 @@ def page_html(template: str, language: str, catalog: dict, lost: bool = False) -
             "title": catalog["title_bridge"],
             "description": html.escape(catalog["description_bridge"], quote=True),
             "og_locale": OG_LOCALES[language],
+            "social": f"social/{language}.jpg",
             "first_visit": "",
             "indexing": BRIDGE.indexing(language, ""),
             "skip": BRIDGE.skip(catalog),
