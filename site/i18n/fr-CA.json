@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Jeux de cheats",
   "cmp_row_requests": "Demandes",
   "cmp_yes": "Oui",
-  "cmp_no": "Non"
+  "cmp_no": "Non",
+  "shots_title": "L'administration en images",
+  "shots_lede": "Le pont a ses propres pages, en anglais et en français, en thème sombre ou clair. En voici trois, sur une bibliothèque inventée : rien ci-dessous n'est une vraie collection.",
+  "shots_overview": "Vue d'ensemble : ce qui est servi, la santé, et l'avancement du hachage.",
+  "shots_library": "Bibliothèque : chaque titre de chaque source, avec recherche, filtres et export.",
+  "shots_sources": "Sources : d'où le pont lit, dans quel ordre, avec un test pour chacune."
 }

@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Conjuntos de cheats",
   "cmp_row_requests": "Pedidos",
   "cmp_yes": "Sim",
-  "cmp_no": "Não"
+  "cmp_no": "Não",
+  "shots_title": "A administração, em imagens",
+  "shots_lede": "A ponte traz as próprias páginas, em inglês e francês, em tema escuro ou claro. Aqui estão três, sobre uma biblioteca inventada: nada do que aparece é uma coleção real.",
+  "shots_overview": "Visão geral: o que é servido, a saúde e o andamento do hash.",
+  "shots_library": "Biblioteca: cada título de cada fonte, com busca, filtros e exportação.",
+  "shots_sources": "Fontes: de onde a ponte lê, em que ordem, com um teste para cada uma."
 }

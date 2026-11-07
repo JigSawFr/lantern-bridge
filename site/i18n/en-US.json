@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Cheat sets",
   "cmp_row_requests": "Requests",
   "cmp_yes": "Yes",
-  "cmp_no": "No"
+  "cmp_no": "No",
+  "shots_title": "The administration, in pictures",
+  "shots_lede": "The bridge comes with its own pages, in English and French, in a dark or a light theme. Here are three of them, over a made-up library: nothing below is a real collection.",
+  "shots_overview": "Overview: what is served, health, and how far the hashing has come.",
+  "shots_library": "Library: every title from every source, with search, filters and export.",
+  "shots_sources": "Sources: where the bridge reads from, in what order, with a test for each."
 }

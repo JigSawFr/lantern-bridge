@@ -105,5 +105,10 @@
   "cmp_row_cheats": "Set di trucchi",
   "cmp_row_requests": "Richieste",
   "cmp_yes": "Sì",
-  "cmp_no": "No"
+  "cmp_no": "No",
+  "shots_title": "L'amministrazione, in immagini",
+  "shots_lede": "Il bridge ha le sue pagine, in inglese e francese, con tema scuro o chiaro. Eccone tre, su una libreria inventata: nulla di ciò che vedi è una collezione reale.",
+  "shots_overview": "Panoramica: cosa viene servito, lo stato di salute e a che punto è l'hashing.",
+  "shots_library": "Libreria: ogni titolo di ogni sorgente, con ricerca, filtri ed esportazione.",
+  "shots_sources": "Sorgenti: da dove legge il bridge, in che ordine, con una prova per ciascuna."
 }
