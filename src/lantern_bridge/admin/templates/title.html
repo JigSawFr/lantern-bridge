@@ -83,10 +83,11 @@
       {% if f.source in open_folders %}<div class="factions">
         {% set conv = conversions.get(f.format) %}
         {% if conv and compress_status == "ready" %}<details class="convert"><summary>{{ _("Convert…") }}</summary>
-          <form method="post" action="/admin/library/{{ title.title_id }}/convert" class="stack">
+          <form method="post" action="/admin/library/{{ title.title_id }}/convert" class="stack"{% set hint0 = hints.get(f.source ~ "/" ~ f.path) %}{% if hint0 %} data-estimates='{{ hint0.table | tojson }}'{% endif %}>
             <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ f.source }}"><input type="hidden" name="path" value="{{ f.path }}">
             {% if conv[1] == "compress" %}<label>{{ _("Compression level") }} <select name="level">{% for n in (3, 10, 18, 22) %}<option value="{{ n }}"{% if n == 18 %} selected{% endif %}>{{ n }}{% if n == 3 %} · {{ _("fast") }}{% elif n == 18 %} · {{ _("default") }}{% elif n == 22 %} · {{ _("smallest") }}{% endif %}</option>{% endfor %}</select></label>
             <label>{{ _("Mode") }} <select name="mode"><option value="solid">{{ _("Solid: the smallest file") }}</option><option value="block">{{ _("Block: can be read without decompressing") }}</option></select></label>{% endif %}
+            {% set hint = hints.get(f.source ~ "/" ~ f.path) %}{% if hint %}<p class="dim small estimate" data-note-measured="{{ _('from your earlier conversions') }}" data-note-typical="{{ _('a typical figure: it varies a lot with the game') }}">{{ _("Estimated result") }}: <strong data-estimate>{{ hint.default.text }}</strong> <span data-estimate-note>{{ _('from your earlier conversions') if hint.default.measured else _('a typical figure: it varies a lot with the game') }}</span></p>{% endif %}
             <label class="check"><input type="checkbox" name="delete"> {{ _("Delete the original afterwards, once the result is checked") }}</label>
             <button>{{ _("Compress to {format}", format=conv[0] | upper) if conv[1] == "compress" else _("Decompress to {format}", format=conv[0] | upper) }}</button>
           </form></details>{% endif %}

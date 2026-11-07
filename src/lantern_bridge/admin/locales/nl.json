@@ -495,5 +495,13 @@
  "smallest": "kleinste",
  "then the original is deleted": "daarna wordt het origineel verwijderd",
  "File deleted": "Bestand verwijderd",
- "File converted": "Bestand omgezet"
+ "File converted": "Bestand omgezet",
+ "Conversions": "Omzettingen",
+ "Estimated result": "Geschat resultaat",
+ "a typical figure: it varies a lot with the game": "een gebruikelijk cijfer: het verschilt sterk per spel",
+ "about {time} left": "nog ongeveer {time}",
+ "expected": "verwacht",
+ "from your earlier conversions": "volgens uw eerdere omzettingen",
+ "grew by": "gegroeid met",
+ "saved": "bespaard"
 }

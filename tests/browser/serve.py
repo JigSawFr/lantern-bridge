@@ -12,6 +12,7 @@ from pathlib import Path
 import uvicorn
 from lantern.uid import new_uid
 
+from lantern_bridge import compress
 from lantern_bridge.app import make_app
 from lantern_bridge.config import Config, FolderSource
 
@@ -24,7 +25,16 @@ def build(root: Path):  # type: ignore[no-untyped-def]
     games.mkdir(parents=True)
     for name, title_id in TITLES.items():
         (games / f"{name} [{title_id}][v0].nsp").write_bytes(name.encode() * 64)
-    config = Config(uid=new_uid(), name="Browser tests", atlas=False, sources=[FolderSource("games", games)])
+    # A folder open to changes, the keys, and a stand-in for nsz that makes nothing: Convert… is on the page and a
+    # conversion fails at once (which lights a dot in the menu).
+    (root / "state").mkdir()
+    (root / "state" / "prod.keys").write_text("master_key_00 = 00\n")
+    tool = root / "nsz.py"
+    tool.write_text("import sys\nsys.exit(0)\n")
+    compress.find_tool = lambda: str(tool)
+    config = Config(
+        uid=new_uid(), name="Browser tests", atlas=False, sources=[FolderSource("games", games, writable=True)]
+    )
     app = make_app(config, root / "state", run=False)
     store = app.state.admin
     assert store.create(store.setup_code() or "", "boss", PASSWORD) is None

@@ -495,5 +495,13 @@
  "smallest": "минимальный",
  "then the original is deleted": "затем оригинал удаляется",
  "File deleted": "Файл удалён",
- "File converted": "Файл преобразован"
+ "File converted": "Файл преобразован",
+ "Conversions": "Преобразования",
+ "Estimated result": "Ожидаемый результат",
+ "a typical figure: it varies a lot with the game": "типичное значение: сильно зависит от игры",
+ "about {time} left": "осталось около {time}",
+ "expected": "ожидается",
+ "from your earlier conversions": "по вашим прежним преобразованиям",
+ "grew by": "увеличился на",
+ "saved": "сэкономлено"
 }

@@ -35,6 +35,33 @@
     source.onerror = () => { if (source.readyState === EventSource.CLOSED) { source.close(); poll(); } };
   };
 
+  // -- Convert…: the result's expected size follows the level and the mode ---------------------------------------
+  for (const form of document.querySelectorAll("form[data-estimates]")) {
+    let table = {};
+    try { table = JSON.parse(form.dataset.estimates); } catch (_) { continue; }
+    const text = form.querySelector("[data-estimate]"), note = form.querySelector("[data-estimate-note]");
+    const refresh = () => {
+      const level = form.elements.level ? form.elements.level.value : "", mode = form.elements.mode ? form.elements.mode.value : "";
+      const found = table[level ? `${level}:${mode}` : "-"];
+      if (!found || !text) return;
+      text.textContent = found.text;
+      if (note) note.textContent = found.measured ? note.parentElement.dataset.noteMeasured : note.parentElement.dataset.noteTypical;
+    };
+    form.addEventListener("change", refresh);
+  }
+
+  // -- the dots of the menu: where something needs a look, or is going on --------------------------------------
+  const dots = (badges) => {
+    for (const el of document.querySelectorAll("[data-badge]")) {
+      const found = badges[el.dataset.badge];
+      el.hidden = !found;
+      if (found) { el.textContent = String(found.n); el.className = `dot ${found.level}`; }
+    }
+  };
+  if (document.querySelector("[data-badge]")) {
+    follow("/admin/api/badges", (text) => { try { dots(typeof text === "string" ? JSON.parse(text) : text); } catch (_) { /* skipped */ } });
+  }
+
   if (document.getElementById("progress")) {
     get().then(bind).catch(() => {});
     follow("/admin/api/state", (text) => { try { bind(JSON.parse(text)); } catch (_) { /* skipped */ } });

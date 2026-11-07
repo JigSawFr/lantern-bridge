@@ -264,6 +264,43 @@ await test("the header's buttons are the same size: the language code, the switc
   assert.ok(Math.max(...heights) - Math.min(...heights) < 4, `the header's buttons are as tall as each other (${heights})`);
 });
 
+await test("Convert…: the expected size follows the level and the mode", { width: 1280, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/library/0100AAAA00000000`);
+  await page.locator("details.convert summary").first().click();
+  const text = page.locator("[data-estimate]").first();
+  const before = await text.innerText();
+  assert.match(before, /%/, "an expected size, with the change in percent");
+  await page.locator("details.convert select[name=level]").first().selectOption("3");
+  const fast = await text.innerText();
+  await page.locator("details.convert select[name=level]").first().selectOption("22");
+  const small = await text.innerText();
+  assert.ok(fast !== small, `the level changes the figure (${fast} / ${small})`);
+  await page.locator("details.convert select[name=mode]").first().selectOption("block");
+  assert.ok((await text.innerText()) !== small, "so does the mode");
+});
+
+await test("a conversion that fails lights a dot in the menu, readable in both themes", { width: 1280, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/library/0100AAAA00000000`);
+  await page.locator("details.convert summary").first().click();
+  await page.locator("details.convert form button").last().click();
+  await page.waitForURL(/tasks/);
+  await page.waitForSelector("[data-badge=manage]:not([hidden])", { timeout: 6000 });
+  await page.waitForSelector("[data-badge=manage].bad", { timeout: 6000 }); // queued, then failed: info turns red
+  assert.equal((await page.locator("[data-badge=tasks]").first().innerText()).trim(), "1");
+  await page.locator(".more-btn").click();
+  for (const theme of ["dark", "light"]) {
+    await page.evaluate((t) => { document.documentElement.dataset.mode = t; document.documentElement.dataset.theme = t; }, theme);
+    const ratio = await page.locator("[data-badge=tasks]").first().evaluate((el) => {
+      const parse = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number);
+      const lum = ([r, g, b]) => [r, g, b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+      const cs = getComputedStyle(el);
+      const a = lum(parse(cs.color)), b = lum(parse(cs.backgroundColor));
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    assert.ok(ratio >= 4.5, `the dot is readable in the ${theme} theme (${ratio.toFixed(2)})`);
+  }
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

@@ -28,6 +28,11 @@ if log:
 mode = os.environ.get("FAKE_NSZ", "")
 if mode == "slow":
     time.sleep(30)
+if mode == "progress":
+    size = pathlib.Path(args[-1]).stat().st_size
+    line = {{"type": "progress", "step": "Compressing", "currentRead": size / 2, "totalRead": size}}
+    print(json.dumps(line), flush=True)
+    time.sleep(3)
 out = pathlib.Path(args[args.index("-o") + 1])
 src = pathlib.Path(args[-1])
 if mode == "fail":

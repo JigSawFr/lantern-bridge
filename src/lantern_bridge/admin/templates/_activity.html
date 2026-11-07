@@ -17,6 +17,18 @@
   </tbody>
 </table></div>
 
+{% if jobs %}
+<h2>{{ _("Conversions") }} <a class="small" href="/admin/tasks">{{ _("Tasks") }}</a></h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Task") }}</th><th>{{ _("Progress") }}</th></tr></thead>
+  <tbody>
+  {% for j in jobs %}
+  <tr><td><code>{{ j.name }}</code></td><td>{{ _("Compress to {format}", format=j.target | upper) if j.action == "compress" else _("Decompress to {format}", format=j.target | upper) }}</td><td>{% include "_jobprogress.html" %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+
 <h2>{{ _("Machines seen") }}</h2>
 <div class="scroll"><table>
   <thead><tr><th>{{ _("Machine") }}</th><th>{{ _("Program") }}</th><th>{{ _("Last seen") }}</th><th>{{ _("Requests") }}</th><th>{{ _("Sent") }}</th></tr></thead>

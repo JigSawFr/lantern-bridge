@@ -154,7 +154,15 @@ _BUSY, _IDLE, _SETTLE, _BEAT = (
     0.25,
     15.0,
 )  # seconds: look again while busy, while idle, after a change; keep-alive
-_FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state", "/admin/tasks")
+_FOLLOWED = (
+    "/admin",
+    "/admin/",
+    "/admin/activity",
+    "/admin/start",
+    "/admin/api/state",
+    "/admin/api/badges",
+    "/admin/tasks",
+)
 
 
 async def _ask(request: Request, target: str) -> str | None:
@@ -185,7 +193,7 @@ _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSo
 
 
 #: What an observer may read: the overview, the library with its checks and exports, the activity.
-_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/activity", "/admin/live")
+_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/api/badges", "/admin/activity", "/admin/live")
 _OBSERVER_PREFIXES = ("/admin/library", "/admin/static/")
 
 
@@ -231,6 +239,12 @@ def _size(count: float) -> str:
     return ""
 
 
+def _estimate_text(size: int, expected: int) -> str:
+    """A result's expected size and how it compares with the source ("170.2 MiB, -30 %")."""
+    change = round((expected / size - 1) * 100) if size else 0
+    return f"{_size(expected)}, {'-' if change < 0 else '+'}{abs(change)} %"
+
+
 def _duration(seconds: float) -> str:
     seconds = int(seconds)
     if seconds < 90:
@@ -269,6 +283,7 @@ class Admin:
         self.env.filters["clock"] = lambda t: time.strftime("%H:%M:%S", time.localtime(t))
         self.env.filters["iso"] = lambda t: datetime.fromtimestamp(t, UTC).isoformat(timespec="seconds")
         self.env.filters["when"] = _when
+        self.env.filters["duration"] = _duration
 
     # -- state ---------------------------------------------------------------
 
@@ -378,6 +393,7 @@ class Admin:
             name=self.config.name,
             developer=self.config.developer,
             reload_error=getattr(self.reloader, "error", None),
+            badges=self.badges(session.role) if session else {},
             lang=lang,
             theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
             mode=request.cookies.get(_THEME_COOKIE)
@@ -452,6 +468,37 @@ class Admin:
                 for line in self.ring.since(0, "WARNING", limit=200)
             ],
         }
+
+    def badges(self, role: str | None = "admin") -> dict[str, dict[str, Any]]:
+        """What the menu marks with a dot: where something needs a look, or is going on. Each entry is a count and a
+        level (bad: broken, wait: worth a look, info: going on). The Manage button sums what its pages hold."""
+        runtime = self.runtime
+        found: dict[str, dict[str, Any]] = {}
+
+        def put(key: str, count: int, level: str) -> None:
+            if count > 0:
+                found[key] = {"n": count, "level": level}
+
+        waiting = len(self.lantern.desk.waiting()) if self.lantern.desk is not None else 0
+        look = [i for i in attention.collect(runtime, waiting, self.restart_needed()) if i.level != attention.INFO]
+        put("overview", len(look), "bad" if any(i.level == attention.BAD for i in look) else "wait")
+        put("activity", len(runtime.traffic.active), "info")
+        put("library", len(runtime.browser.catalog().flagged()), "wait")
+        put("pairings", waiting, "wait")
+        put("sources", sum(1 for state in runtime.stats.sources.values() if state.reachable is False), "bad")
+        jobs = runtime.compressor.jobs() if runtime.compressor is not None else []
+        failed = sum(1 for j in jobs if j.state == "failed" and time.time() - j.finished < 3600)
+        busy = sum(1 for j in jobs if j.state in ("queued", "running"))
+        put("tasks", failed or busy, "bad" if failed else "info")
+        if role == "observer":
+            return {k: v for k, v in found.items() if k in ("overview", "activity", "library")}
+        held = [found[k] for k in ("pairings", "sources", "tasks") if k in found]
+        put(
+            "manage",
+            sum(b["n"] for b in held),
+            next((lv for lv in ("bad", "wait", "info") if any(b["level"] == lv for b in held)), "info"),
+        )
+        return found
 
     def report(self, full: bool = False) -> str:
         """The bridge's state as text to paste in a support request. Without `full` it holds no password, no
@@ -967,6 +1014,31 @@ def mount(app: FastAPI, admin: Admin) -> None:
             headers=_HEADERS,
         )
 
+    def convert_hints(title: TitleInfo) -> dict[str, dict[str, Any]]:
+        """For each file that can be converted, what the result should weigh for each level and mode (or for the
+        one way back), so the page can show it while the choice is made."""
+        compressor = admin.runtime.compressor
+        found: dict[str, dict[str, Any]] = {}
+        if compressor is None:
+            return found
+        for f in title.files:
+            target, action = CONVERSIONS.get(f.format, ("", ""))
+            if not target:
+                continue
+            choices = (
+                [(lv, block) for lv in (3, 10, 18, 22) for block in (False, True)]
+                if action == "compress"
+                else [(18, False)]
+            )
+            table = {}
+            for level, block in choices:
+                expected, measured = compressor.estimate(f.format, f.size, level, block)
+                key = f"{level}:{'block' if block else 'solid'}" if action == "compress" else "-"
+                table[key] = {"text": _estimate_text(f.size, expected), "measured": measured}
+            default = table["18:solid" if action == "compress" else "-"]
+            found[f"{f.source}/{f.path}"] = {"table": table, "default": default}
+        return found
+
     def title_view(request: Request, session: Session | None, title_id: str, done: str | None = None) -> Response:
         title = admin.runtime.browser.catalog().titles.get(title_id.upper())
         if title is None:
@@ -987,6 +1059,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             timings=admin.runtime.stats.timings,
             open_folders={x.id for x in admin.config.sources if isinstance(x, FolderSource) and x.writable},
             conversions=CONVERSIONS,
+            hints=convert_hints(title),
             compress_status=admin.runtime.compressor.status() if admin.runtime.compressor is not None else "no_tool",
             atlas=admin.runtime.atlas.get(title.title_id) if admin.runtime.atlas is not None else None,
             message=admin.tr(request)(_DONE[done]) if done else None,
@@ -1091,6 +1164,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 level=int(level) if level.isdigit() else 18,
                 block=fields.get("mode") == "block",
                 delete_original=fields.get("delete") == "on",
+                size=target.stat().st_size,
             )
         except ValueError as error:
             return Response(t(str(error)), 400, headers=_HEADERS)
@@ -1135,6 +1209,11 @@ def mount(app: FastAPI, admin: Admin) -> None:
             "days": days,
             "days_max": max((d.sent for d in days), default=0),
             "transfers": transfers,
+            "jobs": [
+                j
+                for j in (admin.runtime.compressor.jobs() if admin.runtime.compressor else [])
+                if j.state in ("queued", "running")
+            ],
             "clients": clients,
             "rates": traffic.rates(),
             "totals": traffic.totals,
@@ -1400,6 +1479,13 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 await asyncio.sleep(1)
 
         return StreamingResponse(events(), media_type="text/event-stream", headers=_HEADERS)
+
+    @router.get("/api/badges")
+    async def api_badges(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return Response(status_code=401, headers=_HEADERS)
+        return Response(json.dumps(admin.badges(session.role)), media_type="application/json", headers=_HEADERS)
 
     @router.get("/live")
     async def live(request: Request) -> Response:
