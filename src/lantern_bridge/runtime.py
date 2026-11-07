@@ -15,6 +15,7 @@ from pathlib import Path
 
 from lantern.server import MemoryLibrary
 
+from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
@@ -72,6 +73,8 @@ class Runtime:
         self._remote_failed: dict[tuple[str, str], float] = {}
         self.projection = Projection(library, self.index, self.roots, self.shops, [s.id for s in config.sources])
         self.browser = Browser(self.index, self.projection)
+        self.atlas = Atlas(state_dir / "atlas.json") if config.atlas else None
+        self.projection.atlas = self.atlas
         self.traffic = Traffic()
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
@@ -97,6 +100,7 @@ class Runtime:
         self._wake = threading.Event()
         self._thread: threading.Thread | None = None
         self._remote_thread: threading.Thread | None = None
+        self._atlas_thread: threading.Thread | None = None
 
     def _shop(self, source: ShopSource) -> Shop:
         password = os.environ.get(source.password_env) if source.password_env else None
@@ -269,6 +273,11 @@ class Runtime:
         if self.shops:
             self._remote_thread = threading.Thread(target=self._remote_loop, name="lantern-bridge-remote", daemon=True)
             self._remote_thread.start()
+        if self.atlas is not None:
+            self._atlas_thread = threading.Thread(
+                target=self.atlas.run, args=(self._stop, self.wake), name="lantern-bridge-atlas", daemon=True
+            )
+            self._atlas_thread.start()
         for source, shop in self.shops.items():
             if isinstance(shop, Ownfoil):
                 watcher = threading.Thread(
@@ -283,11 +292,13 @@ class Runtime:
     def stop(self) -> None:
         self._stop.set()
         self._wake.set()
-        for thread in (self._thread, self._remote_thread, *self._watchers):
+        for thread in (self._thread, self._remote_thread, self._atlas_thread, *self._watchers):
             if thread is not None:
                 thread.join(timeout=10)
         for shop in self.shops.values():
             shop.close()
+        if self.atlas is not None:
+            self.atlas.close()
         self.index.close()
         if self.ledger is not None:
             self.ledger.close()

@@ -18,12 +18,22 @@ from lantern._generated.models import App, Image, Title
 from lantern.server.files import FileRef
 from lantern.server.library import MemoryLibrary
 
+from lantern_bridge.atlas import Atlas, genres_of
 from lantern_bridge.identify import Identity, identify
 from lantern_bridge.index import Index, Row
 from lantern_bridge.sources.ownfoil import Ownfoil, Picture, Sheet
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 
 log = logging.getLogger("lantern_bridge.library")
+
+
+def _names(names: Sequence[str]) -> str | None:
+    """Names as one string, cut to what a sheet allows (512 bytes)."""
+    return ", ".join(names).encode()[:500].decode(errors="ignore") or None
+
+
+def _tags(labels: Sequence[str]) -> list[str]:
+    return [label[:64] for label in labels[:32]]
 
 
 class Projection:
@@ -49,6 +59,7 @@ class Projection:
         self._shown: dict[str, tuple[Row, Identity]] = {}  # app id -> the row that serves it
         self._refused: dict[str, Row] = {}  # what the library refused, so that it is said once
         self._titles: dict[str, Title] = {}
+        self.atlas: Atlas | None = None  # what Atlas says of a game, when the setting is on
         self.sheets: dict[str, dict[str, Sheet]] = {}  # source -> title id -> what the source says of the game
         self._pictures: dict[tuple[str, str], Image] = {}  # (source, address) -> the image as the library serves it
         self._picture_retry: dict[tuple[str, str], float] = {}
@@ -151,8 +162,19 @@ class Projection:
             for source, sheets in self.sheets.items()
             if title_id in sheets
         ]
+        known = self.atlas.get(title_id) if self.atlas is not None else None
         if not found:
-            return Title(platform="switch", title_id=title_id, name=name)
+            if known is None:
+                return Title(platform="switch", title_id=title_id, name=name)
+            return Title(
+                platform="switch",
+                title_id=title_id,
+                name=known.name,
+                developer=_names(known.developers),
+                publisher=_names(known.publishers),
+                genres=genres_of(known.genres) or None,
+                tags=_tags(known.genres) or None,
+            )
         _, source, sheet = min(found, key=lambda f: f[0])
         shots = [image for p in sheet.screenshots if (image := self._image(source, p)) is not None]
         return Title(
@@ -161,11 +183,11 @@ class Projection:
             name=sheet.name or name,
             summary=sheet.summary,
             description=sheet.description,
-            developer=sheet.developer,
-            publisher=sheet.publisher,
+            developer=sheet.developer or (_names(known.developers) if known else None),
+            publisher=sheet.publisher or (_names(known.publishers) if known else None),
             release=sheet.release,
-            genres=list(sheet.genres) or None,
-            tags=list(sheet.tags) or None,
+            genres=list(sheet.genres or (genres_of(known.genres) if known else ())) or None,
+            tags=list(sheet.tags or (_tags(known.genres) if known else ())) or None,
             languages=list(sheet.languages) or None,
             icon=self._image(source, sheet.icon),
             banner=self._image(source, sheet.banner),

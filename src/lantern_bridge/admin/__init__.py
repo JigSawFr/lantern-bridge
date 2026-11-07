@@ -481,6 +481,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             sheet=admin.runtime.projection.title(title.title_id),
             cheats=cheats,
             timings=admin.runtime.stats.timings,
+            atlas=admin.runtime.atlas.get(title.title_id) if admin.runtime.atlas is not None else None,
             message=admin.tr(request)(_DONE[done]) if done else None,
         )
 
@@ -766,6 +767,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             message=t(done) if done else None,
             error=error,
             tested=tested,
+            atlas_info=admin.runtime.atlas,
         )
 
     async def change(request: Request, edit: Any, done: str) -> Response:
@@ -809,6 +811,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.public = "public" in f
             config.admin_lan_only = "admin_lan_only" in f
             config.developer = "developer" in f
+            config.atlas = "atlas" in f
             return None
 
         return await change(request, edit, "saved")
