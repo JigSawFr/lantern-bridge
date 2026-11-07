@@ -291,3 +291,4 @@ fieldset.group p{margin:.7rem 0}
 .savebar{display:flex;align-items:center;gap:1rem;margin-top:1rem}
 .savebar [data-dirty-note]{flex:1}
 .card.dirty .savebar{position:sticky;bottom:0;margin:1rem -1.25rem -1.1rem;padding:.8rem 1.25rem;background:var(--night);border-top:1px solid var(--aurora);border-radius:0 0 var(--radius) var(--radius)}
+:root[data-theme="light"] .lang button[aria-current]{color:#00604d}

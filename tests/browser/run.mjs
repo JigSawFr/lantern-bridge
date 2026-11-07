@@ -116,6 +116,41 @@ await test("desktop: the search shortcut", { width: 1280, height: 800 }, async (
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "q");
 });
 
+await test("light theme: the text of every page has an AA contrast", { width: 1200, height: 900 }, async (page) => {
+  await page.context().addCookies([{ name: "lb_theme", value: "light", url: `${BASE}/` }]);
+  for (const path of ["", "library", "library?view=list", "library/0100AAAA00000000", "activity", "events", "devices", "pairings", "config", "sources", "logs"]) {
+    await page.goto(`${BASE}/${path}`);
+    const bad = await page.evaluate(() => {
+      const lum = (c) => { const a = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
+      const parse = (s) => { const m = s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const v = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return { rgb: v.slice(0, 3), a: v.length > 3 ? v[3] : 1 }; };
+      const background = (el) => {
+        let base = [255, 255, 255];
+        const chain = []; for (let e = el; e; e = e.parentElement) chain.push(e);
+        for (const e of chain.reverse()) { const c = parse(getComputedStyle(e).backgroundColor); if (c && c.a > 0) base = base.map((v, i) => Math.round(c.rgb[i] * c.a + v * (1 - c.a))); }
+        return base;
+      };
+      const out = [];
+      for (const el of document.querySelectorAll("body *")) {
+        if (!([...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()))) continue;
+        if (el.closest(".cover")) continue; // a title's initials sit on a gradient
+        const cs = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        if (cs.visibility === "hidden" || cs.display === "none" || !r.width || !r.height) continue;
+        const fg = parse(cs.color);
+        if (!fg || fg.a === 0) continue; // text filled by a gradient
+        const bg = background(el);
+        const mix = fg.rgb.map((v, i) => Math.round(v * fg.a + bg[i] * (1 - fg.a)));
+        const hi = Math.max(lum(mix), lum(bg)), lo = Math.min(lum(mix), lum(bg));
+        const big = parseFloat(cs.fontSize) >= 24 || (parseFloat(cs.fontSize) >= 18.66 && Number(cs.fontWeight) >= 700);
+        const ratio = (hi + 0.05) / (lo + 0.05);
+        if (ratio < (big ? 3 : 4.5)) out.push(`${el.tagName.toLowerCase()} "${el.textContent.trim().slice(0, 24)}" ${ratio.toFixed(2)}`);
+      }
+      return out;
+    });
+    assert.deepEqual(bad, [], `${path || "overview"}: too little contrast`);
+  }
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);
