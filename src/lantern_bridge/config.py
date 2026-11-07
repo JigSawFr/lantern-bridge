@@ -112,6 +112,8 @@ class Config:
     developer: bool = False
     # True: titles get their genres, developer and publisher from Atlas (a public file fetched once a day).
     atlas: bool = True
+    # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
+    metrics: bool = False
     sources: list[Source] = field(default_factory=list)
     # Everything this version does not know, kept to be written back.
     _extra: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -127,6 +129,7 @@ class Config:
         data["admin_lan_only"] = self.admin_lan_only
         data["developer"] = self.developer
         data["atlas"] = self.atlas
+        data["metrics"] = self.metrics
         data["sources"] = [{**self._extra_sources.get(s.id, {}), **_source_table(s)} for s in self.sources]
         return tomli_w.dumps(data)
 
@@ -181,7 +184,18 @@ def _parse(data: dict[str, Any]) -> Config:
         raise ConfigSchemaError(
             f"the configuration has schema {schema}, this version reads up to {SCHEMA}: update lantern-bridge"
         )
-    known = {"schema", "uid", "name", "remote_rate", "public", "admin_lan_only", "developer", "atlas", "sources"}
+    known = {
+        "schema",
+        "uid",
+        "name",
+        "remote_rate",
+        "public",
+        "admin_lan_only",
+        "developer",
+        "atlas",
+        "metrics",
+        "sources",
+    }
     extra = {k: v for k, v in data.items() if k not in known}
     uid = data.get("uid")
     name = data.get("name", DEFAULT_NAME)
@@ -202,6 +216,9 @@ def _parse(data: dict[str, Any]) -> Config:
     atlas = data.get("atlas", True)
     if not isinstance(atlas, bool):
         raise ConfigError("`atlas` must be true or false")
+    metrics = data.get("metrics", False)
+    if not isinstance(metrics, bool):
+        raise ConfigError("`metrics` must be true or false")
     sources: list[Source] = []
     extra_sources: dict[str, dict[str, Any]] = {}
     raw_sources = data.get("sources", [])
@@ -250,6 +267,7 @@ def _parse(data: dict[str, Any]) -> Config:
         admin_lan_only=lan_only,
         developer=developer,
         atlas=atlas,
+        metrics=metrics,
         sources=sources,
         _extra=extra,
         _extra_sources=extra_sources,

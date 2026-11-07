@@ -55,6 +55,7 @@ FR: dict[str, str] = {
     "The tiles above start again with the bridge; the days and the machines are kept for 90 days.": "Les tuiles du haut repartent de zéro avec le pont ; les jours et les machines sont gardés 90 jours.",
     "The last days": "Les derniers jours",
     "Day": "Jour",
+    "Metrics: answer /metrics (Prometheus format) to the local network": "Métriques : répondre sur /metrics (format Prometheus) au réseau local",
     "Health": "Santé",
     "to check": "à vérifier",
     "failing": "en panne",
