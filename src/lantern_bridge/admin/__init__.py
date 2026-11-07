@@ -50,6 +50,7 @@ from lantern_bridge.config import (
     check,
     load,
     parse_mqtt,
+    parse_webhook,
     save,
 )
 from lantern_bridge.logs import LEVELS, LogRing
@@ -920,6 +921,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             config.developer = "developer" in f
             config.atlas = "atlas" in f
             config.metrics = "metrics" in f
+            config.webhook = parse_webhook(f.get("webhook", "").strip())
             return None
 
         return await change(request, edit, "saved")

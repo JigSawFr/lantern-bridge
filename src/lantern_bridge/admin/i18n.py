@@ -32,6 +32,8 @@ FR: dict[str, str] = {
     "Activity": "Activité",
     "Clear the library page cache": "Vider le cache de la page Bibliothèque",
     "Developer": "Développeur",
+    "Address called when scans find changes (optional)": "Adresse appelée quand les scans trouvent des changements (facultatif)",
+    "The bridge sends one POST of JSON with how many files were added, changed or removed per source (no path, no title), at most every ten seconds. A failed call is not repeated.": "Le pont envoie un POST JSON avec le nombre de fichiers ajoutés, modifiés ou retirés par source (ni chemin ni titre), au plus toutes les dix secondes. Un appel qui échoue n'est pas répété.",
     "MQTT broker": "Broker MQTT",
     "The bridge publishes its state on an MQTT broker, where Home Assistant reads it. Leave the host empty to publish nothing. The password is read from the environment variable named below.": "Le pont publie son état sur un broker MQTT, où Home Assistant le lit. Laissez l'hôte vide pour ne rien publier. Le mot de passe est lu dans la variable d'environnement nommée ci-dessous.",
     "Host": "Hôte",

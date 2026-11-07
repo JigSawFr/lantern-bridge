@@ -136,6 +136,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **MQTT.** Give the bridge a broker (*Settings › MQTT broker*, or a `[mqtt]` table: `host`, `port`, `user`, `password_env`, `prefix`, `tls`) and it publishes under `<prefix>/<uid>` (`lantern-bridge` unless you change it): `state`, a retained JSON document of `schema` 1 every 30 seconds (status and checks, titles, files hashed and waiting, traffic, each source up or not; no path and no name of a device), and `availability` (`online`, and `offline` as its last will). An order on `order/rescan` reads every source again now. Home Assistant's [Boréale integration](https://github.com/JigSawFr/boreale-ha) reads these topics.
 
+**Webhook.** Set an address in *Settings* (or `webhook` in `config.toml`) and the bridge sends it one POST of JSON when scans found changes, at most every ten seconds: `schema` 1, `event` `scan`, the bridge (id, name, version) and, per source, how many files were `added`, `changed` or `removed`. No path and no title. A call that fails is logged and not repeated. A secret the receiver wants goes in the address's path (no credentials in the address).
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.
