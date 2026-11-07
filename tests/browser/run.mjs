@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 
-const { chromium } = createRequire(import.meta.url)("playwright");
+const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODULE || "playwright");
 const PORT = process.env.PORT || "8765";
 const BASE = `http://127.0.0.1:${PORT}/admin`;
 const PASSWORD = "correct horse battery staple";
@@ -15,7 +15,10 @@ await new Promise((resolve, reject) => {
   server.on("exit", (code) => reject(new Error(`the test server stopped (${code})`)));
 });
 
-const browser = await chromium.launch();
+// CHROME: a browser already on the machine (the CI runner's Chrome); without it Playwright's own Chromium
+const browser = await chromium.launch(
+  process.env.CHROME ? { executablePath: process.env.CHROME, args: ["--no-sandbox"] } : {},
+);
 let failed = 0;
 const test = async (name, size, body) => {
   const context = await browser.newContext({ viewport: size });
