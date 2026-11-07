@@ -73,7 +73,7 @@
     count.textContent = T.count.replace('{ok}', String(good)).replace('{all}', String(names.length));
   }
 
-  input.addEventListener('input', render);
+  input.addEventListener('input', () => { if (window.countEvent) window.countEvent('identify'); render(); });
   render();
   root.hidden = false;
 })();

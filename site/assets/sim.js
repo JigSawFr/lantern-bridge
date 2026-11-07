@@ -89,7 +89,7 @@
   for (const source of SOURCES) {
     const button = el('button', null, label(source));
     button.type = 'button'; button.dataset.source = source;
-    button.addEventListener('click', () => { if (chosen.has(source)) chosen.delete(source); else chosen.add(source); render(); });
+    button.addEventListener('click', () => { if (window.countEvent) window.countEvent('simulator'); if (chosen.has(source)) chosen.delete(source); else chosen.add(source); render(); });
     picker.append(button);
   }
   render();
