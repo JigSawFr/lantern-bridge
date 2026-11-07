@@ -92,6 +92,13 @@ def make_app(
     app.state.admin_pages = pages
     mount(app, pages)
 
+    @app.get("/", include_in_schema=False)
+    async def home(request: Request) -> Response:
+        """A page for a browser; any other client (a console's app included) keeps the plain 404 it always had."""
+        if "text/html" not in request.headers.get("accept", ""):
+            raise HTTPException(404)
+        return pages.home(request, health.overall(health.run(runtime)))
+
     @app.get("/metrics", include_in_schema=False)
     async def metrics_page(request: Request) -> Response:
         """The figures for a monitoring tool: off unless the settings say so, and for the local network only."""
