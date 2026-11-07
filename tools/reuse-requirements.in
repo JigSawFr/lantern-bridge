@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 JigSawFr
+# SPDX-License-Identifier: MIT
+
+# What reuse.yml lints the licences with. tools/reuse-requirements.txt pins it
+# and its dependencies by hash; regenerate it after a change here:
+#   uv pip compile tools/reuse-requirements.in --universal --generate-hashes \
+#     --python-version 3.11 --exclude-newer <a date two weeks ago> -o tools/reuse-requirements.txt
+reuse==6.2.0
