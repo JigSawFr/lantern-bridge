@@ -1,0 +1,37 @@
+<section class="cards">
+  <div class="tile"><span class="n">{{ transfers | length }}</span><span class="what">{{ _("transfers in progress") }}</span></div>
+  <div class="tile"><span class="n">{{ rates.bytes | size }}/s</span><span class="what">{{ _("sent now") }}</span></div>
+  <div class="tile"><span class="n">{{ "%.1f"|format(rates.requests) }}</span><span class="what">{{ _("requests a second") }}</span></div>
+  <div class="tile"><span class="n">{{ totals.sent | size }}</span><span class="what">{{ _("sent since the start") }} · {{ totals.requests }} {{ _("requests") }}{% if totals.errors %} · {{ totals.errors }} {{ _("errors") }}{% endif %}</span></div>
+</section>
+
+<h2>{{ _("Transfers in progress") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Machine") }}</th><th>{{ _("Request") }}</th><th>{{ _("Range") }}</th><th>{{ _("Sent") }}</th><th>{{ _("Rate") }}</th><th>{{ _("For") }}</th></tr></thead>
+  <tbody>
+  {% for t in transfers %}
+  <tr><td>{{ t.client }}</td><td><code>{{ t.method }} {{ t.path[-48:] }}</code></td><td>{{ t.range or "–" }}</td><td>{{ t.sent | size }}</td><td>{{ t.rate | size }}/s</td><td>{{ "%.0f"|format(now - t.started) }} s</td></tr>
+  {% else %}
+  <tr><td colspan="6">{{ _("Nothing is being sent.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ _("Machines seen") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Machine") }}</th><th>{{ _("Program") }}</th><th>{{ _("Last seen") }}</th><th>{{ _("Requests") }}</th><th>{{ _("Sent") }}</th></tr></thead>
+  <tbody>
+  {% for c in clients %}
+  <tr><td>{{ c.address }}</td><td class="dim">{{ c.agent or "–" }}</td><td>{{ c.last | when }}</td><td>{{ c.requests }}</td><td>{{ c.sent | size }}</td></tr>
+  {% else %}
+  <tr><td colspan="5">{{ _("No machine has called the library since the bridge started.") }} <a href="/admin/devices">{{ _("Paired devices") }}</a></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ _("Hashing") }}</h2>
+<div class="card">
+  <progress max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
+  <p>{{ state.hashed }} / {{ state.total }} {{ _("files hashed") }} · {{ state.pending_bytes | size }} {{ _("to go") }}{% if state.rate %} · {{ state.rate | size }}/s{% endif %}{% if state.eta %} · {{ _("time left") }} {{ (state.eta / 60) | round | int }} min{% endif %}</p>
+</div>
+<p class="dim small">{{ _("Up for") }} {{ (uptime / 60) | round | int }} min. {{ _("These figures are kept in memory only and start again with the bridge.") }}</p>

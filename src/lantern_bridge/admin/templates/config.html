@@ -16,6 +16,7 @@
     <label>{{ _("Hashing rate over the network (MiB/s, 0: no limit)") }} <input name="remote_rate" type="number" min="0" max="1000" step="0.5" value="{{ file.remote_rate }}"></label>
   </div>
   <p><label class="check"><input type="checkbox" name="public"{% if file.public %} checked{% endif %}> {{ _("Public: anyone who reaches the server reads the library") }}</label></p>
+  <p><label class="check"><input type="checkbox" name="developer"{% if file.developer %} checked{% endif %}> {{ _("Developer mode: add a page with the requests, the raw JSON and the timings") }}</label></p>
   <p><label class="check"><input type="checkbox" name="admin_lan_only"{% if file.admin_lan_only %} checked{% endif %}> {{ _("These pages answer on the local network only") }}</label></p>
   <button>{{ _("Save") }}</button>
 </form>

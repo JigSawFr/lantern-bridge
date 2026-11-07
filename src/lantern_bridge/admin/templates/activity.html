@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Activity") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Activity") }}</h1>
+<p class="lede">{{ _("Who is reading the library right now, and how far the hashing has come.") }}</p>
+<div id="live" data-live="/admin/activity?fragment=1">{% include "_activity.html" %}</div>
+{% endblock %}

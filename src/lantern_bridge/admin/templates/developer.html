@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Developer") }}{% endblock %}
+{% block body %}
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+<h1>{{ _("Developer") }}</h1>
+<p class="lede">{{ _("Tools to test and debug the bridge. Turn this page off in the settings.") }}</p>
+
+<section class="cards facts">
+  <div class="tile"><span class="n small">{{ process.apps }}</span><span class="what">{{ _("apps in the library") }}</span></div>
+  <div class="tile"><span class="n small">{{ process.titles }}</span><span class="what">{{ _("titles") }}</span></div>
+  <div class="tile"><span class="n small">{{ process.journal if process.journal is not none else "–" }}</span><span class="what">{{ _("journal position") }}</span></div>
+  <div class="tile"><span class="n small">{{ process.threads }}</span><span class="what">{{ _("threads") }}</span></div>
+</section>
+<p class="dim small">pid {{ process.pid }} · Python {{ process.python }} · {{ process.platform }}</p>
+
+<div class="card">
+  <h2>{{ _("Actions") }}</h2>
+  <form method="post" class="row"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+    <button class="ghost" formaction="/admin/developer/scan">{{ _("Scan now") }}</button>
+    <button class="ghost" formaction="/admin/developer/forget">{{ _("Clear the library page cache") }}</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>{{ _("A title as JSON") }}</h2>
+  <form method="get" action="/admin/developer/title.json" class="row" target="_blank">
+    <label class="grow">{{ _("Title id") }} <input name="id" placeholder="0100AAAA00000000" pattern="[0-9A-Fa-f]{16}" required></label>
+    <button class="ghost">{{ _("Open") }}</button>
+  </form>
+</div>
+
+<h2>{{ _("Slowest hashing since the start") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("File") }}</th><th>{{ _("Source") }}</th><th>{{ _("Took") }}</th><th>{{ _("When") }}</th></tr></thead>
+  <tbody>
+  {% for key, t in slow %}
+  <tr><td><code>{{ key[1].rsplit("#", 1)[-1][-60:] }}</code></td><td>{{ key[0] }}</td><td>{{ "%.2f"|format(t[0]) }} s</td><td>{{ t[1] | when }}</td></tr>
+  {% else %}
+  <tr><td colspan="4">{{ _("Nothing was hashed since the start.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ _("The last requests") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("When") }}</th><th>{{ _("Machine") }}</th><th>{{ _("Request") }}</th><th>{{ _("Status") }}</th><th>{{ _("Time") }}</th><th>{{ _("Sent") }}</th></tr></thead>
+  <tbody>
+  {% for r in recent %}
+  <tr><td>{{ r.time | when }}</td><td>{{ r.client }}</td><td><code>{{ r.method }} {{ r.path[-60:] }}</code></td><td>{{ r.status }}</td><td>{{ "%.0f"|format(r.seconds * 1000) }} ms</td><td>{{ r.sent | size }}</td></tr>
+  {% else %}
+  <tr><td colspan="6">{{ _("No request yet.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

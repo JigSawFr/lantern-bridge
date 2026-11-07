@@ -21,6 +21,7 @@ from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
 from lantern_bridge.runtime import Runtime
+from lantern_bridge.traffic import TrafficMiddleware
 from lantern_bridge.upstream import BridgeLibrary
 
 
@@ -61,6 +62,7 @@ def make_app(
     )
     runtime.answer_request = lantern.answer_request
     include(app, lantern)
+    app.add_middleware(TrafficMiddleware, traffic=runtime.traffic)
     ring = LogRing()
     install(ring, json_lines=json_logs)
     store = AdminStore(state_dir / "admin.json")
