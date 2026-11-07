@@ -256,6 +256,14 @@ for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone"
   });
 }
 
+await test("the header's buttons are the same size: the language code, the switch, Sign out", { width: 1280, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/`);
+  const size = (selector) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).fontSize);
+  assert.equal(await size(".langmenu summary"), await size(".out"), "the language code is as big as Sign out");
+  const heights = await page.evaluate(() => [".langmenu summary", ".modes", ".out"].map((s) => document.querySelector(s).getBoundingClientRect().height));
+  assert.ok(Math.max(...heights) - Math.min(...heights) < 4, `the header's buttons are as tall as each other (${heights})`);
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

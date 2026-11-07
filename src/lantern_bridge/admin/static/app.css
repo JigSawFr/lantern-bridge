@@ -61,14 +61,14 @@ nav a[aria-current]{color:var(--abyss);background:var(--snow)}
 }
 .flag{font:16px/1 "Twemoji Flags","Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;flex:none}
 .langmenu{position:relative}
-.langmenu summary{list-style:none;display:inline-flex;align-items:center;gap:.4rem;min-height:36px;padding:0 .7rem;border:1px solid var(--line);border-radius:999px;color:var(--mist);cursor:pointer;font:500 .8rem var(--mono)}
+.langmenu summary{list-style:none;display:inline-flex;align-items:center;gap:.4rem;min-height:36px;padding:0 .7rem;border:1px solid var(--line);border-radius:999px;color:var(--mist);cursor:pointer;font:500 .85rem var(--body)}
 .langmenu summary::-webkit-details-marker{display:none}
 .langmenu summary:hover,.langmenu[open] summary{color:var(--snow);border-color:var(--dusk)}
 .langs{position:absolute;right:0;top:calc(100% + .4rem);z-index:20;display:grid;min-width:15rem;max-height:70vh;overflow:auto;padding:.35rem;background:var(--night);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px -16px rgb(0 0 0 / .6)}
 .langs button{display:flex;align-items:center;justify-content:flex-start;gap:.7rem;width:100%;background:none;border:0;color:var(--snow);padding:.5rem .6rem;border-radius:8px;text-align:left;font:500 .9rem var(--body);cursor:pointer;min-height:40px}
 .langs button:hover{background:rgb(255 255 255 / .06)}
 .langs button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
-@media (max-width:40rem){.langmenu summary .code{display:none}.langs{right:-3.5rem}}
+@media (max-width:40rem){.langmenu summary .lc{display:none}.langs{right:-3.5rem}}
 .modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .modes button{background:none;color:var(--mist);border:0;width:36px;min-height:36px;display:grid;place-items:center;padding:0;cursor:pointer}
 .modes button:hover{color:var(--snow)}
