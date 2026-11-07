@@ -212,3 +212,11 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
   a{color:LinkText}
   :focus-visible{outline:2px solid Highlight}
 }
+
+.timeline{list-style:none;margin:1rem 0;padding:0;display:grid;gap:.35rem}
+.timeline .day h2{margin:1.4rem 0 .3rem;font-size:.95rem;color:var(--mist)}
+.timeline .ev{display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:baseline;padding:.45rem .8rem;border-left:3px solid var(--line);background:var(--surface);border-radius:0 10px 10px 0}
+.timeline .ev time{font:500 .8rem var(--mono);color:var(--dusk)}
+.timeline .ev.source_down,.timeline .ev.pairing_refused,.timeline .ev.revoked{border-left-color:var(--danger)}
+.timeline .ev.source_up,.timeline .ev.paired{border-left-color:var(--aurora)}
+.timeline .ev.update{border-left-color:var(--ice)}

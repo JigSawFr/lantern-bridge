@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Journal") }}{% endblock %}
+{% block body %}
+{% set labels = {
+  "started": _("Bridge started"), "scan": _("Files changed"), "source_down": _("Source down"), "source_up": _("Source back"),
+  "update": _("Newer version out"), "settings": _("Settings saved"), "paired": _("Device paired"),
+  "pairing_refused": _("Pairing refused"), "revoked": _("Device revoked")} %}
+<h1>{{ _("Journal") }}</h1>
+<p class="lede">{{ _("What happened to the bridge, newest first: scans that found changes, a source gone and back, devices paired or revoked, settings saved. Kept for 90 days, with no path and no title.") }}</p>
+<nav class="chips" aria-label="{{ _('Kind') }}">
+  <a href="/admin/events"{% if not kind %} aria-current="true"{% endif %}>{{ _("All") }}</a>
+  {% for k in kinds %}<a href="/admin/events?kind={{ k }}"{% if kind == k %} aria-current="true"{% endif %}>{{ labels[k] }}</a>{% endfor %}
+</nav>
+{% if events %}
+<ul class="timeline">
+  {% for e in events %}
+  {% if loop.first or (e.ts | day) != (events[loop.index0 - 1].ts | day) %}<li class="day"><h2>{{ e.ts | day }}</h2></li>{% endif %}
+  <li class="ev {{ e.kind }}"><time datetime="{{ e.ts | iso }}">{{ e.ts | clock }}</time> <strong>{{ labels.get(e.kind, e.kind) }}</strong>{% if e.subject %} <span class="pill">{{ e.subject }}</span>{% endif %}{% if e.detail %} <span class="dim small">{{ e.detail }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty card"><p>{% if not usable %}{{ _("The journal is off: the history file of this bridge cannot be used.") }}{% elif kind %}{{ _("Nothing of this kind yet.") }} <a href="/admin/events">{{ _("All") }}</a>{% else %}{{ _("Nothing yet: the journal fills as the bridge scans, pairs and changes.") }}{% endif %}</p></div>
+{% endif %}
+{% endblock %}

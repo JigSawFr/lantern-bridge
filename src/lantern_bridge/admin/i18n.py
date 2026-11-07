@@ -10,6 +10,20 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "Journal": "Journal",
+    "What happened to the bridge, newest first: scans that found changes, a source gone and back, devices paired or revoked, settings saved. Kept for 90 days, with no path and no title.": "Ce qui est arrivé au pont, du plus récent au plus ancien : les lectures qui ont trouvé des changements, une source tombée puis revenue, des appareils appairés ou révoqués, des réglages enregistrés. Gardé 90 jours, sans chemin ni titre.",
+    "The journal is off: the history file of this bridge cannot be used.": "Le journal est désactivé : le fichier d'historique de ce pont est inutilisable.",
+    "Nothing of this kind yet.": "Rien de ce genre pour l'instant.",
+    "Nothing yet: the journal fills as the bridge scans, pairs and changes.": "Rien pour l'instant : le journal se remplit au fil des lectures, des appairages et des changements.",
+    "Bridge started": "Pont démarré",
+    "Files changed": "Fichiers modifiés",
+    "Source down": "Source hors service",
+    "Source back": "Source revenue",
+    "Newer version out": "Nouvelle version sortie",
+    "Settings saved": "Réglages enregistrés",
+    "Device paired": "Appareil appairé",
+    "Pairing refused": "Appairage refusé",
+    "Device revoked": "Appareil révoqué",
     "Open Lantern on the console and pick this server, then accept its request in": "Ouvrez Lantern sur la console et choisissez ce serveur, puis acceptez sa demande dans",
     "Create one above and give its code to the person, who types it in Lantern when adding this server.": "Créez-en une ci-dessus et donnez son code à la personne, qui le saisit dans Lantern en ajoutant ce serveur.",
     "Clear the filters": "Effacer les filtres",
