@@ -10,6 +10,13 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "Find a setting…": "Chercher un réglage…",
+    "Find a setting": "Chercher un réglage",
+    "No setting matches.": "Aucun réglage ne correspond.",
+    "The settings could not be saved.": "Les réglages n'ont pas pu être enregistrés.",
+    "Unsaved changes in": "Modifications non enregistrées dans",
+    "card(s) — applied at the next restart.": "carte(s) — appliquées au prochain redémarrage.",
+    "Save all": "Tout enregistrer",
     "This is a Lantern server.": "Ceci est un serveur Lantern.",
     "Running": "En marche",
     "Running, with a warning": "En marche, avec un avertissement",
