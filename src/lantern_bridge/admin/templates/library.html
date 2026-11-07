@@ -12,7 +12,8 @@
   <label>{{ _("State") }} <select name="state">
     <option value="">{{ _("Any") }}</option>
     <option value="hashed"{% if f.state == "hashed" %} selected{% endif %}>{{ _("Hashed") }}</option>
-    <option value="pending"{% if f.state == "pending" %} selected{% endif %}>{{ _("Waiting to be hashed") }}</option></select></label>
+    <option value="pending"{% if f.state == "pending" %} selected{% endif %}>{{ _("Waiting to be hashed") }}</option>
+    <option value="check"{% if f.state == "check" %} selected{% endif %}>{{ _("With something to check") }}</option></select></label>
   <label>{{ _("Sort") }} <select name="sort">
     <option value="name"{% if f.sort in ("", "name") %} selected{% endif %}>{{ _("Name") }}</option>
     <option value="size"{% if f.sort == "size" %} selected{% endif %}>{{ _("Size") }}</option>
@@ -40,6 +41,7 @@
         {% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span>{% endif %}
         {% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}
         {% for g in t.genres[:2] %}<span class="badge genre">{{ g }}</span>{% endfor %}
+        {% if t.title_id in flagged %}<span class="badge wait">{{ _("to check") }}</span>{% endif %}
         {% if t.pending %}<span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}
       </span>
       <span class="dim small">{{ t.size | size }} · {{ t.sources | join(", ") }}</span>

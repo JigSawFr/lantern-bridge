@@ -147,6 +147,13 @@ class Catalog:
                 writer.writerow([*(_cell(v) for v in row), _cell(f.path.rsplit("#", 1)[-1])])
         return out.getvalue()
 
+    def flagged(self) -> dict[str, list[Issue]]:
+        """The things to check, by title."""
+        by_title: dict[str, list[Issue]] = {}
+        for issue in self.issues():
+            by_title.setdefault(issue.title_id, []).append(issue)
+        return by_title
+
     def issues(self) -> list[Issue]:
         """Duplicates and orphans, found by comparing what the index lists (nothing is read from disk)."""
         found: list[Issue] = []
@@ -278,9 +285,11 @@ def search(
     sort: str = "name",
     page: int = 1,
     per_page: int = PAGE,
+    flagged: Iterable[str] = (),
 ) -> Page:
     """Filter, sort and cut the titles; an unknown value of a filter is no filter."""
     needle = q.strip().lower()
+    to_check = frozenset(flagged)
 
     def keep(title: TitleInfo) -> bool:
         if needle and needle not in title.name.lower() and needle not in title.title_id.lower():
@@ -292,6 +301,8 @@ def search(
         if genre and genre not in title.genres:
             return False
         if state == "pending" and not title.pending:
+            return False
+        if state == "check" and title.title_id not in to_check:
             return False
         return not (state == "hashed" and title.pending)
 

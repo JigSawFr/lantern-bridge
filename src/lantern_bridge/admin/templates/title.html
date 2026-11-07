@@ -49,6 +49,19 @@
   {% if title.pending %}<span class="pill wait">{{ title.pending }} {{ _("waiting") }}</span>{% endif %}
 </form>
 
+{% if issues %}
+<section class="card check">
+  <h2>{{ _("Things to check") }} <span class="pill wait">{{ issues | length }}</span></h2>
+  <ul class="assoc">
+    {% for i in issues %}
+    <li><span>{{ {"same_content": _("The same file twice"), "same_version": _("Two different files for one version"), "no_base": _("Update or DLC without its game")}[i.kind] }}</span>
+      <span class="dim small">{{ i.detail }}{% if i.served %} · {{ _("Served:") }} {{ i.served }}{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+  <p class="dim small">{{ _("Nothing is changed here: the files stay where they are.") }}</p>
+</section>
+{% endif %}
+
 <h2>{{ _("Versions and add-ons") }}</h2>
 <ul class="assoc">
   {% for f in title.files %}

@@ -19,6 +19,8 @@ FR: dict[str, str] = {
     "New source": "Nouvelle source",
     "this kind of source is not supported": "ce type de source n'est pas pris en charge",
     "a variable's name is letters, digits and _": "le nom d'une variable est fait de lettres, de chiffres et de _",
+    "With something to check": "À vérifier",
+    "Nothing is changed here: the files stay where they are.": "Rien n'est modifié ici : les fichiers restent où ils sont.",
     "Restart the bridge to apply the source you added.": "Redémarrez le pont pour appliquer la source ajoutée.",
     "Start the setup": "Démarrer la configuration",
     "No device is paired yet": "Aucun appareil n'est encore appairé",
