@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from lantern.server import LanternApp, SqliteAccounts
 from lantern.server.fastapi import include
 
-from lantern_bridge import health
+from lantern_bridge import __version__, health
 from lantern_bridge.admin import Admin, is_local, mount
 from lantern_bridge.admin.auth import AdminStore
 from lantern_bridge.config import Config
@@ -83,10 +83,14 @@ def make_app(
         )
 
     @app.get("/healthz", include_in_schema=False)
-    async def healthz() -> JSONResponse:
-        """The whole status and nothing else: 200 when the bridge does its job (a warning included), 503 when not."""
+    async def healthz(request: Request) -> JSONResponse:
+        """The whole status: 200 when the bridge does its job (a warning included), 503 when not. The local network
+        also gets the version and the bridge's id, which a tool needs to tell one bridge from another."""
         status = health.overall(health.run(runtime))
-        return JSONResponse({"status": status}, status_code=503 if status == health.FAIL else 200)
+        body = {"status": status}
+        if is_local(request.client.host if request.client else None):
+            body |= {"version": __version__, "uid": config.uid}
+        return JSONResponse(body, status_code=503 if status == health.FAIL else 200)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics_page(request: Request) -> Response:
