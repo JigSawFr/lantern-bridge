@@ -785,6 +785,15 @@ def mount(app: FastAPI, admin: Admin) -> None:
         admin.runtime.wake()
         return redirect("/?m=" + ("queued" if fields.get("action") == "rehash" else "scan"), request)
 
+    def cheats_of(catalog: Catalog) -> dict[str, int]:
+        """How many cheat sets each title of the library has (the sets of titles it does not list are left out)."""
+        found: dict[str, int] = {}
+        for cheat in admin.runtime.projection.library.cheats():
+            title = cheat.title_id.upper()
+            if title in catalog.titles:
+                found[title] = found.get(title, 0) + 1
+        return found
+
     def icons_of(title_ids: Iterable[str]) -> set[str]:
         """The titles, among these, whose sheet has an icon the bridge holds."""
         projection = admin.runtime.projection
@@ -807,6 +816,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             source=q.get("source", ""),
             state=q.get("state", ""),
             genre=q.get("genre", ""),
+            with_cheats=cheats_of(catalog),
             per_page=10**9,
         ).titles
 
@@ -891,6 +901,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         catalog = admin.runtime.browser.catalog()
         number = q.get("page", "1")
         flagged = catalog.flagged()
+        cheats = cheats_of(catalog)
         found = search(
             catalog,
             flagged=flagged,
@@ -899,6 +910,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             source=q.get("source", ""),
             state=q.get("state", ""),
             genre=q.get("genre", ""),
+            with_cheats=cheats,
             sort=q.get("sort", "name"),
             descending={"asc": False, "desc": True}.get(q.get("dir", "")),
             page=int(number) if number.isdigit() else 1,
@@ -914,7 +926,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             message=admin.tr(request)(done) if done else None,
             order={"sort": sort, "down": down},
             found=found,
-            counts=catalog.counts(),
+            counts={**catalog.counts(), "cheats": len(cheats)},
+            cheats=cheats,
             genres=catalog.genres(),
             icons=icons_of(t.title_id for t in found.titles),
             ignored=sum(len(v) for v in admin.runtime.stats.ignored.values()),

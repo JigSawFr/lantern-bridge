@@ -293,3 +293,36 @@ def test_an_export_can_be_the_filtered_list_or_the_ticked_titles(tmp_path: Path)
     everything = json.loads(client.get("/admin/library/export").text)["titles"]
     assert len(everything) == 2
     assert len(json.loads(client.get("/admin/library/export?q=nothing-like-it").text)["titles"]) == 0
+
+
+def _cheat(client: TestClient, title_id: str, build: str) -> None:
+    client.app.state.runtime.projection.library.add_cheat(  # type: ignore[attr-defined]
+        platform="switch",
+        title_id=title_id,
+        build_id=build,
+        text="[Infinite lives]\n04000000 00000000 00000001",
+        source="aero",
+    )
+
+
+def test_the_library_can_be_narrowed_to_the_titles_that_have_cheats(tmp_path: Path) -> None:
+    client = _shelf(tmp_path)
+    assert "type=cheats" not in client.get("/admin/library").text  # no cheat: no chip
+    _cheat(client, "0100AAAA00000000", "AB12")
+    _cheat(client, "0100AAAA00000000", "CD34")
+    _cheat(client, "0100EEEE00000000", "FF00")  # a title the library does not list: left out
+    page = client.get("/admin/library").text
+    assert "type=cheats" in page and "2 cheats" in page  # the chip, and the badge on the title
+    narrowed = client.get("/admin/library?type=cheats").text
+    assert (
+        "Aurora Quest" in narrowed and "Zebra Run" not in narrowed and 'aria-current="true">Cheats <b>1</b>' in narrowed
+    )
+    names = [t.name for t in search(_catalog(client), kind="cheats", with_cheats={"0100AAAA00000000"}).titles]
+    assert names == ["Aurora Quest"]
+    assert search(_catalog(client), kind="cheats").total == 0  # with no cheat given, none matches
+    import json
+
+    exported = json.loads(client.get("/admin/library/export?type=cheats").text)["titles"]
+    assert [t["title_id"] for t in exported] == ["0100AAAA00000000"]
+    client.post("/admin/lang", data={"lang": "fr", "next": "/admin/library"})
+    assert "2 cheats" in client.get("/admin/library").text

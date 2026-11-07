@@ -25,7 +25,7 @@
 </form>
 
 <nav class="chips" aria-label="{{ _('Kind') }}">
-  {% for key, label in [("", _("All")), ("base", _("Games")), ("update", _("Updates")), ("dlc", _("DLC"))] %}
+  {% for key, label in [("", _("All")), ("base", _("Games")), ("update", _("Updates")), ("dlc", _("DLC"))] + ([("cheats", _("Cheats"))] if counts.cheats else []) %}
   <a href="/admin/library?type={{ key }}{% if f.q %}&amp;q={{ f.q | urlencode }}{% endif %}{% if f.source %}&amp;source={{ f.source | urlencode }}{% endif %}{% if f.state %}&amp;state={{ f.state }}{% endif %}{% if f.genre %}&amp;genre={{ f.genre | urlencode }}{% endif %}{% if f.sort %}&amp;sort={{ f.sort }}{% endif %}{% if f.view %}&amp;view={{ f.view }}{% endif %}"{% if f.type == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key or "all"] }}</b></a>
   {% endfor %}
 </nav>
@@ -52,7 +52,7 @@
   {% for t in found.titles %}
   <tr><td class="pick"><input type="checkbox" name="pick" data-pick value="{{ t.title_id }}" aria-label="{{ _('Select {name}', name=t.name) }}"></td>
     <td><a href="/admin/library/{{ t.title_id }}"><strong>{{ t.name }}</strong></a> <code>{{ t.title_id }}</code></td>
-    <td>{% if t.count("base") %}<span class="badge">{{ _("game") }}</span> {% endif %}{% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span> {% endif %}{% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}</td>
+    <td>{% if t.count("base") %}<span class="badge">{{ _("game") }}</span> {% endif %}{% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span> {% endif %}{% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span> {% endif %}{% if cheats.get(t.title_id) %}<span class="badge">{{ cheats[t.title_id] }} {{ _("cheats") }}</span>{% endif %}</td>
     <td>{% if t.latest %}v{{ t.latest }}{% else %}–{% endif %}</td>
     <td>{{ t.size | size }}</td><td class="dim">{{ t.sources | join(", ") }}</td>
     <td>{% if t.title_id in flagged %}<span class="badge wait">{{ _("to check") }}</span>{% endif %}{% if t.pending %} <span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}</td></tr>
@@ -70,6 +70,7 @@
         {% if t.count("base") %}<span class="badge">{{ _("game") }}{% if t.latest %} v{{ t.latest }}{% endif %}</span>{% endif %}
         {% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span>{% endif %}
         {% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}
+        {% if cheats.get(t.title_id) %}<span class="badge">{{ cheats[t.title_id] }} {{ _("cheats") }}</span>{% endif %}
         {% for g in t.genres[:2] %}<span class="badge genre">{{ g }}</span>{% endfor %}
         {% if t.title_id in flagged %}<span class="badge wait">{{ _("to check") }}</span>{% endif %}
         {% if t.pending %}<span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}

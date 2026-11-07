@@ -22,6 +22,8 @@ from lantern_bridge.identify import identify
 from lantern_bridge.library import Projection
 
 TYPES = ("base", "update", "dlc")
+#: What else the library can be narrowed to: the titles that have cheats (they come from an AeroFoil).
+CHEATS = "cheats"
 
 
 @dataclass(frozen=True, slots=True)
@@ -295,15 +297,19 @@ def search(
     page: int = 1,
     per_page: int = PAGE,
     flagged: Iterable[str] = (),
+    with_cheats: Iterable[str] = (),
 ) -> Page:
     """Filter, sort and cut the titles; an unknown value of a filter is no filter."""
     needle = q.strip().lower()
     to_check = frozenset(flagged)
+    cheated = frozenset(with_cheats)
 
     def keep(title: TitleInfo) -> bool:
         if needle and needle not in title.name.lower() and needle not in title.title_id.lower():
             return False
         if kind in TYPES and kind not in title.types:
+            return False
+        if kind == CHEATS and title.title_id not in cheated:
             return False
         if source and source not in title.sources:
             return False
