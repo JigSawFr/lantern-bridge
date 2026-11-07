@@ -18,6 +18,7 @@ from pathlib import Path
 from lantern.server import MemoryLibrary
 from lantern.server.file_index import SqliteIndex, SyncResult, hash_pending
 
+from lantern_bridge import __version__
 from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
@@ -80,7 +81,9 @@ class Runtime:
         self.roots = {s.id: s.path for s in config.sources if isinstance(s, FolderSource)}
         self.shops = {s.id: self._shop(s) for s in config.sources if isinstance(s, ShopSource)}
         self.publisher: Publisher | None = None
-        self.updates = Updates() if config.update_check else None
+        self.updates = (
+            Updates(notify=lambda latest: self.history.event("update", detail=latest)) if config.update_check else None
+        )
         self._updates_thread: threading.Thread | None = None
         self.webhook = Webhook(config.webhook, config.uid, config.name) if config.webhook else None
         self._shop_scanned: dict[str, float] = {}
@@ -138,6 +141,20 @@ class Runtime:
         """A client for a shop of the configuration (the caller closes it)."""
         return self._shop(source)
 
+    def _reach(self, source: str, state: SourceState, error: BaseException | None) -> None:
+        """A source answered, or did not; the journal gets the turn from one to the other, not every pass."""
+        was = state.reachable
+        if error is not None:
+            state.reachable, state.error = False, str(error)
+            if was is not False:
+                # an OS error names the file: only its reason goes to the journal
+                why = (error.strerror or type(error).__name__) if isinstance(error, OSError) else str(error)
+                self.history.event("source_down", source, why)
+            return
+        state.reachable, state.scanned, state.error = True, time.time(), None
+        if was is False:
+            self.history.event("source_up", source)
+
     def _note(self, source: str, result: SyncResult) -> None:
         """What a scan found goes to the list the pages show (and to the log, as before)."""
         now = time.time()
@@ -152,6 +169,7 @@ class Runtime:
             self.webhook.note(source, result)
         if result.added or result.changed or result.removed:
             log.info("source %s: +%d ~%d -%d", source, result.added, result.changed, result.removed)
+            self.history.event("scan", source, f"+{result.added} ~{result.changed} -{result.removed}")
 
     def _scan_shops(self) -> None:
         for source, shop in self.shops.items():
@@ -165,9 +183,9 @@ class Runtime:
                 result = self.index.sync(source, shop.scan())
             except UpstreamError as error:
                 log.warning("source %s cannot be read: %s", source, error)
-                state.reachable, state.error = False, str(error)
+                self._reach(source, state, error)
                 continue
-            state.reachable, state.scanned, state.error = True, time.time(), None
+            self._reach(source, state, None)
             self._note(source, result)
             if source == (self.aero.id if self.aero else None):
                 self._mirror(shop)
@@ -241,9 +259,9 @@ class Runtime:
                 self.stats.ignored[source] = skipped
             except OSError as error:
                 log.warning("source %s cannot be read: %s", source, error)
-                state.reachable, state.error = False, str(error)
+                self._reach(source, state, error)
                 continue
-            state.reachable, state.scanned, state.error = True, time.time(), None
+            self._reach(source, state, None)
             try:  # read here, in the scanning thread: a stalled network volume must not stall the pages
                 state.free = shutil.disk_usage(root).free
             except OSError:
@@ -310,6 +328,7 @@ class Runtime:
         self._wake.set()
 
     def start(self) -> None:
+        self.history.event("started", detail=__version__)
         if self.updates is not None:
             self._updates_thread = threading.Thread(
                 target=self.updates.run, args=(self._stop,), name="lantern-bridge-updates", daemon=True

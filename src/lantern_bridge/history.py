@@ -1,9 +1,11 @@
 # SPDX-FileCopyrightText: 2026 JigSawFr
 # SPDX-License-Identifier: MIT
-"""What the administration pages remember of the traffic across restarts: totals by day and the machines seen.
+"""What the administration pages remember across restarts: the traffic by day, the machines seen, the journal.
 
-Counters only (requests, bytes sent, errors) by day and by machine; no path, no query, no token, no body.
-A day older than `KEEP_DAYS` is dropped. The file is its own (``activity.sqlite3``) and carries its schema
+The traffic is counters only (requests, bytes sent, errors) by day and by machine; no path, no query, no token,
+no body. The journal is the events worth a line (a scan that found changes, a source gone and back, a device
+paired, a setting saved...): a kind, a subject (a source id, an account) and a short detail, never a path or a
+title. A day older than `KEEP_DAYS` is dropped. The file is its own (``activity.sqlite3``) and carries its schema
 number, so a newer one is left alone and the pages simply start from nothing.
 """
 
@@ -23,6 +25,7 @@ log = logging.getLogger(__name__)
 SCHEMA = 1
 KEEP_DAYS = 90
 MAX_MACHINES = 200
+MAX_EVENTS = 1000
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +41,14 @@ class Delta:
     requests: int
     sent: int
     errors: int
+
+
+@dataclass(frozen=True, slots=True)
+class Event:
+    ts: float
+    kind: str  # started, scan, source_down, source_up, update, settings, paired, revoked
+    subject: str  # a source id or an account, or empty
+    detail: str  # short; never a path or a title
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +92,8 @@ class History:
                     PRIMARY KEY (day, key));
                 CREATE TABLE IF NOT EXISTS machines (key TEXT PRIMARY KEY, label TEXT, address TEXT, agent TEXT,
                     first REAL, last REAL, requests INTEGER, sent INTEGER);
+                CREATE TABLE IF NOT EXISTS events (ts REAL, kind TEXT, subject TEXT, detail TEXT);
+                CREATE INDEX IF NOT EXISTS events_ts ON events (ts);
                 """
             )
             db.execute(f"PRAGMA user_version = {SCHEMA}")
@@ -102,6 +115,11 @@ class History:
             self._db.execute(
                 "DELETE FROM machines WHERE key NOT IN (SELECT key FROM machines ORDER BY last DESC LIMIT ?)",
                 (MAX_MACHINES,),
+            )
+            self._db.execute("DELETE FROM events WHERE ts < ?", (time.time() - KEEP_DAYS * 86400,))
+            self._db.execute(
+                "DELETE FROM events WHERE rowid NOT IN (SELECT rowid FROM events ORDER BY ts DESC LIMIT ?)",
+                (MAX_EVENTS,),
             )
 
     def add(self, deltas: Iterable[Delta], day: str | None = None) -> None:
@@ -150,6 +168,35 @@ class History:
         with self._lock:
             rows = self._db.execute("SELECT * FROM machines ORDER BY last DESC LIMIT ?", (MAX_MACHINES,)).fetchall()
         return [Seen(*r) for r in rows]
+
+    def event(self, kind: str, subject: str = "", detail: str = "", now: float | None = None) -> None:
+        """Adds a line to the journal (nothing happens when the file is off)."""
+        if self._db is None:
+            return
+        try:
+            with self._lock, self._db:
+                self._db.execute(
+                    "INSERT INTO events VALUES (?,?,?,?)",
+                    (time.time() if now is None else now, kind[:32], subject[:64], detail[:120]),
+                )
+        except sqlite3.Error as error:
+            log.warning("the journal could not be written: %s", error)
+
+    def events(self, limit: int = 200, kind: str = "") -> list[Event]:
+        """The latest events, newest first."""
+        if self._db is None:
+            return []
+        with self._lock:
+            if kind:
+                rows = self._db.execute(
+                    "SELECT ts, kind, subject, detail FROM events WHERE kind = ? ORDER BY ts DESC, rowid DESC LIMIT ?",
+                    (kind, limit),
+                ).fetchall()
+            else:
+                rows = self._db.execute(
+                    "SELECT ts, kind, subject, detail FROM events ORDER BY ts DESC, rowid DESC LIMIT ?", (limit,)
+                ).fetchall()
+        return [Event(*r) for r in rows]
 
     def forget(self, key: str) -> None:
         if self._db is not None:

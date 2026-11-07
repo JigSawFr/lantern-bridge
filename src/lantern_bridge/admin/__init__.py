@@ -97,6 +97,18 @@ _DONE = {
     "done": "Done.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
 }
+#: The kinds of the journal, in the order of its filter.
+_JOURNAL = (
+    "started",
+    "scan",
+    "source_down",
+    "source_up",
+    "update",
+    "settings",
+    "paired",
+    "pairing_refused",
+    "revoked",
+)
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
 
@@ -158,6 +170,9 @@ class Admin:
             loader=PackageLoader("lantern_bridge.admin", "templates"), autoescape=select_autoescape(["html"])
         )
         self.env.filters["size"] = _size
+        self.env.filters["day"] = lambda t: time.strftime("%Y-%m-%d", time.localtime(t))
+        self.env.filters["clock"] = lambda t: time.strftime("%H:%M:%S", time.localtime(t))
+        self.env.filters["iso"] = lambda t: datetime.fromtimestamp(t, UTC).isoformat(timespec="seconds")
         self.env.filters["when"] = lambda t: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t)) if t else "-"
 
     # -- state ---------------------------------------------------------------
@@ -683,6 +698,24 @@ def mount(app: FastAPI, admin: Admin) -> None:
             "now": now,
         }
 
+    @router.get("/events")
+    async def events_page(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        kind = request.query_params.get("kind", "")
+        kind = kind if kind in _JOURNAL else ""
+        return admin.page(
+            request,
+            "events.html",
+            session,
+            active="events",
+            events=admin.runtime.history.events(200, kind),
+            kinds=_JOURNAL,
+            kind=kind,
+            usable=admin.runtime.history.usable,
+        )
+
     @router.get("/activity")
     async def activity(request: Request) -> Response:
         session, _, refused = await authed(request)
@@ -810,6 +843,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if fields.get("decision") == "refuse":
             desk.refuse(entry)
             log.info("pairing of %s refused", entry.device)
+            admin.runtime.history.event("pairing_refused")
             return redirect("/pairings", request)
         name = fields.get("user", "").strip()
         if not name or len(name) > 64 or not set(name) <= _USER_CHARS:
@@ -827,6 +861,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         user = accounts.user(name) or accounts.create_user(name, _DEFAULT_SCOPES)
         granted = desk.approve(entry, user.name)
         log.info("pairing of %s approved for %s: %s", entry.device, user.name, ", ".join(granted) or "no scope")
+        admin.runtime.history.event("paired", user.name)
         return redirect("/pairings", request)
 
     @router.get("/devices")
@@ -851,6 +886,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         accounts = admin.lantern.accounts
         if accounts is not None and accounts.revoke(device_id):
             log.info("device %s revoked", device_id)
+            admin.runtime.history.event("revoked")
         return redirect("/devices", request)
 
     @router.get("/logs")
@@ -974,6 +1010,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             typed = {k: v for k, v in fields.items() if k != "csrf"}
             return settings_page(request, session, 400, error=t(problem) if problem in _FIXED else problem, draft=typed)
         log.info("settings changed from the pages: %s", done)
+        admin.runtime.history.event("settings", detail=done)
         return redirect(f"/{'start' if fields.get('back') == 'start' else 'config'}?m={done}", request)
 
     _FIXED = {
@@ -1165,6 +1202,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         except OSError as error:
             return settings_page(request, session, 500, error=f"{error.strerror or error}")
         log.info("settings changed from the pages: the last change was taken back")
+        admin.runtime.history.event("settings", detail="undone")
         return redirect("/config?m=undone", request)
 
     def find(config: Config, sid: str) -> int | None:

@@ -13,6 +13,7 @@ import logging
 import re
 import threading
 import time
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -43,8 +44,14 @@ def newer(latest: str | None, current: str) -> bool:
 
 
 class Updates:
-    def __init__(self, current: str = __version__, url: str = RELEASES, client: httpx.Client | None = None) -> None:
-        self.current, self.url = current, url
+    def __init__(
+        self,
+        current: str = __version__,
+        url: str = RELEASES,
+        client: httpx.Client | None = None,
+        notify: Callable[[str], None] | None = None,
+    ) -> None:
+        self.current, self.url, self._notify = current, url, notify
         self._client = client or httpx.Client(
             timeout=15.0,
             follow_redirects=False,
@@ -71,7 +78,10 @@ class Updates:
             else:
                 reply.raise_for_status()
                 tag: Any = reply.json().get("tag_name")
+                before = self.latest
                 self.latest, self.error = (tag if isinstance(tag, str) else None), None
+                if self._notify is not None and self.latest != before and self.available and self.latest:
+                    self._notify(self.latest)  # once per release, not at every refresh
         except (httpx.HTTPError, ValueError, AttributeError) as error:
             self.error = type(error).__name__
             log.warning("the latest release could not be read: %s", self.error)
