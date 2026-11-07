@@ -21,6 +21,8 @@ from typing import Any
 
 SCHEMA = 1
 SESSION_SECONDS = 8 * 3600
+#: A session nobody used for this long ends, whatever is left of its eight hours.
+IDLE_SECONDS = 30 * 60
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
 MIN_PASSWORD = 10
 
@@ -38,6 +40,7 @@ class Session:
     name: str
     csrf: str
     expires: float
+    seen: float = 0.0
     #: "admin", or "observer": an account that looks at a few pages and changes nothing.
     role: str = "admin"
 
@@ -159,20 +162,27 @@ class AdminStore:
 
     def login(self, name: str, role: str = "admin") -> tuple[str, Session]:
         token = secrets.token_urlsafe(32)
-        session = Session(name, secrets.token_urlsafe(24), time.monotonic() + SESSION_SECONDS, role)
+        session = Session(
+            name, secrets.token_urlsafe(24), time.monotonic() + SESSION_SECONDS, seen=time.monotonic(), role=role
+        )
         with self._lock:
             self._sessions = {t: s for t, s in self._sessions.items() if s.expires > time.monotonic()}
             self._sessions[token] = session
         return token, session
 
-    def session(self, token: str | None) -> Session | None:
+    def session(self, token: str | None, touch: bool = True) -> Session | None:
+        """The session of a cookie. Using it keeps it alive; `touch=False` (a page already open, asking again by
+        itself) does not, so an open tab does not hold a session for ever."""
         if not token:
             return None
+        now = time.monotonic()
         with self._lock:
             found = self._sessions.get(token)
-            if found is None or found.expires <= time.monotonic():
+            if found is None or found.expires <= now or now - found.seen > IDLE_SECONDS:
                 self._sessions.pop(token, None)
                 return None
+            if touch:
+                found.seen = now
             return found
 
     def logout(self, token: str | None) -> None:
