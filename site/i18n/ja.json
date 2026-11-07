@@ -71,5 +71,16 @@
   "lost_title": "夜の中で迷子に",
   "lost_text": "このページは存在しないか、なくなりました。",
   "lost_back": "ホームページに戻る",
-  "lost_page_title": "ページが見つかりません · Lantern Bridge"
+  "lost_page_title": "ページが見つかりません · Lantern Bridge",
+  "gen_title": "設定ファイルを作る",
+  "gen_lede": "分かる範囲で入力してください。ページがコピーできる docker-compose.yml と config.toml を書きます。入力内容はブラウザの外には出ず、パスワードもファイルには入りません。ブリッジは各パスワードを環境変数から読みます。",
+  "gen_name": "デバイスに表示される名前",
+  "gen_port": "ポート",
+  "gen_games": "このマシンのゲームフォルダ",
+  "gen_shops": "読み込むショップ",
+  "gen_url": "アドレス",
+  "gen_user": "ユーザー",
+  "gen_compose": "docker-compose.yml",
+  "gen_config": "config.toml",
+  "gen_note": "コンテナを起動する前に、compose ファイルに書かれた環境変数に各パスワードを設定してください。"
 }

@@ -71,5 +71,16 @@
   "lost_title": "Verloren in der Nacht",
   "lost_text": "Diese Seite gibt es nicht oder nicht mehr.",
   "lost_back": "Zurück zur Startseite",
-  "lost_page_title": "Seite nicht gefunden · Lantern Bridge"
+  "lost_page_title": "Seite nicht gefunden · Lantern Bridge",
+  "gen_title": "Schreiben Sie Ihre Konfiguration",
+  "gen_lede": "Füllen Sie aus, was Sie haben: Die Seite schreibt eine docker-compose.yml und eine config.toml zum Kopieren. Nichts verlässt Ihren Browser, und kein Passwort steht in den Dateien: Die Bridge liest jedes aus einer Umgebungsvariablen.",
+  "gen_name": "Name, der Geräten angezeigt wird",
+  "gen_port": "Port",
+  "gen_games": "Spielordner auf diesem Rechner",
+  "gen_shops": "Shops zum Lesen",
+  "gen_url": "Adresse",
+  "gen_user": "Benutzer",
+  "gen_compose": "docker-compose.yml",
+  "gen_config": "config.toml",
+  "gen_note": "Setzen Sie jedes Passwort in der Umgebungsvariablen, die in der Compose-Datei steht, bevor Sie den Container starten."
 }
