@@ -51,5 +51,17 @@
   "bridge_cta_title": "내 라이브러리를 Lantern으로",
   "bridge_cta": "작업을 지켜보거나 SDK로 직접 서버를 만들어 보세요.",
   "bridge_cta_link": "GitHub의 lantern-bridge",
-  "bridge_cta_sdk": "SDK"
+  "bridge_cta_sdk": "SDK",
+  "sim_title": "설치하지 않고 브리지 체험하기",
+  "sim_lede": "라이브러리가 있는 소스를 고르세요. 브리지는 모두 읽어 SHA-256으로 합친 하나의 라이브러리를 제공합니다. Lantern 클라이언트에는 이렇게 보입니다. 게임은 가상이며 브라우저 밖으로는 아무것도 나가지 않습니다.",
+  "sim_pick": "소스",
+  "sim_in": "선택한 소스 안",
+  "sim_out": "Lantern 클라이언트에 보이는 것",
+  "sim_empty": "소스를 하나 이상 고르세요.",
+  "sim_seen": "소스: {n}",
+  "sim_extras": "이 소스들이 더해 주는 것",
+  "sim_x_ownfoil": "실시간 변경",
+  "sim_x_aerofoil": "세이브, 치트, 요청, 연령 등급",
+  "sim_x_none": "라이브러리 외에는 없음",
+  "sim_json": "클라이언트가 읽는 /apps 응답"
 }

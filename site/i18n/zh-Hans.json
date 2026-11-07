@@ -51,5 +51,17 @@
   "bridge_cta_title": "把你的游戏库带到 Lantern",
   "bridge_cta": "关注进展,或用 SDK 构建你自己的服务器。",
   "bridge_cta_link": "GitHub 上的 lantern-bridge",
-  "bridge_cta_sdk": "SDK"
+  "bridge_cta_sdk": "SDK",
+  "sim_title": "无需安装，先试试桥接器",
+  "sim_lede": "选择你的游戏库所在的来源。桥接器会读取全部来源，并提供一个按 SHA-256 合并的游戏库，这就是 Lantern 客户端看到的内容。游戏都是虚构的，也不会有任何数据离开你的浏览器。",
+  "sim_pick": "来源",
+  "sim_in": "你的来源中",
+  "sim_out": "Lantern 客户端看到的内容",
+  "sim_empty": "请至少选择一个来源。",
+  "sim_seen": "来源：{n}",
+  "sim_extras": "这些来源额外提供",
+  "sim_x_ownfoil": "实时变更",
+  "sim_x_aerofoil": "存档、金手指、请求、内容分级",
+  "sim_x_none": "除游戏库外没有其他内容",
+  "sim_json": "客户端读取的 /apps 响应"
 }

@@ -109,6 +109,7 @@ def page_html(template: str, language: str, catalog: dict) -> str:
                 f'<script src="{root}assets/code.js" defer data-copy="{html.escape(catalog["ui_copy"], quote=True)}" '
                 f'data-copied="{html.escape(catalog["ui_copied"], quote=True)}" '
                 f'data-failed="{html.escape(catalog["ui_copy_failed"], quote=True)}"></script>'
+                f'<script src="{root}assets/sim.js" defer></script>'
             ),
         }
     )
