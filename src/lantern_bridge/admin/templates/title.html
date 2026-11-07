@@ -15,6 +15,21 @@
   </div>
 </section>
 
+{% if atlas %}
+<section class="card atlas">
+  <h2>{{ _("From Atlas") }}</h2>
+  <dl>
+    {% if atlas.series %}<dt>{{ _("Series") }}</dt><dd>{{ atlas.series | join(", ") }}</dd>{% endif %}
+    {% if atlas.developers %}<dt>{{ _("Developers") }}</dt><dd>{{ atlas.developers | join(", ") }}</dd>{% endif %}
+    {% if atlas.publishers %}<dt>{{ _("Publishers") }}</dt><dd>{{ atlas.publishers | join(", ") }}</dd>{% endif %}
+    {% if atlas.genres %}<dt>{{ _("Genres") }}</dt><dd>{{ atlas.genres | join(", ") }}</dd>{% endif %}
+    {% if atlas.modes %}<dt>{{ _("Modes") }}</dt><dd>{{ atlas.modes | join(", ") }}</dd>{% endif %}
+    {% if atlas.rating is not none %}<dt>{{ _("Steam reviews") }}</dt><dd>{{ atlas.rating }} % {{ _("positive") }}</dd>{% endif %}
+  </dl>
+  <p class="dim small">{{ _("Open data by Atlas (CC0), from Wikidata and Steam.") }} <a href="https://atlas.boreale.dev" rel="noreferrer">atlas.boreale.dev</a></p>
+</section>
+{% endif %}
+
 <section class="cards facts">
   <div class="tile"><span class="n">{{ title.count("base") }}</span><span class="what">{{ _("games") }}</span></div>
   <div class="tile"><span class="n">{{ title.count("update") }}</span><span class="what">{{ _("updates") }}</span></div>

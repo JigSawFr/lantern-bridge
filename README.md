@@ -120,6 +120,9 @@ The age-rating ceiling is not read from AeroFoil: set it on the Lantern token.
 
 Open `http://<host>:8080/admin/`. The first time, the server writes a one-time **setup code** in its log (look for `setup code`); enter it with the name and password you want for the administrator. Then sign in to see the hashing progress and the sources, approve or refuse the devices that ask to pair, revoke a device, follow the logs live, and:
 
+- **Library**: every title the bridge knows, as a shelf (search, kind, source, hashing state, sort) and a page per title: its games, updates and DLC, its files by source with their SHA-256, its cheats, what Atlas says of it, and a button to hash one file or the whole title again (`lantern-bridge rehash --title <id>` does the same).
+- **Activity**: the transfers in progress, the machines that called the library, the rates and the hashing, live.
+- **Developer** (off unless `developer = true`): the last requests, the slowest hashing, a title as raw JSON, a few actions.
 - **Settings**: the name, the hashing rate and the access mode; the sources (add, remove, reorder, test a folder or a shop). The page writes `config.toml` (keeping the keys it does not know); the bridge reads it at startup, and the pages say when a restart is due.
 - **Accounts**: each account's scopes and devices, and, with an `aerofoil` source, the AeroFoil user it acts as (only the name of the variable holding the password is kept).
 - **Invitations**: a code that pairs a device without approval, for 1, 7 or 30 days and a number of devices.
@@ -127,7 +130,9 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 
 The pages wear Boréale's night, in English and French (the browser's language, or the switch in the header), with the fonts served from the bridge.
 
-The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. Nothing is loaded from elsewhere.
+The pages answer the local network only (private and loopback addresses). Behind a reverse proxy, start the server with uvicorn's proxy headers so it sees the real address, or set `admin_lan_only = false` in `config.toml` if the proxy does its own filtering. The session cookie is `HttpOnly` and `SameSite=Strict`, and `Secure` over HTTPS. The browser loads nothing from elsewhere.
+
+**Atlas.** By default (`atlas = true`) the bridge fetches one public file once a day, [Atlas](https://atlas.boreale.dev)'s `platforms/switch/games.json` (CC0: names, developers, publishers, genres, series and modes from Wikidata, Steam's rating), from `raw.githubusercontent.com`, keeps it in its state directory (`atlas.json`) and uses it to fill in the genres, developer and publisher a source leaves empty. Nothing about your library is sent: it is a plain `GET`. Set `atlas = false` (or untick it in the settings) and the bridge contacts nothing outside your sources.
 
 ### 🐳 In a container
 

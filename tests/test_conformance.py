@@ -59,7 +59,7 @@ def bridge(tmp_path: Path) -> Iterator[tuple[str, Path]]:
         (games / name).write_bytes(data)
     config = tmp_path / "config.toml"
     config.write_text(
-        f'name = "Conformance shelf"\n\n[[sources]]\nid = "games"\nkind = "folder"\npath = "{games}"\n',
+        f'name = "Conformance shelf"\natlas = false\n\n[[sources]]\nid = "games"\nkind = "folder"\npath = "{games}"\n',
         encoding="utf-8",
     )
     key = DeviceKey.generate()
