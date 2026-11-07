@@ -426,15 +426,11 @@ dependencies = [
     { name = "httpx" },
     { name = "jinja2" },
     { name = "lantern-protocol", extra = ["fastapi"] },
+    { name = "nsz" },
     { name = "paho-mqtt" },
     { name = "tomli-w" },
     { name = "uvicorn" },
     { name = "websockets" },
-]
-
-[package.optional-dependencies]
-compress = [
-    { name = "nsz" },
 ]
 
 [package.dev-dependencies]
@@ -454,13 +450,12 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "lantern-protocol", extras = ["fastapi"], editable = "sdk/python" },
-    { name = "nsz", marker = "extra == 'compress'", specifier = ">=5.0" },
+    { name = "nsz", specifier = ">=5.0" },
     { name = "paho-mqtt", specifier = ">=2.1.0" },
     { name = "tomli-w", specifier = ">=1.2.0" },
     { name = "uvicorn", specifier = ">=0.30" },
     { name = "websockets", specifier = ">=13" },
 ]
-provides-extras = ["compress"]
 
 [package.metadata.requires-dev]
 dev = [

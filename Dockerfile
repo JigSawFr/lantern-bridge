@@ -17,10 +17,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable --no-install-project
 COPY README.md ./
 COPY src ./src
-# `--build-arg WITH_NSZ=1` adds the nsz tool (compress and decompress from the title page; you bring your own keys)
-ARG WITH_NSZ=0
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-editable $([ "$WITH_NSZ" = "1" ] && echo --extra compress) \
+    uv sync --frozen --no-dev --no-editable \
     && rm -f /opt/venv/bin/activate* /opt/venv/bin/*.bat /opt/venv/bin/*.ps1
 
 FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca

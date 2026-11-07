@@ -33,16 +33,12 @@ dependencies = [
     "httpx>=0.27",
     "jinja2>=3.1",
     "lantern-protocol[fastapi]",
+    "nsz>=5.0",
     "paho-mqtt>=2.1.0",
     "tomli-w>=1.2.0",
     "uvicorn>=0.30",
     "websockets>=13",
 ]
-
-[project.optional-dependencies]
-# The nsz tool, to compress and decompress packages from the title page (a folder open to changes, and the
-# user's own prod.keys). The image has it with `--build-arg WITH_NSZ=1`.
-compress = ["nsz>=5.0"]
 
 [project.scripts]
 lantern-bridge = "lantern_bridge.__main__:main"
