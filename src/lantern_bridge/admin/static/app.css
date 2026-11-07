@@ -206,6 +206,26 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 /* -- contrast and colour modes: the secondary text clears 4.5:1 on every surface (tests/test_a11y.py checks it);
    more contrast asked for, the secondary text takes the main muted tone and the lines are drawn firmer;
    forced colours, the system's own are used and every box keeps a border --------------------------------- */
+/* The light look is a choice of the browser (a cookie); dark stays the default. Colours that were white tints on the
+   night are dark tints on the day, and the aurora's colours are darkened until text in them reads (AA). */
+:root[data-theme="light"]{
+  --abyss:#f4f7fb;--night:#ffffff;--line:#c5d0e0;--snow:#0f1b30;--mist:#3b4a63;--dusk:#566683;
+  --aurora:#007a62;--ice:#0069a8;--violet:#6a3fd6;--danger:#b3261e;--warn:#8a5a00;--bad:#b3261e;
+  --grad:linear-gradient(100deg,#007a62 0%,#0069a8 55%,#6a3fd6 100%);
+  --surface:rgb(255 255 255 / .9);color-scheme:light}
+:root[data-theme="light"] body{background:radial-gradient(70% 45% at 12% -8%,rgb(0 255 204 / .14),transparent 70%),
+    radial-gradient(60% 40% at 88% -6%,rgb(138 92 255 / .12),transparent 70%),var(--abyss);background-repeat:no-repeat}
+:root[data-theme="light"] .top{background:rgb(244 247 251 / .85)}
+:root[data-theme="light"] code,:root[data-theme="light"] .kind,:root[data-theme="light"] nav a:hover,
+:root[data-theme="light"] #log .ln:hover,:root[data-theme="light"] tbody tr:hover td{background:rgb(15 27 48 / .06)}
+:root[data-theme="light"] progress,:root[data-theme="light"] progress::-webkit-progress-bar{background:rgb(15 27 48 / .1)}
+:root[data-theme="light"] input,:root[data-theme="light"] select{background:#fff}
+:root[data-theme="light"] pre#log,:root[data-theme="light"] #log{background:#fff}
+:root[data-theme="light"] .toast{background:rgb(255 255 255 / .96);box-shadow:0 18px 40px -16px rgb(15 27 48 / .35)}
+:root[data-theme="light"] dialog.ask::backdrop{background:rgb(15 27 48 / .45)}
+:root[data-theme="light"] .lang button[aria-current],:root[data-theme="light"] .good{background:rgb(0 122 98 / .1)}
+:root[data-theme="light"] .note{background:rgb(138 90 0 / .08)}
+:root[data-theme="light"] #log .error,:root[data-theme="light"] #log .critical{background:rgb(179 38 30 / .07)}
 @media (prefers-contrast:more){:root{--dusk:var(--mist);--line:#5a729b;--snow:#fff}}
 @media (forced-colors:active){
   .tile,.card,.todo li,.steps li,.assoc li,input,select,button,.button,.pill,.badge{border:1px solid CanvasText}

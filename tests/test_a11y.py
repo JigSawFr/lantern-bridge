@@ -53,7 +53,7 @@ def test_every_page_has_its_landmarks_and_a_way_past_the_menu(tmp_path: Path) ->
     client = _admin(_client(tmp_path, sources=True))
     for path in ("/admin/", "/admin/library", "/admin/activity", "/admin/config", "/admin/pairings", "/admin/start"):
         page = client.get(path).text
-        assert '<html lang="en">' in page and '<a class="skip" href="#content">' in page, path
+        assert '<html lang="en"' in page and '<a class="skip" href="#content">' in page, path
         assert '<main id="content"' in page and '<nav aria-label="Pages">' in page, path
         assert page.count("<h1") == 1, path
         assert 'name="viewport"' in page, path
@@ -71,3 +71,33 @@ def test_a_field_always_has_its_label(tmp_path: Path) -> None:
             assert name, tag
             before = page[: page.index(tag)]
             assert before.rfind("<label") > before.rfind("</label>") or "aria-label" in tag, (path, tag)
+
+
+def _light() -> dict[str, str]:
+    start = CSS.index(':root[data-theme="light"]{')
+    block = CSS[start : CSS.index("}", start)]
+    return dict(re.findall(r"--([a-z]+):(#[0-9a-fA-F]{6})", block))
+
+
+def test_the_light_theme_clears_aa_too() -> None:
+    colours = _light()
+    for text in ("snow", "mist", "dusk", "aurora", "ice", "violet", "danger", "warn"):
+        for surface in ("abyss", "night"):
+            assert _ratio(colours[text], colours[surface]) >= 4.5, (text, surface)
+    assert _ratio(colours["abyss"], colours["snow"]) >= 7  # the buttons are snow with abyss text
+
+
+def test_dark_is_the_default_and_light_is_a_choice_kept_in_a_cookie(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    page = client.get("/admin/")
+    assert 'data-theme="dark"' in page.text and "Light theme" in page.text
+    reply = client.post("/admin/theme", data={"theme": "light", "next": "/admin/library"})
+    assert reply.status_code == 303 and reply.headers["location"] == "/admin/library"
+    assert "lb_theme=light" in reply.headers["set-cookie"] and "HttpOnly" in reply.headers["set-cookie"]
+    light = client.get("/admin/")
+    assert 'data-theme="light"' in light.text and "Dark theme" in light.text
+    back = client.post("/admin/theme", data={"theme": "dark", "next": "//evil.example.org"})
+    assert back.headers["location"] == "/admin/"
+    assert 'data-theme="dark"' in client.get("/admin/").text
+    client.post("/admin/theme", data={"theme": "purple"})  # anything else is the default
+    assert 'data-theme="dark"' in client.get("/admin/").text
