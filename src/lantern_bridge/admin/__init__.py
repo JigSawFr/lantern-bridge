@@ -9,6 +9,7 @@ policy forbids the rest), no cookie but the session, no referrer sent.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import dataclasses
 import ipaddress
 import json
@@ -17,6 +18,8 @@ import os
 import platform
 import re
 import secrets
+import sqlite3
+import tempfile
 import threading
 import time
 from collections.abc import AsyncIterator, Iterable
@@ -28,12 +31,13 @@ from typing import Any
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from jinja2 import Environment, PackageLoader, select_autoescape
 from lantern.server import LanternApp
 from lantern.server.pairing import Limiter
+from starlette.background import BackgroundTask
 
-from lantern_bridge import SPEC_DRAFT, __version__, health, selfcheck
+from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -925,6 +929,29 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return None
 
         return await change(request, edit, "saved")
+
+    @router.post("/config/backup")
+    async def config_backup(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        scratch = tempfile.NamedTemporaryFile(prefix="lantern-bridge-", suffix=".zip", delete=False)  # noqa: SIM115
+        scratch.close()
+        try:
+            await asyncio.to_thread(backup.make, admin.runtime.state_dir, admin.config_path, Path(scratch.name))
+        except (backup.BackupError, ConfigError, OSError, sqlite3.Error) as error:
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(scratch.name)
+            return settings_page(request, session, 400, error=str(error))
+        log.info("a backup was downloaded")
+        name = f"lantern-bridge-backup-{time.strftime('%Y%m%d-%H%M%S')}.zip"
+        return FileResponse(
+            scratch.name,
+            media_type="application/zip",
+            filename=name,
+            headers=_HEADERS,
+            background=BackgroundTask(Path(scratch.name).unlink, missing_ok=True),
+        )
 
     @router.post("/config/mqtt")
     async def config_mqtt(request: Request) -> Response:

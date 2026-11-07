@@ -43,6 +43,13 @@
   <button>{{ _("Save") }}</button>
 </form>
 
+<form method="post" action="/admin/config/backup" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Backup") }}</h2>
+  <p class="muted">{{ _("A zip with the settings and the hashes the bridge worked out (the pairings are not in it: a device pairs again). To restore it, stop the bridge and run: lantern-bridge restore FILE.") }}</p>
+  <button>{{ _("Download a backup") }}</button>
+</form>
+
 <h2>{{ _("Sources") }}</h2>
 <p class="muted">{{ _("When two sources have the same file, the first one in this list serves it (a folder before a shop).") }}</p>
 <div class="scroll"><table>
