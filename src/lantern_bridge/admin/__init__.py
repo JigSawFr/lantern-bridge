@@ -9,9 +9,11 @@ policy forbids the rest), no cookie but the session, no referrer sent.
 from __future__ import annotations
 
 import asyncio
+import base64
 import contextlib
 import csv
 import dataclasses
+import hashlib
 import io
 import ipaddress
 import json
@@ -359,6 +361,23 @@ class Admin:
             **ctx,
         )
         return HTMLResponse(html, status_code=status, headers=_HEADERS)
+
+    def home(self, request: Request, status: str) -> HTMLResponse:
+        """The page at the root, for a person who opens the bridge's address in a browser: no figure, no version,
+        nothing the protocol's own routes do not already say. Self-contained, so it needs no file the local-network
+        guard would refuse to a stranger; its one style block is allowed by its hash."""
+        lang = self.lang(request)
+        html = self.env.get_template("home.html").render(
+            lang=lang, name=self.config.name, status=status, admin=self.reachable(request), _=translator(lang)
+        )
+        style = re.search(r"<style>(.*?)</style>", html, re.S)
+        digest = base64.b64encode(hashlib.sha256((style.group(1) if style else "").encode()).digest()).decode()
+        headers = {
+            **_HEADERS,
+            "Content-Security-Policy": f"default-src 'none'; style-src 'sha256-{digest}'; base-uri 'none'; "
+            "form-action 'none'; frame-ancestors 'none'",
+        }
+        return HTMLResponse(html, headers=headers)
 
     def diagnostic(self) -> dict[str, Any]:
         """What helps to understand a bridge from far away, with no secret: no password, no address's login,

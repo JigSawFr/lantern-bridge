@@ -10,6 +10,12 @@ LANGUAGES = ("en", "fr")
 COOKIE = "lb_lang"
 
 FR: dict[str, str] = {
+    "This is a Lantern server.": "Ceci est un serveur Lantern.",
+    "Running": "En marche",
+    "Running, with a warning": "En marche, avec un avertissement",
+    "Not working right now": "Ne fonctionne pas pour le moment",
+    "Add its address in a Lantern-compatible app on your console to browse and download the library.": "Ajoutez son adresse dans une application compatible Lantern sur votre console pour parcourir et télécharger la bibliothèque.",
+    "Open the administration": "Ouvrir l'administration",
     "Journal": "Journal",
     "What happened to the bridge, newest first: scans that found changes, a source gone and back, devices paired or revoked, settings saved. Kept for 90 days, with no path and no title.": "Ce qui est arrivé au pont, du plus récent au plus ancien : les lectures qui ont trouvé des changements, une source tombée puis revenue, des appareils appairés ou révoqués, des réglages enregistrés. Gardé 90 jours, sans chemin ni titre.",
     "The journal is off: the history file of this bridge cannot be used.": "Le journal est désactivé : le fichier d'historique de ce pont est inutilisable.",

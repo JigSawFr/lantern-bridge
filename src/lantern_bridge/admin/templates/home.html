@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>{{ name }}</title>
+<style>
+:root{color-scheme:dark light;--bg:#0b1020;--fg:#e8eefc;--mute:#9aa7c7;--card:#121a33;--line:#243056;--ok:#00ffcc;--warn:#ffcc33;--bad:#ff6677;--link:#33bbff}
+@media (prefers-color-scheme:light){:root{--bg:#f5f7fc;--fg:#10182e;--mute:#4a5878;--card:#fff;--line:#d3dbee;--ok:#00725a;--warn:#8a5a00;--bad:#b4233a;--link:#0a5bb5}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:100%;max-width:30rem;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 24px;text-align:center}
+svg{width:72px;height:72px}
+h1{margin:16px 0 4px;font-size:1.5rem}
+p{margin:8px 0;color:var(--mute)}
+.pill{display:inline-block;margin:16px 0 8px;padding:4px 14px;border:1px solid currentColor;border-radius:999px;font-size:.9rem;font-weight:600}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.fail{color:var(--bad)}
+a{color:var(--link)}
+.go{display:inline-block;margin-top:16px;padding:10px 20px;border-radius:10px;background:var(--link);color:var(--bg);font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<main>
+<svg viewBox="0 0 256 256" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00FFCC"/><stop offset=".65" stop-color="#33BBFF"/><stop offset="1" stop-color="#8A5CFF"/></linearGradient></defs><rect x="50" y="48" width="156" height="160" rx="22" fill="#0E1A33" stroke="url(#g)" stroke-width="16"/><path d="M78 168 Q128 96 178 168" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M74 172 H182" stroke="#fff" stroke-width="12" stroke-linecap="round"/></svg>
+<h1>{{ name }}</h1>
+<p>{{ _("This is a Lantern server.") }}</p>
+<p><span class="pill {{ status }}" role="status">{% if status == "ok" %}{{ _("Running") }}{% elif status == "warn" %}{{ _("Running, with a warning") }}{% else %}{{ _("Not working right now") }}{% endif %}</span></p>
+<p>{{ _("Add its address in a Lantern-compatible app on your console to browse and download the library.") }}</p>
+{% if admin %}<a class="go" href="/admin/">{{ _("Open the administration") }}</a>{% endif %}
+</main>
+</body>
+</html>
