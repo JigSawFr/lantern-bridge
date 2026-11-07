@@ -82,5 +82,18 @@
   "gen_user": "Usuário",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "Defina cada senha na variável de ambiente indicada no arquivo compose antes de iniciar o contêiner."
+  "gen_note": "Defina cada senha na variável de ambiente indicada no arquivo compose antes de iniciar o contêiner.",
+  "idf_title": "Meus arquivos serão reconhecidos?",
+  "idf_lede": "A ponte lê a identidade de um jogo no nome do arquivo: um id de 16 dígitos entre colchetes e a versão em [v…]. Cole os nomes dos seus arquivos, um por linha, para ver o que ela faz de cada um. É a regra da própria ponte, executada na sua página: nada é enviado.",
+  "idf_label": "Nomes de arquivo, um por linha",
+  "idf_kind_base": "Jogo base",
+  "idf_kind_update": "Atualização",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "Título",
+  "idf_f_app": "Aplicativo",
+  "idf_f_ver": "Código de versão",
+  "idf_no_format": "Não é um pacote: o nome precisa terminar em .nsp, .nsz, .xci ou .xcz.",
+  "idf_no_id": "Sem id de 16 dígitos entre colchetes: a ponte deixa este arquivo fora da biblioteca.",
+  "idf_count": "{ok} de {all} reconhecidos",
+  "idf_empty": "Cole pelo menos um nome."
 }

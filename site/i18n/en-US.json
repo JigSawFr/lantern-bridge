@@ -82,5 +82,18 @@
   "gen_user": "User",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "Set each password in the environment variable named in the compose file before you start the container."
+  "gen_note": "Set each password in the environment variable named in the compose file before you start the container.",
+  "idf_title": "Will my files be recognised?",
+  "idf_lede": "The bridge reads a game's identity from its file name: a 16-digit id in square brackets, and the version in [v…]. Paste your file names, one per line, to see what it makes of each. This is the bridge's own rule, run in your page: nothing is sent.",
+  "idf_label": "File names, one per line",
+  "idf_kind_base": "Base game",
+  "idf_kind_update": "Update",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "Title",
+  "idf_f_app": "Application",
+  "idf_f_ver": "Version code",
+  "idf_no_format": "Not a package: the name must end in .nsp, .nsz, .xci or .xcz.",
+  "idf_no_id": "No 16-digit id in square brackets: the bridge leaves this file out of the library.",
+  "idf_count": "{ok} of {all} recognised",
+  "idf_empty": "Paste at least one name."
 }

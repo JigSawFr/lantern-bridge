@@ -82,5 +82,18 @@
   "gen_user": "Gebruiker",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "Zet elk wachtwoord in de omgevingsvariabele die in het compose-bestand staat voordat je de container start."
+  "gen_note": "Zet elk wachtwoord in de omgevingsvariabele die in het compose-bestand staat voordat je de container start.",
+  "idf_title": "Worden mijn bestanden herkend?",
+  "idf_lede": "De bridge leest de identiteit van een game uit de bestandsnaam: een id van 16 cijfers tussen blokhaken en de versie in [v…]. Plak je bestandsnamen, één per regel, om te zien wat hij ermee doet. Dit is de regel van de bridge zelf, uitgevoerd in je pagina: er wordt niets verstuurd.",
+  "idf_label": "Bestandsnamen, één per regel",
+  "idf_kind_base": "Basisgame",
+  "idf_kind_update": "Update",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "Titel",
+  "idf_f_app": "Applicatie",
+  "idf_f_ver": "Versiecode",
+  "idf_no_format": "Geen pakket: de naam moet eindigen op .nsp, .nsz, .xci of .xcz.",
+  "idf_no_id": "Geen id van 16 cijfers tussen blokhaken: de bridge laat dit bestand buiten de bibliotheek.",
+  "idf_count": "{ok} van {all} herkend",
+  "idf_empty": "Plak minstens één naam."
 }

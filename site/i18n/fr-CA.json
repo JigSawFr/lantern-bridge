@@ -82,5 +82,18 @@
   "gen_user": "Utilisateur",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "Définissez chaque mot de passe dans la variable d'environnement nommée dans le fichier compose avant de démarrer le conteneur."
+  "gen_note": "Définissez chaque mot de passe dans la variable d'environnement nommée dans le fichier compose avant de démarrer le conteneur.",
+  "idf_title": "Mes fichiers seront-ils reconnus ?",
+  "idf_lede": "Le pont lit l'identité d'un jeu dans le nom de son fichier : un identifiant de 16 chiffres entre crochets, et la version dans [v…]. Collez vos noms de fichiers, un par ligne, pour voir ce qu'il en fait. C'est la règle même du pont, exécutée dans votre page : rien n'est envoyé.",
+  "idf_label": "Noms de fichiers, un par ligne",
+  "idf_kind_base": "Jeu de base",
+  "idf_kind_update": "Mise à jour",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "Titre",
+  "idf_f_app": "Application",
+  "idf_f_ver": "Code de version",
+  "idf_no_format": "Ce n'est pas un paquet : le nom doit finir par .nsp, .nsz, .xci ou .xcz.",
+  "idf_no_id": "Pas d'identifiant de 16 chiffres entre crochets : le pont laisse ce fichier hors de la bibliothèque.",
+  "idf_count": "{ok} sur {all} reconnus",
+  "idf_empty": "Collez au moins un nom."
 }
