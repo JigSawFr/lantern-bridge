@@ -7,16 +7,18 @@ import shutil
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 
 from lantern_bridge.admin import attention
 from lantern_bridge.admin.i18n import FR
-from lantern_bridge.runtime import SourceState
+from lantern_bridge.runtime import Runtime, SourceState
 from test_admin import _admin, _client
 from test_observer import SEE, _with_observer
 
 
-def _runtime(client):  # type: ignore[no-untyped-def]
-    return client.app.state.runtime
+def _runtime(client: TestClient) -> Runtime:
+    runtime: Runtime = client.app.state.runtime  # type: ignore[attr-defined]
+    return runtime
 
 
 def test_a_quiet_bridge_has_nothing_to_deal_with(tmp_path: Path) -> None:
