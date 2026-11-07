@@ -1,7 +1,7 @@
-<section class="cards">
+<section class="cards" data-sample="{{ rates.bytes | round | int }},{{ (rates.requests * 10) | round | int }}">
   <div class="tile"><span class="n">{{ transfers | length }}</span><span class="what">{{ _("transfers in progress") }}</span></div>
-  <div class="tile"><span class="n">{{ rates.bytes | size }}/s</span><span class="what">{{ _("sent now") }}</span></div>
-  <div class="tile"><span class="n">{{ "%.1f"|format(rates.requests) }}</span><span class="what">{{ _("requests a second") }}</span></div>
+  <div class="tile"><span class="n">{{ rates.bytes | size }}/s</span><span class="what">{{ _("sent now") }}</span><svg class="spark" data-spark="0" viewBox="0 0 120 28" preserveAspectRatio="none" aria-hidden="true"><path class="fill"/><path class="line"/></svg></div>
+  <div class="tile"><span class="n">{{ "%.1f"|format(rates.requests) }}</span><span class="what">{{ _("requests a second") }}</span><svg class="spark" data-spark="1" viewBox="0 0 120 28" preserveAspectRatio="none" aria-hidden="true"><path class="fill"/><path class="line"/></svg></div>
   <div class="tile"><span class="n">{{ totals.sent | size }}</span><span class="what">{{ _("sent since the start") }} · {{ totals.requests }} {{ _("requests") }}{% if totals.errors %} · {{ totals.errors }} {{ _("errors") }}{% endif %}{% if totals.simple %} · <span title="{{ _('Health checks, browsers and scanners: not counted above.') }}">{{ totals.simple }} {{ _("simple requests, apart") }}</span>{% endif %}</span></div>
 </section>
 
@@ -10,7 +10,7 @@
   <thead><tr><th>{{ _("Machine") }}</th><th>{{ _("Request") }}</th><th>{{ _("Range") }}</th><th>{{ _("Sent") }}</th><th>{{ _("Rate") }}</th><th>{{ _("For") }}</th></tr></thead>
   <tbody>
   {% for t in transfers %}
-  <tr><td><span class="beat" aria-hidden="true"></span>{{ t.client }}</td><td><code>{{ t.method }} {{ t.path[-48:] }}</code></td><td>{{ t.range or "–" }}</td><td>{{ t.sent | size }}</td><td>{{ t.rate | size }}/s</td><td>{{ "%.0f"|format(now - t.started) }} s</td></tr>
+  <tr><td><span class="beat" aria-hidden="true"></span>{{ t.client }}</td><td><code>{{ t.method }} {{ t.path[-48:] }}</code></td><td>{{ t.range or "–" }}</td><td>{{ t.sent | size }}{% if t.total %}<progress class="mini working" max="{{ t.total }}" value="{{ [t.sent, t.total] | min }}" aria-label="{{ _('Sent') }}"></progress>{% endif %}</td><td>{{ t.rate | size }}/s{% if t.total and t.rate and t.total > t.sent %}<br><span class="dim small">{{ ((t.total - t.sent) / t.rate) | duration }}</span>{% endif %}</td><td>{{ "%.0f"|format(now - t.started) }} s</td></tr>
   {% else %}
   <tr><td colspan="6">{{ _("Nothing is being sent.") }}</td></tr>
   {% endfor %}

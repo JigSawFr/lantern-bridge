@@ -220,3 +220,17 @@ def test_the_activity_page_and_the_metrics_say_how_many_are_apart(tmp_path: Path
     assert "1 simple requests, apart" in client.get("/admin/activity").text
     client.post("/admin/lang", data={"lang": "fr", "next": "/admin/activity"})
     assert "1 requêtes simples, à part" in client.get("/admin/activity").text
+
+
+def test_a_transfer_in_progress_shows_its_share_and_the_page_draws_the_rates(tmp_path: Path) -> None:
+    client = _admin(_public(tmp_path))
+    traffic: Traffic = client.app.state.runtime.traffic  # type: ignore[attr-defined]
+    transfer = traffic.begin("10.0.0.7", "GET", "/api/lantern/v1/files/x", None)
+    transfer.total = 1000
+    traffic.sent(transfer, 250)
+    page = client.get("/admin/activity?fragment=1").text
+    assert 'max="1000" value="250"' in page  # its share of the announced length
+    assert 'data-spark="0"' in page and 'data-spark="1"' in page and "data-sample=" in page
+    transfer.total = 0  # no length announced: no bar, and nothing divides by zero
+    assert 'max="0"' not in client.get("/admin/activity?fragment=1").text
+    traffic.end(transfer, "")

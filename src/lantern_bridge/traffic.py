@@ -50,6 +50,7 @@ class Transfer:
     range: str | None = None
     key: str = ""  # who asked: "device:<id>" or "addr:<address>"
     label: str = ""  # the paired device's name and account, when the token is one
+    total: int = 0  # bytes the response announced (Content-Length), 0 when unknown
 
     @property
     def rate(self) -> float:
@@ -297,6 +298,9 @@ class TrafficMiddleware:
         async def counting(message: Message) -> None:
             if message["type"] == "http.response.start":
                 transfer.status = int(message.get("status", 0))
+                for name, value in message.get("headers") or ():
+                    if name.lower() == b"content-length" and value.isdigit():
+                        transfer.total = int(value)
             elif message["type"] == "http.response.body":
                 self.traffic.sent(transfer, len(message.get("body", b"")))
             await send(message)

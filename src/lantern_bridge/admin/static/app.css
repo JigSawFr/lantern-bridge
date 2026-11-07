@@ -388,3 +388,11 @@ button[aria-busy="true"]:not(.link)::after{content:"";display:inline-block;width
   details.fold[open]>:not(summary){animation:lb-rise .25s ease-out backwards}
   a.tile{transition:border-color .2s,box-shadow .2s,transform .2s}a.tile:hover{transform:translateY(-2px)}
 }
+
+/* -- activity: the rates are drawn under their tile; the tab's alerts speak in the toasts -------------------- */
+.tile .spark{display:block;width:100%;height:1.6rem;margin-top:.5rem;overflow:visible}
+.spark .line{fill:none;stroke:var(--aurora);stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.spark .fill{fill:var(--aurora);opacity:.14;stroke:none}
+.toast.wait{border:1px solid rgb(255 209 102 / .45);color:var(--warn);border-radius:12px;padding:.7rem 1rem}
+.toast.bad{border:1px solid rgb(255 138 128 / .5);color:var(--danger);border-radius:12px;padding:.7rem 1rem}
+a.toast{display:block;text-decoration:none}a.toast:hover{filter:brightness(1.15)}

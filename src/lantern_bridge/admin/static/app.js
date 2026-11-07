@@ -3,6 +3,7 @@
 // many wait. Everywhere: a confirmation dialog, a toast for what was saved, copy buttons, a password reveal.
 (() => {
   const say = (name) => document.body.dataset[name] || "";
+  let toast = () => {};
   const get = () => fetch("/admin/api/state", { credentials: "same-origin" }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
 
   // Import: a chosen file fills the text box beside it (the file never leaves the browser until it is sent).
@@ -133,6 +134,42 @@
       el.hidden = !found;
       if (found) { el.textContent = String(found.n); el.className = `dot ${found.level}`; }
     }
+    tab(badges);
+  };
+  // The tab itself says so: "(2)" in front of the title when something needs a look, and a coloured dot on the
+  // icon (red: broken, amber: worth a look, blue: going on), so that it shows from another tab too.
+  const baseTitle = document.title;
+  const icon = document.querySelector("link[rel=icon]");
+  const mark = new Image();
+  mark.src = icon ? icon.href : "";
+  const LEVEL = { bad: "#ff5a4f", wait: "#ffc23d", info: "#33bbff" };
+  let drawn = "";
+  const tab = (badges) => {
+    const list = Object.entries(badges).filter(([key]) => key !== "manage");
+    const look = list.filter(([, b]) => b.level !== "info").reduce((n, [, b]) => n + b.n, 0);
+    document.title = look ? `(${look}) ${baseTitle}` : baseTitle;
+    const level = list.some(([, b]) => b.level === "bad") ? "bad" : list.some(([, b]) => b.level === "wait") ? "wait" : list.length ? "info" : "";
+    if (!icon || level === drawn || !mark.complete || !mark.naturalWidth) return;
+    drawn = level;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(mark, 0, 0, 64, 64);
+      if (level) {
+        ctx.beginPath(); ctx.arc(48, 16, 14, 0, 7); ctx.fillStyle = "#0b1424"; ctx.fill();
+        ctx.beginPath(); ctx.arc(48, 16, 10, 0, 7); ctx.fillStyle = LEVEL[level]; ctx.fill();
+      }
+      icon.type = "image/png";
+      icon.href = canvas.toDataURL("image/png");
+    } catch (_) { /* an icon that cannot be drawn stays as it was */ }
+  };
+  // What shows up while the page is open is said where the eyes are: a toast, once, when a count grows.
+  const announce = (badges, was) => {
+    for (const key of ["overview", "pairings", "sources", "tasks"]) {
+      const now = badges[key], text = say(`t${key[0].toUpperCase()}${key.slice(1)}`);
+      if (now && now.level !== "info" && text && (!was[key] || now.n > was[key].n || was[key].level === "info")) toast(text, now.level === "bad" ? "bad" : "wait", `/admin/${key === "overview" ? "" : key === "tasks" ? "tasks" : key}`);
+    }
   };
   // Alerts: when the dots show something new that needs a look, a browser that allowed it shows a notification
   // (through the service worker, so that an installed app gets it too). Only this device decides, and only while
@@ -153,6 +190,7 @@
         }
       }
     }
+    if (before !== null) announce(badges, before);
     before = badges;
   };
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/admin/sw.js", { scope: "/admin/" }).catch(() => {});
@@ -216,6 +254,29 @@
   // -- blocks that follow the server: their HTML arrives when it changes ------------------------------------
   // The new HTML takes the block's place; what changed in it is shown: a cell or a figure lights up once, a
   // number counts to its new value, a bar glides, a row that was not there slides in.
+  // The two rates of the activity page are drawn as they come: one sample each time the block changes, kept for
+  // the last two minutes (and across pages of the tab), drawn as a line under the tile.
+  const WINDOW = 120000;
+  let samples = [];
+  try { samples = JSON.parse(sessionStorage.getItem("lb-samples") || "[]"); } catch (_) { /* none */ }
+  const sparks = (root) => {
+    const holder = root.querySelector("[data-sample]");
+    if (!holder) return;
+    const now = Date.now();
+    const [bytes, requests] = holder.dataset.sample.split(",").map(Number);
+    samples = samples.filter((s) => now - s[0] <= WINDOW);
+    if (!samples.length || now - samples[samples.length - 1][0] > 400) samples.push([now, bytes, requests]);
+    try { sessionStorage.setItem("lb-samples", JSON.stringify(samples)); } catch (_) { /* skipped */ }
+    for (const svg of root.querySelectorAll("svg[data-spark]")) {
+      const k = Number(svg.dataset.spark) + 1;
+      const top = Math.max(1, ...samples.map((s) => s[k]));
+      const point = (s) => `${(((s[0] - (now - WINDOW)) / WINDOW) * 120).toFixed(1)},${(26 - (s[k] / top) * 24).toFixed(1)}`;
+      const last = samples[samples.length - 1];
+      const line = samples.map(point).join(" L") + ` L120,${(26 - (last[k] / top) * 24).toFixed(1)}`;
+      svg.querySelector(".line").setAttribute("d", `M${line}`);
+      svg.querySelector(".fill").setAttribute("d", `M${line} L120,28 L${point(samples[0]).split(",")[0]},28Z`);
+    }
+  };
   const PICK = "td, .tile .n, .pill, progress";
   const swap = (live, html) => {
     const next = document.createElement("div");
@@ -234,6 +295,7 @@
       });
     }
     live.replaceChildren(...next.childNodes);
+    sparks(live);
     for (const [kind, el, before] of changes) {
       if (kind === "bar") { const to = Number(el.value); el.value = before; glide(el, Number(el.max), to); }
       else if (kind === "count") { const text = el.textContent; el.textContent = before; count(el, text); }
@@ -488,6 +550,18 @@
 
   // -- what was saved is said once, then goes -----------------------------------------------------------
   const toasts = document.getElementById("toasts");
+  toast = (text, level = "good", href = "") => {
+    if (!toasts || document.hidden) return;
+    const note = document.createElement(href ? "a" : "p");
+    note.className = `toast ${level}`;
+    note.setAttribute("role", "status");
+    note.textContent = text;
+    if (href) note.href = href;
+    toasts.append(note);
+    while (toasts.children.length > 3) toasts.firstElementChild.remove();
+    setTimeout(() => note.classList.add("gone"), 7000);
+    setTimeout(() => note.remove(), 7600);
+  };
   for (const note of document.querySelectorAll("[data-toast]")) {
     if (!toasts) break;
     note.classList.add("toast");
