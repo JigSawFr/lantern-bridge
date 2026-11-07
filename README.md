@@ -124,7 +124,7 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 - **Activity**: the transfers in progress, the machines that called the library, the rates and the hashing, live (the live blocks arrive over one server-sent stream each, `/admin/live`, sent when the content changes; a browser without `EventSource` asks again every two seconds).
 - **Developer** (off unless `developer = true`): the last requests, the slowest hashing, a title as raw JSON, a few actions.
 - **Sources**: add, remove, reorder and test a folder or a shop.
-- **Settings**: the name, the hashing rate and the access mode, the notifications, the integrations, a read-only account, MQTT and a backup, with a contents bar and a Save bar that appears when a card was edited. The page writes `config.toml` (keeping the keys it does not know); the bridge reads it at startup, and the pages say when a restart is due.
+- **Settings**: the name, the hashing rate and the access mode, the notifications, the integrations, a read-only account, MQTT and a backup, with a contents bar, a search box, and one Save all bar that appears when cards were edited (the read-only account keeps its own button). The page writes `config.toml` (keeping the keys it does not know); the bridge reads it at startup, and the pages say when a restart is due.
 - **Accounts**: each account's scopes and devices, and, with an `aerofoil` source, the AeroFoil user it acts as (only the name of the variable holding the password is kept).
 - **Invitations**: a code that pairs a device without approval, for 1, 7 or 30 days and a number of devices.
 - **Diagnostic**: a JSON file with versions, sources, counts and recent warnings, and no secret.

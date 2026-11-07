@@ -290,5 +290,10 @@ fieldset.group p{margin:.7rem 0}
 .card[data-dirty]{overflow:visible}
 .savebar{display:flex;align-items:center;gap:1rem;margin-top:1rem}
 .savebar [data-dirty-note]{flex:1}
+body.saveall form[data-dirty] .savebar{display:none}
+.savebar.all{position:sticky;bottom:0;z-index:5;margin:1rem 0 0;padding:.8rem 1.25rem;background:var(--night);border:1px solid var(--aurora);border-radius:var(--radius)}
+.savebar.all[hidden]{display:none}
+.searchbox{margin:.5rem 0 1rem}
+.searchbox input{width:100%}
 .card.dirty .savebar{position:sticky;bottom:0;margin:1rem -1.25rem -1.1rem;padding:.8rem 1.25rem;background:var(--night);border-top:1px solid var(--aurora);border-radius:0 0 var(--radius) var(--radius)}
 :root[data-theme="light"] .lang button[aria-current]{color:#00604d}

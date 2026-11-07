@@ -151,6 +151,29 @@ await test("light theme: the text of every page has an AA contrast", { width: 12
   }
 });
 
+await test("settings: one bar saves every edited card, and a box finds a setting", { width: 1280, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/config`);
+  assert.equal(await page.locator("[data-saveall]").isVisible(), false, "no bar before an edit");
+  await page.fill("#settings-search", "webhook");
+  assert.equal(await page.locator("input[name=webhook]").isVisible(), true);
+  assert.equal(await page.locator("input[name=password_env]").isVisible(), false, "the other settings step aside");
+  await page.fill("#settings-search", "zzzz");
+  assert.equal(await page.locator("#settings-none").isVisible(), true);
+  await page.fill("#settings-search", "");
+  assert.equal(await page.locator("input[name=password_env]").isVisible(), true);
+  await page.fill("input[name=webhook]", "https://example.org/hook");
+  assert.equal(await page.locator("[data-saveall]").isVisible(), true, "the bar shows after an edit");
+  await page.locator("[data-saveall] button").click();
+  await page.waitForURL(/config\?m=/);
+  assert.equal(await page.inputValue("input[name=webhook]"), "https://example.org/hook");
+  assert.equal(await page.locator("[data-saveall]").isVisible(), false);
+  const before = page.url();
+  await page.fill("input[name=webhook]", "not an address");
+  await page.locator("[data-saveall] button").click();
+  await page.locator("form[data-dirty] .error").first().waitFor();
+  assert.equal(page.url(), before, "a refused value stays on the page");
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

@@ -124,12 +124,66 @@
     });
   }
 
-  // -- a settings card that was edited says so, and its Save sticks to the bottom of the screen -------------
-  for (const form of document.querySelectorAll("form[data-dirty]")) {
+  // -- a settings card that was edited says so; one bar saves every edited card, and a box finds a setting -----
+  const cards = [...document.querySelectorAll("form[data-dirty]")];
+  const bar = document.querySelector("[data-saveall]");
+  const edited = () => cards.filter((f) => f.classList.contains("dirty") && !f.hasAttribute("data-solo"));
+  const refresh = () => {
+    if (!bar) return;
+    const n = edited().length;
+    bar.hidden = n === 0;
+    const count = bar.querySelector("[data-count]");
+    if (count) count.textContent = String(n);
+  };
+  for (const form of cards) {
     const note = form.querySelector("[data-dirty-note]");
-    const mark = () => { form.classList.add("dirty"); if (note) note.hidden = false; };
+    const mark = () => { form.classList.add("dirty"); if (note) note.hidden = false; refresh(); };
     form.addEventListener("input", mark);
     form.addEventListener("change", mark);
+  }
+  if (bar) {
+    document.body.classList.add("saveall");
+    const button = bar.querySelector("button");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      let last = location.href;
+      for (const form of edited()) {
+        for (const old of form.querySelectorAll(":scope > .error[data-saveall-error]")) old.remove();
+        const reply = await fetch(form.action, { method: "POST", body: new URLSearchParams(new FormData(form)) });
+        if (reply.ok && /[?&]m=/.test(reply.url)) { last = reply.url; continue; }
+        const problem = new DOMParser().parseFromString(await reply.text(), "text/html").querySelector(".error");
+        const line = document.createElement("p");
+        line.className = "error";
+        line.setAttribute("role", "alert");
+        line.setAttribute("data-saveall-error", "");
+        line.textContent = problem ? problem.textContent : bar.dataset.failed;
+        form.prepend(line);
+        line.scrollIntoView({ block: "center" });
+        button.disabled = false;
+        return;
+      }
+      location.href = last;
+    });
+  }
+  const find = document.getElementById("settings-search");
+  if (find) {
+    find.closest("[data-search-box]").hidden = false;
+    const none = document.getElementById("settings-none");
+    find.addEventListener("input", () => {
+      const q = find.value.trim().toLowerCase();
+      let shown = 0;
+      for (const label of document.querySelectorAll("form[data-dirty] label")) {
+        const names = [...label.querySelectorAll("input, select, textarea")].map((i) => `${i.name} ${i.placeholder || ""}`);
+        const hit = !q || `${label.textContent} ${names.join(" ")}`.toLowerCase().includes(q);
+        label.hidden = !hit;
+        if (hit) shown += 1;
+      }
+      for (const group of document.querySelectorAll("form[data-dirty] fieldset, form.card")) {
+        const rows = group.querySelectorAll("label");
+        group.hidden = q !== "" && rows.length > 0 && [...rows].every((r) => r.hidden);
+      }
+      if (none) none.hidden = shown > 0 || !q;
+    });
   }
 
   // -- a title with files waiting to be hashed refreshes itself until they are done ---------------------
