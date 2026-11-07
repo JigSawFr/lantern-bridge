@@ -503,5 +503,20 @@
  "expected": "预计",
  "from your earlier conversions": "根据您之前的转换",
  "grew by": "增加了",
- "saved": "节省"
+ "saved": "节省",
+ "End": "结束",
+ "End all the other sessions": "结束所有其他会话",
+ "End every other session?": "要结束所有其他会话吗？",
+ "End the session you are using? You will have to sign in again.": "要结束您正在使用的会话吗？您需要重新登录。",
+ "From": "来源",
+ "Role": "角色",
+ "Sessions": "会话",
+ "Signed in": "登录时间",
+ "The session was ended.": "会话已结束。",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "谁登录了这些页面、来自哪里、从何时开始。结束的会话会立即关闭；一段时间不使用也会自动结束。",
+ "administrator": "管理员",
+ "read-only": "只读",
+ "this one": "当前",
+ "Sign-ins blocked": "登录已被阻止",
+ "Session ended": "会话已结束"
 }

@@ -43,6 +43,15 @@ class Session:
     seen: float = 0.0
     #: "admin", or "observer": an account that looks at a few pages and changes nothing.
     role: str = "admin"
+    #: Where it came from, for the list of open sessions (never the token, which only the cookie holds).
+    address: str = ""
+    agent: str = ""
+    signed: float = 0.0  # when it was opened, by the clock on the wall
+
+
+def short(token: str) -> str:
+    """A session's name in the pages and in their forms: enough to tell it from the others, useless as a cookie."""
+    return hashlib.sha256(token.encode()).hexdigest()[:12]
 
 
 class AdminStore:
@@ -160,10 +169,17 @@ class AdminStore:
                 self._write(data)
             self._sessions = {t: s for t, s in self._sessions.items() if s.role != "observer"}
 
-    def login(self, name: str, role: str = "admin") -> tuple[str, Session]:
+    def login(self, name: str, role: str = "admin", address: str = "", agent: str = "") -> tuple[str, Session]:
         token = secrets.token_urlsafe(32)
         session = Session(
-            name, secrets.token_urlsafe(24), time.monotonic() + SESSION_SECONDS, seen=time.monotonic(), role=role
+            name,
+            secrets.token_urlsafe(24),
+            time.monotonic() + SESSION_SECONDS,
+            seen=time.monotonic(),
+            role=role,
+            address=address[:64],
+            agent=agent[:160],
+            signed=time.time(),
         )
         with self._lock:
             self._sessions = {t: s for t, s in self._sessions.items() if s.expires > time.monotonic()}
@@ -189,3 +205,42 @@ class AdminStore:
         if token:
             with self._lock:
                 self._sessions.pop(token, None)
+
+    def listing(self, current: str | None = None) -> list[dict[str, Any]]:
+        """The open sessions, newest first, for the administrator's page: who, from where, since when."""
+        now, wall = time.monotonic(), time.time()
+        with self._lock:
+            self._sessions = {
+                t: s for t, s in self._sessions.items() if s.expires > now and now - s.seen <= IDLE_SECONDS
+            }
+            rows = [
+                {
+                    "id": short(token),
+                    "name": s.name,
+                    "role": s.role,
+                    "address": s.address,
+                    "agent": s.agent,
+                    "signed": s.signed,
+                    "last": wall - (now - s.seen),
+                    "current": token == current,
+                }
+                for token, s in self._sessions.items()
+            ]
+        return sorted(rows, key=lambda r: -r["signed"])
+
+    def revoke(self, sid: str) -> bool:
+        """Ends the session called `sid` (see `short`); False when there is none."""
+        with self._lock:
+            token = next((t for t in self._sessions if short(t) == sid), None)
+            if token is None:
+                return False
+            del self._sessions[token]
+            return True
+
+    def revoke_others(self, current: str | None) -> int:
+        """Ends every session but the one of this cookie; how many there were."""
+        with self._lock:
+            keep = {t: s for t, s in self._sessions.items() if t == current}
+            ended = len(self._sessions) - len(keep)
+            self._sessions = keep
+            return ended

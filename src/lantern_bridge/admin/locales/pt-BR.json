@@ -186,5 +186,16 @@
  "then the original is deleted": "depois o original é excluído",
  "File deleted": "Arquivo excluído",
  "File converted": "Arquivo convertido",
- "saved": "economizado"
+ "saved": "economizado",
+ "End": "Encerrar",
+ "End all the other sessions": "Encerrar todas as outras sessões",
+ "End every other session?": "Encerrar todas as outras sessões?",
+ "End the session you are using? You will have to sign in again.": "Encerrar a sessão que você está usando? Você precisará entrar de novo.",
+ "Role": "Papel",
+ "Signed in": "Entrou",
+ "The session was ended.": "A sessão foi encerrada.",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "Quem está conectado a estas páginas, de onde e desde quando. Uma sessão encerrada é fechada na hora; ela também termina sozinha após um tempo sem uso.",
+ "read-only": "somente leitura",
+ "Sign-ins blocked": "Entradas bloqueadas",
+ "Session ended": "Sessão encerrada"
 }

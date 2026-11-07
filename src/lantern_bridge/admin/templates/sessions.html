@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Sessions") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Sessions") }}</h1>
+<p class="lede">{{ _("Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Name") }}</th><th>{{ _("Role") }}</th><th>{{ _("From") }}</th><th>{{ _("Signed in") }}</th><th>{{ _("Last seen") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td><strong>{{ r.name }}</strong>{% if r.current %} <span class="pill ok">{{ _("this one") }}</span>{% endif %}</td>
+    <td>{{ _("read-only") if r.role == "observer" else _("administrator") }}</td>
+    <td><code>{{ r.address or "–" }}</code>{% if r.agent %}<br><span class="dim small" title="{{ r.agent }}">{{ r.agent[:60] }}</span>{% endif %}</td>
+    <td>{{ r.signed | when }}</td><td>{{ r.last | when }}</td>
+    <td><form method="post" action="/admin/sessions/{{ r.id }}/end"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="ghost small"{% if r.current %} data-confirm="{{ _('End the session you are using? You will have to sign in again.') }}"{% endif %}>{{ _("Sign out") if r.current else _("End") }}</button></form></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% if rows | length > 1 %}
+<form method="post" action="/admin/sessions/others/end" class="row">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <button class="danger" data-confirm="{{ _('End every other session?') }}">{{ _("End all the other sessions") }}</button>
+</form>
+{% endif %}
+{% endblock %}

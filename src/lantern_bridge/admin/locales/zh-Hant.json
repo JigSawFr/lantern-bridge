@@ -503,5 +503,20 @@
  "expected": "預計",
  "from your earlier conversions": "根據您之前的轉換",
  "grew by": "增加了",
- "saved": "節省"
+ "saved": "節省",
+ "End": "結束",
+ "End all the other sessions": "結束所有其他工作階段",
+ "End every other session?": "要結束所有其他工作階段嗎？",
+ "End the session you are using? You will have to sign in again.": "要結束您正在使用的工作階段嗎？您需要重新登入。",
+ "From": "來源",
+ "Role": "角色",
+ "Sessions": "工作階段",
+ "Signed in": "登入時間",
+ "The session was ended.": "工作階段已結束。",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "誰登入了這些頁面、來自哪裡、從何時開始。結束的工作階段會立即關閉；一段時間未使用也會自動結束。",
+ "administrator": "管理員",
+ "read-only": "唯讀",
+ "this one": "目前",
+ "Sign-ins blocked": "登入已被封鎖",
+ "Session ended": "工作階段已結束"
 }
