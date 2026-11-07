@@ -6,7 +6,7 @@
 <p class="lede">{{ _("Everything the bridge knows, from every source: games, their updates and their DLC.") }}{% if ignored %} <a href="/admin/library/ignored">{{ ignored }} {{ _("files ignored") }}</a>{% endif %}{% if issues %} <a href="/admin/library/checks">{{ issues }} {{ _("things to check") }}</a>{% endif %} <a href="/admin/library/export">{{ _("Export") }} JSON</a> · <a href="/admin/library/export?format=csv">CSV</a></p>
 
 <form class="toolbar" method="get" action="/admin/library" role="search" data-autosubmit>
-  <label class="grow">{{ _("Search") }} <input type="search" name="q" id="q" value="{{ f.q }}" placeholder="{{ _('A name or a title id') }} ( / )" maxlength="100"></label>
+  <label class="grow">{{ _("Search") }} <span class="searchbox"><input type="search" name="q" id="q" value="{{ f.q }}" placeholder="{{ _('A name or a title id') }}" maxlength="100"><kbd class="key" aria-hidden="true">/</kbd></span></label>
   <label>{{ _("Source") }} <select name="source"><option value="">{{ _("All sources") }}</option>{% for s in sources %}<option value="{{ s }}"{% if f.source == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
   {% if genres %}<label>{{ _("Genre") }} <select name="genre"><option value="">{{ _("All genres") }}</option>{% for g in genres %}<option value="{{ g }}"{% if f.genre == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label>{% endif %}
   <label>{{ _("State") }} <select name="state">
@@ -18,18 +18,36 @@
     <option value="name"{% if f.sort in ("", "name") %} selected{% endif %}>{{ _("Name") }}</option>
     <option value="size"{% if f.sort == "size" %} selected{% endif %}>{{ _("Size") }}</option>
     <option value="version"{% if f.sort == "version" %} selected{% endif %}>{{ _("Newest version") }}</option></select></label>
-  <input type="hidden" name="type" value="{{ f.type }}">
-  <button class="ghost">{{ _("Apply") }}</button>
+  <input type="hidden" name="type" value="{{ f.type }}"><input type="hidden" name="view" value="{{ f.view }}">
+  <button class="ghost" data-apply>{{ _("Apply") }}</button>
 </form>
 
 <nav class="chips" aria-label="{{ _('Kind') }}">
   {% for key, label in [("", _("All")), ("base", _("Games")), ("update", _("Updates")), ("dlc", _("DLC"))] %}
-  <a href="/admin/library?type={{ key }}{% if f.q %}&amp;q={{ f.q | urlencode }}{% endif %}{% if f.source %}&amp;source={{ f.source | urlencode }}{% endif %}{% if f.state %}&amp;state={{ f.state }}{% endif %}{% if f.genre %}&amp;genre={{ f.genre | urlencode }}{% endif %}{% if f.sort %}&amp;sort={{ f.sort }}{% endif %}"{% if f.type == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key or "all"] }}</b></a>
+  <a href="/admin/library?type={{ key }}{% if f.q %}&amp;q={{ f.q | urlencode }}{% endif %}{% if f.source %}&amp;source={{ f.source | urlencode }}{% endif %}{% if f.state %}&amp;state={{ f.state }}{% endif %}{% if f.genre %}&amp;genre={{ f.genre | urlencode }}{% endif %}{% if f.sort %}&amp;sort={{ f.sort }}{% endif %}{% if f.view %}&amp;view={{ f.view }}{% endif %}"{% if f.type == key %} aria-current="true"{% endif %}>{{ label }} <b>{{ counts[key or "all"] }}</b></a>
   {% endfor %}
 </nav>
 
 {% if found.titles %}
-<p class="dim count">{{ found.total }} {{ _("titles") }}{% if found.pages > 1 %} · {{ _("page") }} {{ found.page }} / {{ found.pages }}{% endif %}</p>
+<div class="countbar"><p class="dim count">{{ found.total }} {{ _("titles") }}{% if found.pages > 1 %} · {{ _("page") }} {{ found.page }} / {{ found.pages }}{% endif %}</p>
+  <span class="views" role="group" aria-label="{{ _('View') }}">
+    {% set rest %}{% for k, v in f.items() if v and k != "view" %}{{ k }}={{ v | urlencode }}&amp;{% endfor %}{% endset %}
+    <a href="/admin/library?{{ rest }}view=grid"{% if f.view != "list" %} aria-current="true"{% endif %}>{{ _("Grid") }}</a>
+    <a href="/admin/library?{{ rest }}view=list"{% if f.view == "list" %} aria-current="true"{% endif %}>{{ _("List") }}</a>
+  </span></div>
+{% if f.view == "list" %}
+<div class="scroll"><table class="dense">
+  <thead><tr><th>{{ _("Name") }}</th><th>{{ _("Kind") }}</th><th>{{ _("Size") }}</th><th>{{ _("Source") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for t in found.titles %}
+  <tr><td><a href="/admin/library/{{ t.title_id }}"><strong>{{ t.name }}</strong></a> <code>{{ t.title_id }}</code></td>
+    <td>{% if t.count("base") %}<span class="badge">{{ _("game") }}{% if t.latest %} v{{ t.latest }}{% endif %}</span> {% endif %}{% if t.count("update") %}<span class="badge">{{ t.count("update") }} {{ _("updates") }}</span> {% endif %}{% if t.count("dlc") %}<span class="badge">{{ t.count("dlc") }} DLC</span>{% endif %}</td>
+    <td>{{ t.size | size }}</td><td class="dim">{{ t.sources | join(", ") }}</td>
+    <td>{% if t.title_id in flagged %}<span class="badge wait">{{ _("to check") }}</span>{% endif %}{% if t.pending %} <span class="badge wait">{{ t.pending }} {{ _("waiting") }}</span>{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
 <ul class="shelf">
   {% for t in found.titles %}
   <li><a class="game tone-{{ t.tone }}" href="/admin/library/{{ t.title_id }}">
@@ -48,6 +66,7 @@
     </span></a></li>
   {% endfor %}
 </ul>
+{% endif %}
 {% if found.pages > 1 %}
 <nav class="pager" aria-label="{{ _('Pages') }}">
   {% if found.page > 1 %}<a class="button ghost" href="{{ link(found.page - 1) }}">← {{ _("Previous") }}</a>{% endif %}

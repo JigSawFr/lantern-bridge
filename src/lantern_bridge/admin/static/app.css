@@ -266,3 +266,13 @@ details.fold>summary{font:600 1.15rem/1.2 var(--display);letter-spacing:-.02em;c
 details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::before{content:"▸";display:inline-block;width:1.1em;color:var(--dusk);transition:transform .15s}
 details.fold[open]>summary::before{transform:rotate(90deg)}
+
+/* -- library: the search key hint, grid or list, the filter button kept for browsers without script ---------- */
+.searchbox{position:relative;display:block}.searchbox input{padding-right:2.6rem}
+.key{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);font:500 .75rem var(--mono);color:var(--dusk);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 .4rem;pointer-events:none}
+.searchbox:focus-within .key{display:none}
+.js .toolbar [data-apply]{display:none}
+.countbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:.4rem 0 .8rem}.countbar .count{margin:0}
+.views{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.views a{color:var(--mist);text-decoration:none;padding:.25rem .8rem;font-size:.85rem}.views a[aria-current]{background:var(--snow);color:var(--abyss)}
+table.dense td,table.dense th{padding:.45rem .7rem}
