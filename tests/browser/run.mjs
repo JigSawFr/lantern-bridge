@@ -86,7 +86,7 @@ for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone"
 }
 
 await test("phone: a table row becomes a labelled card", { width: 390, height: 800 }, async (page) => {
-  await page.goto(`${BASE}/config`);
+  await page.goto(`${BASE}/sources`);
   assert.ok((await page.locator("td[data-label]").count()) > 0, "cells carry their column's name");
 });
 

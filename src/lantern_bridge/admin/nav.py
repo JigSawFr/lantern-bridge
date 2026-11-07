@@ -39,6 +39,7 @@ def build(role: str | None, developer: bool, _: Callable[..., str]) -> Menu:
         Entry("devices", _("Devices"), "/admin/devices"),
         Entry("accounts", _("Accounts"), "/admin/accounts"),
         Entry("invitations", _("Invitations"), "/admin/invitations"),
+        Entry("sources", _("Sources"), "/admin/sources"),
         Entry("config", _("Settings"), "/admin/config"),
         Entry("logs", _("Logs"), "/admin/logs"),
     ]
