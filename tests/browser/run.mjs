@@ -67,7 +67,17 @@ for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone"
     assert.ok((await page.locator("main").innerText()).includes("Kite Race"));
   });
 
-  await test(`${label}: the activity block follows the server`, size, async (page) => {
+  await test(`${label}: the activity block follows the server by a stream`, size, async (page) => {
+    await page.goto(`${BASE}/activity`);
+    const got = page.waitForResponse((r) => r.url().includes("/admin/live") && r.headers()["content-type"].startsWith("text/event-stream"));
+    await page.reload();
+    await got;
+    // the first message of the stream is the block's content: the page stores it when it applies it
+    await page.waitForFunction(() => document.querySelector("[data-live]").dataset.html !== undefined, null, { timeout: 4000 });
+  });
+
+  await test(`${label}: without EventSource the block is asked again every two seconds`, size, async (page) => {
+    await page.addInitScript(() => { Object.defineProperty(window, "EventSource", { value: undefined }); });
     await page.goto(`${BASE}/activity`);
     const live = page.locator("[data-live]");
     await live.evaluate((el) => { el.innerHTML = "<p id=stale>stale</p>"; });

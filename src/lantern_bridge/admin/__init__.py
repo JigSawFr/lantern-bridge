@@ -128,11 +128,39 @@ def _csv_safe(value: str) -> str:
     return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
 
 
+#: What the live stream may follow: the pages' fragments and the state. Each is asked again as the same session.
+_FOLLOWED = ("/admin", "/admin/", "/admin/activity", "/admin/start", "/admin/api/state")
+
+
+async def _ask(request: Request, target: str) -> str | None:
+    """The body that `target` would answer to this very request (same cookies, same checks), or None if it fails."""
+    path, _, query = target.partition("?")
+    scope = {
+        key: request.scope[key]
+        for key in ("type", "asgi", "http_version", "scheme", "server", "client", "root_path", "headers")
+        if key in request.scope
+    }
+    scope.update(method="GET", path=path, raw_path=path.encode(), query_string=query.encode())
+    answer: dict[str, Any] = {"body": b"", "status": 0}
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message: dict[str, Any]) -> None:
+        if message["type"] == "http.response.start":
+            answer["status"] = message["status"]
+        elif message["type"] == "http.response.body":
+            answer["body"] += message.get("body", b"")
+
+    await request.app(scope, receive, send)
+    return answer["body"].decode("utf-8", "replace") if answer["status"] == 200 else None
+
+
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
 
 
 #: What an observer may read: the overview, the library with its checks and exports, the activity.
-_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/activity")
+_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/activity", "/admin/live")
 _OBSERVER_PREFIXES = ("/admin/library", "/admin/static/")
 
 
@@ -966,6 +994,35 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 for line in admin.ring.since(last, level):
                     last = line.id
                     yield f"id: {line.id}\ndata: {json.dumps(line.to_json())}\n\n"
+                    beat = 0
+                beat += 1
+                if beat >= 15:
+                    yield ": keep-alive\n\n"
+                    beat = 0
+                await asyncio.sleep(1)
+
+        return StreamingResponse(events(), media_type="text/event-stream", headers=_HEADERS)
+
+    @router.get("/live")
+    async def live(request: Request) -> Response:
+        """Server-sent events for one block of a page: its fresh content, sent when it changes (not every pass)."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return Response(status_code=401, headers=_HEADERS)
+        target = request.query_params.get("u", "")
+        if target.partition("?")[0] not in _FOLLOWED or "\n" in target or "\r" in target:
+            raise HTTPException(404)
+
+        async def events() -> AsyncIterator[str]:
+            last: str | None = None
+            beat = 0
+            while not await request.is_disconnected():
+                body = await _ask(request, target)
+                if body is None:  # the session ended or the page failed: the browser reconnects and is sent to sign in
+                    return
+                if body != last:
+                    last = body
+                    yield f"data: {json.dumps(body)}\n\n"
                     beat = 0
                 beat += 1
                 if beat >= 15:

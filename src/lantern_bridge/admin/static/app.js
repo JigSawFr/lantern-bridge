@@ -17,10 +17,25 @@
     const bar = document.getElementById("progress");
     if (bar) { bar.max = state.total || 1; bar.value = state.hashed; }
   };
+  // One server-sent stream per followed address: the server sends the body when it changes. Without
+  // EventSource (or when the stream cannot open) the same address is asked again every two seconds.
+  const follow = (url, apply) => {
+    let timer = 0;
+    const poll = () => {
+      if (timer) return;
+      timer = setInterval(() => {
+        if (!document.hidden) fetch(url, { credentials: "same-origin" }).then((r) => (r.ok ? r.text() : Promise.reject(r.status))).then(apply).catch(() => {});
+      }, 2000);
+    };
+    if (!window.EventSource) return poll();
+    const source = new EventSource(`/admin/live?u=${encodeURIComponent(url)}`);
+    source.onmessage = (e) => { try { apply(JSON.parse(e.data)); } catch (_) { /* a broken line is skipped */ } };
+    source.onerror = () => { if (source.readyState === EventSource.CLOSED) { source.close(); poll(); } };
+  };
+
   if (document.getElementById("progress")) {
-    const tick = () => get().then(bind).catch(() => {});
-    tick();
-    setInterval(tick, 2000);
+    get().then(bind).catch(() => {});
+    follow("/admin/api/state", (text) => { try { bind(JSON.parse(text)); } catch (_) { /* skipped */ } });
   }
 
   // -- tables: on a narrow screen each row becomes a card, so every cell carries its column's name -------
@@ -34,19 +49,16 @@
   };
   labelTables(document);
 
-  // -- blocks that follow the server: their HTML is fetched again every two seconds -----------------------
-  const lives = [...document.querySelectorAll("[data-live]")].filter((el) => el.dataset.live.startsWith("/"));
-  if (lives.length) {
-    setInterval(() => {
-      if (document.hidden) return;
-      for (const live of lives) {
-        if (live.contains(document.activeElement) && document.activeElement !== document.body) continue; // not under a click or a keyboard
-        fetch(live.dataset.live, { credentials: "same-origin" })
-          .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
-          .then((html) => { if (html !== live.dataset.html) { live.innerHTML = html; live.dataset.html = html; labelTables(live); } })
-          .catch(() => {});
-      }
-    }, 2000);
+  // -- blocks that follow the server: their HTML arrives when it changes ------------------------------------
+  for (const live of document.querySelectorAll("[data-live]")) {
+    if (!live.dataset.live.startsWith("/")) continue;
+    follow(live.dataset.live, (html) => {
+      if (document.hidden || html === live.dataset.html) return;
+      if (live.contains(document.activeElement) && document.activeElement !== document.body) return; // not under a click or a keyboard
+      live.innerHTML = html;
+      live.dataset.html = html;
+      labelTables(live);
+    });
   }
 
   // -- the menu scrolls sideways on a narrow screen: the current page is brought into view ----------------
