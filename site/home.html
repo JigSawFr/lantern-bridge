@@ -21,6 +21,20 @@
     </ol>
   </section>
 
+  <section class="section" id="simulator" hidden
+    data-name-folders="{{bridge_src_folders_t}}" data-name-tinfoil="{{bridge_src_tinfoil_t}}" data-name-ownfoil="{{bridge_src_ownfoil_t}}" data-name-aerofoil="{{bridge_src_aerofoil_t}}"
+    data-seen="{{sim_seen}}" data-empty="{{sim_empty}}" data-extras="{{sim_extras}}" data-extra-ownfoil="{{sim_x_ownfoil}}" data-extra-aerofoil="{{sim_x_aerofoil}}" data-extra-none="{{sim_x_none}}">
+    <h2>{{sim_title}}</h2>
+    <p class="section-lede">{{sim_lede}}</p>
+    <div class="sim-sources" role="group" aria-label="{{sim_pick}}"></div>
+    <div class="sim">
+      <div><h3>{{sim_in}}</h3><div class="sim-in"></div></div>
+      <div><h3>{{sim_out}}</h3><ul class="sim-out" aria-live="polite"></ul></div>
+    </div>
+    <div class="sim-extras"></div>
+    <details class="sim-json"><summary>{{sim_json}}</summary><pre tabindex="0"><code class="language-json"></code></pre></details>
+  </section>
+
   <section class="section" id="run">
     <h2>{{bridge_run_title}}</h2>
     <p class="section-lede">{{bridge_run_lede}}</p>

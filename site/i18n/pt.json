@@ -51,5 +51,17 @@
   "bridge_cta_title": "Leve a sua biblioteca para o Lantern",
   "bridge_cta": "Acompanhe o trabalho, ou crie o seu próprio servidor com o SDK.",
   "bridge_cta_link": "lantern-bridge no GitHub",
-  "bridge_cta_sdk": "O SDK"
+  "bridge_cta_sdk": "O SDK",
+  "sim_title": "Experimente a ponte sem a instalar",
+  "sim_lede": "Escolha as fontes onde vive a sua biblioteca. A ponte lê todas e serve uma só biblioteca, unida por SHA-256: é o que um cliente Lantern veria. Os jogos são inventados e nada sai do seu navegador.",
+  "sim_pick": "Fontes",
+  "sim_in": "Nas suas fontes",
+  "sim_out": "O que um cliente Lantern vê",
+  "sim_empty": "Escolha pelo menos uma fonte.",
+  "sim_seen": "Fontes: {n}",
+  "sim_extras": "O que estas fontes acrescentam",
+  "sim_x_ownfoil": "Alterações em direto",
+  "sim_x_aerofoil": "Jogos guardados, truques, pedidos, classificação etária",
+  "sim_x_none": "Nada além da biblioteca",
+  "sim_json": "A resposta de /apps, tal como o cliente a lê"
 }

@@ -51,5 +51,17 @@
   "bridge_cta_title": "Breng je bibliotheek naar Lantern",
   "bridge_cta": "Volg het werk, of bouw je eigen server met de SDK.",
   "bridge_cta_link": "lantern-bridge op GitHub",
-  "bridge_cta_sdk": "De SDK"
+  "bridge_cta_sdk": "De SDK",
+  "sim_title": "Probeer de Bridge zonder te installeren",
+  "sim_lede": "Kies de bronnen waarin je bibliotheek staat. De bridge leest ze allemaal en serveert één bibliotheek, samengevoegd op SHA-256: dat ziet een Lantern-client. De spellen zijn verzonnen en niets verlaat je browser.",
+  "sim_pick": "Bronnen",
+  "sim_in": "In je bronnen",
+  "sim_out": "Wat een Lantern-client ziet",
+  "sim_empty": "Kies minstens één bron.",
+  "sim_seen": "Bronnen: {n}",
+  "sim_extras": "Wat deze bronnen toevoegen",
+  "sim_x_ownfoil": "Live wijzigingen",
+  "sim_x_aerofoil": "Opslagbestanden, cheats, verzoeken, leeftijdsclassificatie",
+  "sim_x_none": "Niets buiten de bibliotheek",
+  "sim_json": "Het antwoord van /apps, zoals de client het leest"
 }
