@@ -143,6 +143,13 @@ class Config:
     atlas: bool = True
     # True: /metrics answers, in the Prometheus text format, to addresses of the local network. Off by default.
     metrics: bool = False
+    # Networks (`192.168.1.0/24`) the administration pages answer to, instead of every private address. Empty: the
+    # private and loopback addresses. Loopback always may.
+    admin_allow: list[str] = field(default_factory=list)
+    # Names the administration pages answer to (the `Host` header). Empty: addresses, one-word names and local ones.
+    admin_hosts: list[str] = field(default_factory=list)
+    # Reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are believed, as networks.
+    trusted_proxies: list[str] = field(default_factory=list)
     mqtt: Mqtt | None = None
     # Megabytes free on the volume of the state below which the health says to look (it fails below 20).
     low_disk_mb: int = 500
@@ -171,6 +178,9 @@ class Config:
         data["metrics"] = self.metrics
         data["update_check"] = self.update_check
         data["low_disk_mb"] = self.low_disk_mb
+        for key in ("admin_allow", "admin_hosts", "trusted_proxies"):
+            if getattr(self, key):
+                data[key] = list(getattr(self, key))
         if self.mqtt is not None:
             data["mqtt"] = self.mqtt.table()
         if self.webhook is not None:
@@ -195,6 +205,24 @@ def _source_table(source: Source) -> dict[str, Any]:
             {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
         ]
     return table
+
+
+def parse_list(raw: object, key: str, *, networks: bool = False) -> list[str]:
+    """A list of texts: names, or (with `networks`) addresses and networks such as `192.168.1.0/24`."""
+    if raw is None:
+        return []
+    if not isinstance(raw, list) or not all(isinstance(item, str) and item.strip() for item in raw):
+        raise ConfigError(f"`{key}` must be a list of texts")
+    items = [item.strip() for item in raw]
+    if networks:
+        from ipaddress import ip_network
+
+        for item in items:
+            try:
+                ip_network(item, strict=False)
+            except ValueError as error:
+                raise ConfigError(f"`{key}`: {item!r} is not an address or a network (like 192.168.1.0/24)") from error
+    return items
 
 
 def parse_webhook(raw: object, key: str = "webhook") -> str | None:
@@ -291,6 +319,9 @@ def _parse(data: dict[str, Any]) -> Config:
         "metrics",
         "update_check",
         "low_disk_mb",
+        "admin_allow",
+        "admin_hosts",
+        "trusted_proxies",
         "mqtt",
         "webhook",
         "notify",
@@ -325,6 +356,9 @@ def _parse(data: dict[str, Any]) -> Config:
     update_check = data.get("update_check", True)
     if not isinstance(update_check, bool):
         raise ConfigError("`update_check` must be true or false")
+    admin_allow = parse_list(data.get("admin_allow"), "admin_allow", networks=True)
+    admin_hosts = parse_list(data.get("admin_hosts"), "admin_hosts")
+    trusted_proxies = parse_list(data.get("trusted_proxies"), "trusted_proxies", networks=True)
     mqtt = parse_mqtt(data.get("mqtt"))
     webhook = parse_webhook(data.get("webhook"))
     notify = parse_webhook(data.get("notify"), "notify")
@@ -380,6 +414,9 @@ def _parse(data: dict[str, Any]) -> Config:
         mqtt=mqtt,
         update_check=update_check,
         low_disk_mb=low_disk,
+        admin_allow=admin_allow,
+        admin_hosts=admin_hosts,
+        trusted_proxies=trusted_proxies,
         webhook=webhook,
         notify=notify,
         sources=sources,

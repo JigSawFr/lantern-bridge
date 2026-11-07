@@ -40,7 +40,7 @@ from lantern.server.pairing import Limiter
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, selfcheck
-from lantern_bridge.admin import attention, nav
+from lantern_bridge.admin import attention, nav, netguard
 from lantern_bridge.admin.auth import AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import LANGUAGES, pick, translator
@@ -183,6 +183,13 @@ def is_local(host: str | None) -> bool:
     return address.is_loopback or address.is_private or address.is_link_local
 
 
+def is_loopback(host: str | None) -> bool:
+    try:
+        return ipaddress.ip_address((host or "").split("%")[0]).is_loopback
+    except ValueError:
+        return False
+
+
 def _size(count: float) -> str:
     for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
         if count < 1024 or unit == "TiB":
@@ -215,6 +222,8 @@ class Admin:
     ) -> None:
         self.config, self.runtime, self.lantern, self.ring, self.store = config, runtime, lantern, ring, store
         self.config_path = config_path
+        self.networks = netguard.parse_networks(config.admin_allow)
+        self.proxies = netguard.parse_networks(config.trusted_proxies)
         self.attempts = Limiter(5, 300.0)  # wrong passwords, per address
         self.accounts = Limiter(30, 900.0)  # and per name, wide enough that a stranger cannot lock the real one out
         self.streams: dict[str, int] = {}  # open /admin/live streams, per session
@@ -390,11 +399,29 @@ class Admin:
             path="/admin",
             httponly=True,
             samesite="strict",
-            secure=request.url.scheme == "https",
+            secure=self.secure(request),
+        )
+
+    def peer(self, request: Request) -> str | None:
+        return request.client.host if request.client else None
+
+    def client(self, request: Request) -> str:
+        """The address of the client: behind a trusted proxy, the one it forwards."""
+        return netguard.client_address(self.peer(request), request.headers.get("x-forwarded-for"), self.proxies)
+
+    def secure(self, request: Request) -> bool:
+        """Whether the browser speaks HTTPS (itself, or through a trusted proxy that ends it)."""
+        return netguard.is_https(
+            request.url.scheme, self.peer(request), request.headers.get("x-forwarded-proto"), self.proxies
         )
 
     def allowed(self, request: Request) -> bool:
-        return not self.config.admin_lan_only or is_local(request.client.host if request.client else None)
+        if not self.config.admin_lan_only:
+            return True
+        address = self.client(request)
+        if self.networks:
+            return is_loopback(address) or netguard.within(address, self.networks)
+        return is_local(address)
 
     async def form(self, request: Request) -> dict[str, str]:
         body = b""
@@ -414,6 +441,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         # A dependency of the router, not a middleware: the protocol's own routes (and their streams) are untouched.
         if not admin.allowed(request):
             raise HTTPException(403, "The administration pages answer on the local network only.")
+        if not netguard.host_ok(request.headers.get("host"), admin.config.admin_hosts):
+            raise HTTPException(400, "The administration pages do not answer to this name.")
 
     router = APIRouter(prefix="/admin", dependencies=[Depends(local_only)])
     static = resources.files("lantern_bridge.admin") / "static"
@@ -447,7 +476,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 path="/admin",
                 samesite="strict",
                 httponly=True,
-                secure=request.url.scheme == "https",
+                secure=admin.secure(request),
             )
         return response
 
@@ -466,7 +495,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 path="/admin",
                 samesite="strict",
                 httponly=True,
-                secure=request.url.scheme == "https",
+                secure=admin.secure(request),
             )
         else:
             response.delete_cookie(_THEME_COOKIE, path="/admin")
@@ -481,7 +510,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
     @router.post("/setup")
     async def setup_post(request: Request) -> Response:
         fields = await admin.form(request)
-        key = request.client.host if request.client else "?"
+        key = admin.client(request)
         if wait := admin.attempts.wait(key):
             return admin.page(
                 request,
@@ -505,7 +534,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
     @router.post("/login")
     async def login_post(request: Request) -> Response:
         fields = await admin.form(request)
-        key = request.client.host if request.client else "?"
+        key = admin.client(request)
         who = "name:" + fields.get("name", "").strip().lower()
         if wait := max(admin.attempts.wait(key), admin.accounts.wait(who)):
             return admin.page(
