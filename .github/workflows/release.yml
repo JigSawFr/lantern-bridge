@@ -100,7 +100,7 @@ jobs:
   # and `latest`; its digest is attested below
   image:
     name: container image
-    needs: meta
+    needs: [ meta, scan ]
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
@@ -135,24 +135,6 @@ jobs:
             echo "$IMAGE:latest"
             echo EOF
           } >> "$GITHUB_OUTPUT"
-      # One platform, loaded, scanned before anything is pushed: a fixed high or
-      # critical vulnerability stops the release (the build is cached for the push)
-      - name: Build, to scan
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          load: true
-          tags: lantern-bridge:release
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Scan
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: lantern-bridge:release
-          scanners: vuln,secret
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: "1"
       - name: Build and push
         id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -178,30 +160,71 @@ jobs:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-      # The image's own bill of materials (what Trivy finds in it), attested
-      #   gh attestation verify oci://ghcr.io/jigsawfr/lantern-bridge:X.Y.Z -R JigSawFr/lantern-bridge --predicate-type https://cyclonedx.org/bom
-      - name: SBOM of the image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+
+  # The image, scanned before anything is pushed: a fixed high or critical
+  # vulnerability stops the release. Trivy is run from its image, pinned by
+  # digest (v0.76.2, raised by hand), on a job that holds no token.
+  scan:
+    name: scan the image
+    needs: meta
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
-          format: cyclonedx
-          output: image.cdx.json
-      - name: Image SBOM attestation
-        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+          submodules: true
+      - name: Build and save
+        run: |
+          docker build --tag lantern-bridge:release .
+          docker save --output "$RUNNER_TEMP/image.tar" lantern-bridge:release
+      - name: Trivy
+        run: |
+          docker run --rm --volume "$RUNNER_TEMP/image.tar:/image.tar:ro" \
+            ghcr.io/aquasecurity/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
+            image --input /image.tar --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1
+
+  # The image's bill of materials (CycloneDX, what Trivy finds in the pushed
+  # image), made with a token that can only read packages; it is attested in
+  # the next job
+  sbom:
+    name: image SBOM
+    needs: [ meta, image ]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Trivy
+        env:
+          DIGEST: ${{ needs.image.outputs.digest }}
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ github.token }}
+        run: |
+          mkdir "$RUNNER_TEMP/out" && chmod 777 "$RUNNER_TEMP/out"
+          docker run --rm --env TRIVY_USERNAME --env TRIVY_PASSWORD \
+            --volume "$RUNNER_TEMP/out:/out" \
+            ghcr.io/aquasecurity/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
+            image --format cyclonedx --output /out/image.cdx.json "$IMAGE@$DIGEST"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          subject-name: ${{ env.IMAGE }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          sbom-path: image.cdx.json
-          push-to-registry: true
+          name: release-image-sbom
+          path: ${{ runner.temp }}/out/image.cdx.json
+          if-no-files-found: error
 
   # Every file attested, listed and attached
   attest:
     name: attest and attach
-    needs: [ meta, python, image ]
+    needs: [ meta, python, image, sbom ]
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: write      # the release's assets and notes
+      packages: write      # the image's SBOM attestation, stored next to the image
       id-token: write      # the attestations' Sigstore certificate
       attestations: write
     env:
@@ -234,6 +257,18 @@ jobs:
             dist/lantern_bridge-${{ env.VERSION }}-py3-none-any.whl
             dist/lantern_bridge-${{ env.VERSION }}.tar.gz
           sbom-path: dist/lantern-bridge-${{ env.VERSION }}.pypi.cdx.json
+      #   gh attestation verify oci://ghcr.io/jigsawfr/lantern-bridge:X.Y.Z -R JigSawFr/lantern-bridge --predicate-type https://cyclonedx.org/bom
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-image-sbom
+          path: image-sbom
+      - name: SBOM of the image
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ needs.image.outputs.digest }}
+          sbom-path: image-sbom/image.cdx.json
+          push-to-registry: true
       # The release exists (release-please made it with the tag): the files
       # are added to it, a run again replacing its own
       - name: Attach to the release
