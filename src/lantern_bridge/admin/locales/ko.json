@@ -503,5 +503,20 @@
  "expected": "예상",
  "from your earlier conversions": "이전 변환 기준",
  "grew by": "증가",
- "saved": "절약"
+ "saved": "절약",
+ "End": "종료",
+ "End all the other sessions": "다른 모든 세션 종료",
+ "End every other session?": "다른 모든 세션을 종료할까요?",
+ "End the session you are using? You will have to sign in again.": "사용 중인 세션을 종료할까요? 다시 로그인해야 합니다.",
+ "From": "접속 위치",
+ "Role": "역할",
+ "Sessions": "세션",
+ "Signed in": "로그인",
+ "The session was ended.": "세션을 종료했습니다.",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "이 페이지에 로그인한 사용자, 접속 위치, 시작 시각입니다. 종료한 세션은 즉시 닫히며, 한동안 사용하지 않으면 자동으로 종료됩니다.",
+ "administrator": "관리자",
+ "read-only": "읽기 전용",
+ "this one": "현재",
+ "Sign-ins blocked": "로그인 차단됨",
+ "Session ended": "세션 종료됨"
 }

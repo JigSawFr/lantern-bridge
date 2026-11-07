@@ -503,5 +503,20 @@
  "expected": "verwacht",
  "from your earlier conversions": "volgens uw eerdere omzettingen",
  "grew by": "gegroeid met",
- "saved": "bespaard"
+ "saved": "bespaard",
+ "End": "Beëindigen",
+ "End all the other sessions": "Alle andere sessies beëindigen",
+ "End every other session?": "Alle andere sessies beëindigen?",
+ "End the session you are using? You will have to sign in again.": "De sessie beëindigen die u gebruikt? U moet opnieuw inloggen.",
+ "From": "Van",
+ "Role": "Rol",
+ "Sessions": "Sessies",
+ "Signed in": "Ingelogd",
+ "The session was ended.": "De sessie is beëindigd.",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "Wie bij deze pagina's is ingelogd, vanaf waar en sinds wanneer. Een beëindigde sessie is meteen gesloten; ze eindigt ook vanzelf na een tijd zonder gebruik.",
+ "administrator": "beheerder",
+ "read-only": "alleen-lezen",
+ "this one": "deze",
+ "Sign-ins blocked": "Inloggen geblokkeerd",
+ "Session ended": "Sessie beëindigd"
 }

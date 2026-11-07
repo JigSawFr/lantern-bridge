@@ -503,5 +503,20 @@
  "expected": "ожидается",
  "from your earlier conversions": "по вашим прежним преобразованиям",
  "grew by": "увеличился на",
- "saved": "сэкономлено"
+ "saved": "сэкономлено",
+ "End": "Завершить",
+ "End all the other sessions": "Завершить все остальные сеансы",
+ "End every other session?": "Завершить все остальные сеансы?",
+ "End the session you are using? You will have to sign in again.": "Завершить текущий сеанс? Придётся войти снова.",
+ "From": "Откуда",
+ "Role": "Роль",
+ "Sessions": "Сеансы",
+ "Signed in": "Вход выполнен",
+ "The session was ended.": "Сеанс завершён.",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "Кто вошёл на эти страницы, откуда и с какого времени. Завершённый сеанс закрывается сразу; он также завершается сам после некоторого времени без использования.",
+ "administrator": "администратор",
+ "read-only": "только чтение",
+ "this one": "текущий",
+ "Sign-ins blocked": "Вход заблокирован",
+ "Session ended": "Сеанс завершён"
 }

@@ -503,5 +503,20 @@
  "expected": "previsto",
  "from your earlier conversions": "según sus conversiones anteriores",
  "grew by": "aumentó",
- "saved": "ahorrado"
+ "saved": "ahorrado",
+ "End": "Finalizar",
+ "End all the other sessions": "Finalizar todas las demás sesiones",
+ "End every other session?": "¿Finalizar todas las demás sesiones?",
+ "End the session you are using? You will have to sign in again.": "¿Finalizar la sesión que está usando? Tendrá que iniciar sesión de nuevo.",
+ "From": "Desde",
+ "Role": "Rol",
+ "Sessions": "Sesiones",
+ "Signed in": "Inicio de sesión",
+ "The session was ended.": "Se finalizó la sesión.",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "Quién ha iniciado sesión en estas páginas, desde dónde y desde cuándo. Una sesión finalizada se cierra de inmediato; también termina sola tras un tiempo sin uso.",
+ "administrator": "administrador",
+ "read-only": "solo lectura",
+ "this one": "esta",
+ "Sign-ins blocked": "Inicios de sesión bloqueados",
+ "Session ended": "Sesión finalizada"
 }

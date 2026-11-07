@@ -106,6 +106,7 @@ _DONE = {
     "queued": "Hashing again: these files go first.",
     "deleted": "The file was deleted from the disk.",
     "converting": "Queued: the conversion starts when the ones before it are done.",
+    "ended": "The session was ended.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -124,6 +125,8 @@ _JOURNAL = (
     "restored",
     "deleted",
     "converted",
+    "signin_blocked",
+    "session_ended",
 )
 
 
@@ -759,8 +762,13 @@ def mount(app: FastAPI, admin: Admin) -> None:
             admin.attempts.record(key)
             admin.accounts.record(who)
             log.warning("a sign-in failed from %s", key)
+            if max(admin.attempts.wait(key), admin.accounts.wait(who)):  # this very failure shut the door
+                log.warning("sign-ins are blocked for a while (from %s)", key)
+                admin.runtime.history.event("signin_blocked", detail="too many wrong passwords")
             return admin.page(request, "login.html", status=401, error=admin.tr(request)("Wrong name or password."))
-        token, _ = admin.store.login(fields["name"].strip(), role)
+        token, _ = admin.store.login(
+            fields["name"].strip(), role, address=key, agent=request.headers.get("user-agent", "")
+        )
         return redirect("/", request, token)
 
     async def authed(request: Request) -> tuple[Session | None, dict[str, str], Response | None]:
@@ -778,6 +786,46 @@ def mount(app: FastAPI, admin: Admin) -> None:
             if not secrets.compare_digest(fields.get("csrf", "").encode(), session.csrf.encode()):
                 return None, {}, Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
         return session, fields, None
+
+    @router.get("/sessions")
+    async def sessions_page(request: Request) -> Response:
+        """The open sessions of the administration pages, with a way to end them."""
+        session, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        return admin.page(
+            request,
+            "sessions.html",
+            session,
+            active="sessions",
+            rows=admin.store.listing(request.cookies.get(_COOKIE)),
+            message=admin.tr(request)(_DONE[request.query_params["m"]])
+            if request.query_params.get("m") in _DONE
+            else None,
+        )
+
+    @router.post("/sessions/others/end")
+    async def sessions_end_others(request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        ended = admin.store.revoke_others(request.cookies.get(_COOKIE))
+        if ended:
+            log.info("%d other administration session(s) ended from the pages", ended)
+            admin.runtime.history.event("session_ended", detail=f"{ended} session(s)")
+        return redirect("/sessions?m=ended", request)
+
+    @router.post("/sessions/{sid}/end")
+    async def session_end(sid: str, request: Request) -> Response:
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        if not admin.store.revoke(sid):
+            return Response("No such session.", 404, headers=_HEADERS)
+        admin.runtime.history.event("session_ended", detail="1 session")
+        log.info("an administration session was ended from the pages")
+        # Ending your own is signing out: the cookie no longer opens anything, so the next page is the sign-in.
+        return redirect("/sessions?m=ended", request)
 
     @router.post("/logout")
     async def logout(request: Request) -> Response:

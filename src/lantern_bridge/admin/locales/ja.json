@@ -503,5 +503,20 @@
  "expected": "見込み",
  "from your earlier conversions": "これまでの変換に基づく",
  "grew by": "増加",
- "saved": "節約"
+ "saved": "節約",
+ "End": "終了",
+ "End all the other sessions": "他のすべてのセッションを終了",
+ "End every other session?": "他のすべてのセッションを終了しますか？",
+ "End the session you are using? You will have to sign in again.": "使用中のセッションを終了しますか？ 再度サインインが必要です。",
+ "From": "接続元",
+ "Role": "ロール",
+ "Sessions": "セッション",
+ "Signed in": "サインイン",
+ "The session was ended.": "セッションを終了しました。",
+ "Who is signed in to these pages, from where, and since when. A session you end is closed at once; it ends by itself after a while without use.": "このページにサインインしている人、接続元、開始時刻です。終了したセッションはすぐに閉じられ、しばらく使われないと自動的に終了します。",
+ "administrator": "管理者",
+ "read-only": "読み取り専用",
+ "this one": "この端末",
+ "Sign-ins blocked": "サインインをブロック",
+ "Session ended": "セッション終了"
 }
