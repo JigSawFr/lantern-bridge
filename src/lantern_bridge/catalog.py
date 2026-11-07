@@ -84,9 +84,50 @@ class TitleInfo:
         return int(self.title_id[-8:-3] or "0", 16) % 12
 
 
+@dataclass(frozen=True, slots=True)
+class Issue:
+    """Something worth a look in the library: `kind` is one of KINDS, `detail` says which files."""
+
+    kind: str
+    title_id: str
+    name: str
+    detail: str
+
+
+#: same_content: the same bytes twice; same_version: two different files for one version; no_base: an
+#: update or DLC whose game is not in the library.
+KINDS = ("same_content", "same_version", "no_base")
+
+
 @dataclass(slots=True)
 class Catalog:
     titles: dict[str, TitleInfo]
+
+    def issues(self) -> list[Issue]:
+        """Duplicates and orphans, found by comparing what the index lists (nothing is read from disk)."""
+        found: list[Issue] = []
+        for title in self.titles.values():
+            if title.count("base") == 0:
+                found.append(
+                    Issue("no_base", title.title_id, title.name, ", ".join(sorted({f.name for f in title.files})))
+                )
+            groups: dict[tuple[str, str, int], list[FileInfo]] = {}
+            for f in title.files:
+                groups.setdefault((f.type, f.app_id, f.version), []).append(f)
+            for same in groups.values():
+                if len(same) < 2:
+                    continue
+                hashes = {f.sha256 for f in same}
+                kind = "same_content" if len(hashes) == 1 and None not in hashes else "same_version"
+                found.append(
+                    Issue(
+                        kind,
+                        title.title_id,
+                        title.name,
+                        ", ".join(f"{f.source}: {f.path.rsplit('#', 1)[-1]}" for f in same),
+                    )
+                )
+        return sorted(found, key=lambda i: (KINDS.index(i.kind), i.name.lower()))
 
     def genres(self) -> list[str]:
         """Every genre a title of the library has, in alphabetical order."""
