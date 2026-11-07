@@ -200,3 +200,22 @@ def test_duplicates_and_orphans_are_pointed_out(tmp_path: Path) -> None:
     page = client.get("/admin/library/checks")
     assert page.status_code == 200 and "The same file twice" in page.text and "without its game" in page.text
     assert "3 things to check" in client.get("/admin/library").text
+
+
+def test_the_library_can_be_exported_as_json_and_as_csv(tmp_path: Path) -> None:
+    import csv
+    import io
+    import json
+
+    client = _admin(_client(tmp_path, sources=True))
+    (tmp_path / "games" / "=SUM(1) [0100AAAA00000000][v0].nsp").write_bytes(b"base")
+    client.app.state.runtime.cycle(batch=5)  # type: ignore[attr-defined]
+    made = client.get("/admin/library/export")
+    assert made.status_code == 200 and "attachment" in made.headers["content-disposition"]
+    document = json.loads(made.text)
+    assert document["schema"] == 1 and document["titles"][0]["title_id"] == "0100AAAA00000000"
+    assert document["titles"][0]["files"][0]["sha256"] and "generated" in document
+    rows = list(csv.reader(io.StringIO(client.get("/admin/library/export?format=csv").text)))
+    assert rows[0][0] == "title_id" and rows[1][0] == "0100AAAA00000000"
+    assert all(not cell.startswith("=") for row in rows for cell in row)  # a name cannot become a formula
+    assert _client(tmp_path).get("/admin/library/export").status_code == 303

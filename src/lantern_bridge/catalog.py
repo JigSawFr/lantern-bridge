@@ -9,6 +9,8 @@ but a few seconds of cache.
 
 from __future__ import annotations
 
+import csv
+import io
 import threading
 import time
 from collections.abc import Iterable
@@ -103,6 +105,45 @@ KINDS = ("same_content", "same_version", "no_base")
 class Catalog:
     titles: dict[str, TitleInfo]
 
+    def export(self, generated: str) -> dict[str, object]:
+        """The whole library as a document (`schema` 1): the titles, and for each its files."""
+        return {
+            "schema": EXPORT_SCHEMA,
+            "generated": generated,
+            "titles": [
+                {
+                    "title_id": t.title_id,
+                    "name": t.name,
+                    "genres": t.genres,
+                    "files": [
+                        {
+                            "type": f.type,
+                            "app_id": f.app_id,
+                            "version": f.version,
+                            "format": f.format,
+                            "size": f.size,
+                            "sha256": f.sha256,
+                            "source": f.source,
+                            "path": f.path.rsplit("#", 1)[-1],
+                        }
+                        for f in t.files
+                    ],
+                }
+                for t in sorted(self.titles.values(), key=lambda t: (t.name.lower(), t.title_id))
+            ],
+        }
+
+    def export_csv(self) -> str:
+        """One line a file, for a spreadsheet."""
+        out = io.StringIO()
+        writer = csv.writer(out, lineterminator="\n")
+        writer.writerow(_CSV_COLUMNS)
+        for t in sorted(self.titles.values(), key=lambda t: (t.name.lower(), t.title_id)):
+            for f in t.files:
+                row = (t.title_id, t.name, f.type, f.app_id, f.version, f.format, f.size, f.sha256, f.source)
+                writer.writerow([*(_cell(v) for v in row), _cell(f.path.rsplit("#", 1)[-1])])
+        return out.getvalue()
+
     def issues(self) -> list[Issue]:
         """Duplicates and orphans, found by comparing what the index lists (nothing is read from disk)."""
         found: list[Issue] = []
@@ -139,6 +180,17 @@ class Catalog:
             for kind in title.types:
                 out[kind] += 1
         return out
+
+
+#: The version of the exported document (see Catalog.export).
+EXPORT_SCHEMA = 1
+_CSV_COLUMNS = ("title_id", "title", "type", "app_id", "version", "format", "size", "sha256", "source", "path")
+
+
+def _cell(value: object) -> str:
+    """A spreadsheet reads a cell that starts with = + - @ as a formula: a quote in front makes it text."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 def build(index: Index, projection: Projection) -> Catalog:

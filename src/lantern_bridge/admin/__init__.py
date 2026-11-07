@@ -444,6 +444,25 @@ def mount(app: FastAPI, admin: Admin) -> None:
         projection = admin.runtime.projection
         return {i for i in title_ids if (sheet := projection.title(i)) is not None and sheet.icon is not None}
 
+    @router.get("/library/export")
+    async def library_export(request: Request) -> Response:
+        """The library as a file to keep: ?format=json (default, with a schema number) or csv."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return refused
+        catalog = admin.runtime.browser.catalog()
+        stamp = time.strftime("%Y-%m-%d", time.gmtime())
+        if request.query_params.get("format") == "csv":
+            body, kind, extension = catalog.export_csv(), "text/csv; charset=utf-8", "csv"
+        else:
+            document = catalog.export(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+            body, kind, extension = json.dumps(document, indent=2) + "\n", "application/json", "json"
+        return Response(
+            body,
+            media_type=kind,
+            headers={**_HEADERS, "Content-Disposition": f'attachment; filename="library-{stamp}.{extension}"'},
+        )
+
     @router.get("/library/checks")
     async def library_checks(request: Request) -> Response:
         """Duplicates and updates without their game."""

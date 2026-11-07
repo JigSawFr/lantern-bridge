@@ -55,6 +55,7 @@ FR: dict[str, str] = {
     "The tiles above start again with the bridge; the days and the machines are kept for 90 days.": "Les tuiles du haut repartent de zéro avec le pont ; les jours et les machines sont gardés 90 jours.",
     "The last days": "Les derniers jours",
     "Day": "Jour",
+    "Export": "Exporter",
     "things to check": "points à vérifier",
     "Things to check": "Points à vérifier",
     "Duplicates and add-ons whose game is missing. Nothing is changed here: the files stay where they are.": "Doublons et extensions dont le jeu manque. Rien n'est modifié ici : les fichiers restent où ils sont.",
