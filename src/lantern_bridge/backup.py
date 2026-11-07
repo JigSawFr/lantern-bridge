@@ -13,6 +13,7 @@ schema or with a name it does not know, and keeps what it replaces beside it as 
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sqlite3
@@ -39,9 +40,12 @@ class BackupError(Exception):
 
 
 def _copy_database(source: Path, dest: Path) -> None:
-    with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as src, sqlite3.connect(dest) as out:
+    # `with connection` only ends a transaction: the connections are closed here, or Windows keeps the files locked.
+    with (
+        contextlib.closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as src,
+        contextlib.closing(sqlite3.connect(dest)) as out,
+    ):
         src.backup(out)
-    sqlite3.connect(dest).close()
 
 
 def make(state_dir: Path, config_path: Path, dest: Path, now: float | None = None) -> list[str]:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import re
@@ -25,14 +26,14 @@ def _state(tmp_path: Path, rows: int = 3) -> tuple[Path, Path]:
     config = state / "config.toml"
     save(config, Config(uid=UID, name="Shelf", sources=[FolderSource("games", tmp_path)]))
     for name in backup.DATABASES:
-        with sqlite3.connect(state / name) as db:
+        with contextlib.closing(sqlite3.connect(state / name)) as db, db:
             db.execute("create table t (n integer)")
             db.executemany("insert into t values (?)", [(i,) for i in range(rows)])
     return state, config
 
 
 def _rows(path: Path) -> int:
-    with sqlite3.connect(path) as db:
+    with contextlib.closing(sqlite3.connect(path)) as db:
         return int(db.execute("select count(*) from t").fetchone()[0])
 
 
@@ -52,7 +53,7 @@ def test_a_restoration_puts_back_what_was_saved_and_keeps_what_it_replaced(tmp_p
     out = tmp_path / "b.zip"
     backup.make(state, config, out)
     save(config, Config(uid=UID, name="Changed"))
-    with sqlite3.connect(state / "index.sqlite3") as db:
+    with contextlib.closing(sqlite3.connect(state / "index.sqlite3")) as db, db:
         db.execute("insert into t values (99)")
     (state / "index.sqlite3-wal").write_bytes(b"old journal")
     assert backup.restore(out, state, config) == ["config.toml", *backup.DATABASES]
