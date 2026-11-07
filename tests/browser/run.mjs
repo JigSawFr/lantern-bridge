@@ -189,6 +189,34 @@ for (const [scheme, expected] of [["light", "light"], ["dark", "dark"]]) {
   });
 }
 
+for (const [label, size] of [["desktop", { width: 1280, height: 800 }], ["phone", { width: 390, height: 800 }]]) {
+  await test(`${label}: the language menu lists fifteen languages with their flags and switches the page`, size, async (page) => {
+    await page.goto(`${BASE}/config`);
+    await page.locator(".langmenu summary").click();
+    assert.equal(await page.locator(".langs button").count(), 15);
+    const box = await page.locator(".langs").boundingBox();
+    assert.ok(box.x >= 0 && box.x + box.width <= size.width, "the menu stays inside the screen");
+    assert.ok(await noSideScroll(page), "the open menu does not scroll the page sideways");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator(".langs").isVisible(), false, "Escape closes the menu");
+    await page.locator(".langmenu summary").click();
+    await page.getByRole("button", { name: "Deutsch" }).click();
+    await page.waitForURL(/config/);
+    assert.equal(await page.evaluate(() => document.documentElement.lang), "de");
+    assert.ok(await page.locator("h1").innerText().then((t) => t !== "Settings"), "the page is translated");
+    assert.ok(await noSideScroll(page));
+  });
+}
+
+await test("the flags are drawn by the bundled font", { width: 1280, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/`);
+  await page.locator(".langmenu summary").click();
+  const family = await page.locator(".langs .flag").first().evaluate((el) => getComputedStyle(el).fontFamily);
+  assert.ok(family.startsWith('"Twemoji Flags"'), family);
+  const loaded = await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px "Twemoji Flags"', "\u{1F1EB}\u{1F1F7}"); });
+  assert.ok(loaded, "the font is loaded");
+});
+
 await browser.close();
 server.kill();
 process.exit(failed ? 1 : 0);

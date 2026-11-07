@@ -1,0 +1,17 @@
+{
+ "Add its address in a Lantern-compatible app on your console to browse and download the library.": "Agrega su dirección en una aplicación compatible con Lantern en su consola para explorar y descargar la biblioteca.",
+ "Create one above and give its code to the person, who types it in Lantern when adding this server.": "Cree una arriba y dé su código a la persona, que lo ingresará en Lantern al agregir este servidor.",
+ "Restart the bridge to apply the source you added.": "Reinicie el puente para aplicar la fuente que ha agregido.",
+ "Open Lantern on the console, add this server, then accept its request here.": "Abra Lantern en la consola, agrega este servidor y acepte aquí su solicitud.",
+ "The index of hashes is broken": "El índice de hashes está dagrego",
+ "The bridge sends one POST of JSON with how many files were added, changed or removed per source (no path, no title), at most every ten seconds. A failed call is not repeated.": "El puente envía un POST de JSON con el número de archivos agregidos, modificados o eliminados por fuente (sin rutas ni títulos), como máximo cada diez segundos. Una llamada fallida no se repite.",
+ "Developer mode: add a page with the requests, the raw JSON and the timings": "Modo desarrollador: agrege una página con las solicitudes, el JSON sin procesar y los tiempos",
+ "added": "agregido",
+ "Nothing here yet: add a source, then let the bridge scan and hash it.": "Todavía no hay nada: agrega una fuente y deje que el puente la analice y calcule sus hashes.",
+ "Add a source": "Agregir una fuente",
+ "Add one": "Agregir una",
+ "Add": "Agregir",
+ "Nothing to hash yet: add a source that holds games, then scan.": "Nada que procesar todavía: agrega una fuente que contenga juegos y analice.",
+ "The server wrote a one-time code in its log (administrator setup code). Enter it here with the name and the password you want.": "El servidor ha escrito un código de un solo uso en su registro (código de configuración del administrador). Ingréscalo aquí con el nombre y la contraseña que desee.",
+ "Source added.": "Fuente agregida."
+}

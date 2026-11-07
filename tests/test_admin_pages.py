@@ -76,7 +76,7 @@ def test_every_text_of_a_page_has_its_french() -> None:
             texts.add(found[0] or found[1])
     assert len(texts) > 100
     assert sorted(t for t in texts if t not in i18n.FR) == []
-    assert i18n.pick("fr", None) == "fr" and i18n.pick(None, "de, fr;q=0.5") == "fr" and i18n.pick("xx", "de") == "en"
+    assert i18n.pick("fr", None) == "fr" and i18n.pick(None, "de, fr;q=0.5") == "de" and i18n.pick("xx", "sv") == "en"
 
 
 # -- the settings --------------------------------------------------------------------------------------

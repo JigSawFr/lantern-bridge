@@ -1,0 +1,8 @@
+twemoji-flags.woff2: the 15 flags of the site's language menu, cut out of
+"Twemoji Country Flags" (https://github.com/talkjs/country-flag-emoji-polyfill).
+
+The flags' art comes from Twemoji (https://github.com/twitter/twemoji),
+Copyright 2019 Twitter, Inc and other contributors, licensed under
+CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/
+
+The font's code: Copyright (c) 2022 TalkJS, MIT licence.

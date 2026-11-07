@@ -2,6 +2,7 @@
    Sora for headings, Figtree for text, JetBrains Mono for codes. One dark look; fonts are served from here. */
 @font-face{font-family:"Sora";src:url("/admin/static/sora.woff2") format("woff2");font-weight:100 800;font-display:swap}
 @font-face{font-family:"Figtree";src:url("/admin/static/figtree.woff2") format("woff2");font-weight:300 900;font-display:swap}
+@font-face{font-family:"Twemoji Flags";src:url("/admin/static/twemoji-flags.woff2") format("woff2");unicode-range:U+1F1E6-1F1FF;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url("/admin/static/jetbrains-mono.woff2") format("woff2");font-weight:100 800;font-display:swap}
 :root{
   --abyss:#0b1424;--night:#0e1a33;--line:#22324f;--snow:#e8eef7;--mist:#a9b6cc;--dusk:#7d8cab;
@@ -58,9 +59,16 @@ nav a[aria-current]{color:var(--abyss);background:var(--snow)}
   .js .more-list a{border-radius:10px;padding:.5rem .7rem}
   .js .more-btn[aria-expanded="true"]+.more-list{display:flex}
 }
-.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.lang button{background:none;color:var(--mist);border:0;padding:.35rem .7rem;font:500 .8rem var(--mono);cursor:pointer;min-height:36px}
-.lang button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
+.flag{font:16px/1 "Twemoji Flags","Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;flex:none}
+.langmenu{position:relative}
+.langmenu summary{list-style:none;display:inline-flex;align-items:center;gap:.4rem;min-height:36px;padding:0 .7rem;border:1px solid var(--line);border-radius:999px;color:var(--mist);cursor:pointer;font:500 .8rem var(--mono)}
+.langmenu summary::-webkit-details-marker{display:none}
+.langmenu summary:hover,.langmenu[open] summary{color:var(--snow);border-color:var(--dusk)}
+.langs{position:absolute;right:0;top:calc(100% + .4rem);z-index:20;display:grid;min-width:15rem;max-height:70vh;overflow:auto;padding:.35rem;background:var(--night);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px -16px rgb(0 0 0 / .6)}
+.langs button{display:flex;align-items:center;justify-content:flex-start;gap:.7rem;width:100%;background:none;border:0;color:var(--snow);padding:.5rem .6rem;border-radius:8px;text-align:left;font:500 .9rem var(--body);cursor:pointer;min-height:40px}
+.langs button:hover{background:rgb(255 255 255 / .06)}
+.langs button[aria-current]{background:rgb(0 255 204 / .14);color:var(--aurora)}
+@media (max-width:40rem){.langmenu summary .code{display:none}.langs{right:-3.5rem}}
 .modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .modes button{background:none;color:var(--mist);border:0;width:36px;min-height:36px;display:grid;place-items:center;padding:0;cursor:pointer}
 .modes button:hover{color:var(--snow)}
@@ -244,7 +252,7 @@ a.tile:hover{border-color:rgb(0 255 204 / .5);box-shadow:0 0 0 3px rgb(0 255 204
 :root[data-theme="light"] pre#log,:root[data-theme="light"] #log{background:#fff}
 :root[data-theme="light"] .toast{background:rgb(255 255 255 / .96);box-shadow:0 18px 40px -16px rgb(15 27 48 / .35)}
 :root[data-theme="light"] dialog.ask::backdrop{background:rgb(15 27 48 / .45)}
-:root[data-theme="light"] .lang button[aria-current],:root[data-theme="light"] .good{background:rgb(0 122 98 / .1)}
+:root[data-theme="light"] .langs button[aria-current],:root[data-theme="light"] .good{background:rgb(0 122 98 / .1)}
 :root[data-theme="light"] .note{background:rgb(138 90 0 / .08)}
 :root[data-theme="light"] #log .error,:root[data-theme="light"] #log .critical{background:rgb(179 38 30 / .07)}
 @media (prefers-contrast:more){:root{--dusk:var(--mist);--line:#5a729b;--snow:#fff}}
@@ -300,4 +308,6 @@ body.saveall form[data-dirty] .savebar{display:none}
 .searchbox{margin:.5rem 0 1rem}
 .searchbox input{width:100%}
 .card.dirty .savebar{position:sticky;bottom:0;margin:1rem -1.25rem -1.1rem;padding:.8rem 1.25rem;background:var(--night);border-top:1px solid var(--aurora);border-radius:0 0 var(--radius) var(--radius)}
-:root[data-theme="light"] .lang button[aria-current],:root[data-theme="light"] .modes button[aria-pressed="true"]{color:#00604d}
+:root[data-theme="light"] .modes button[aria-pressed="true"],:root[data-theme="light"] .langs button[aria-current]{color:#00604d}
+:root[data-theme="light"] .langs button:hover{background:rgb(15 27 48 / .06)}
+:root[data-theme="light"] .langs{box-shadow:0 18px 40px -16px rgb(15 27 48 / .35)}
