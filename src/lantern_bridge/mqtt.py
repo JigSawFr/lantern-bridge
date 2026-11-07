@@ -73,7 +73,12 @@ def state(runtime: Runtime, now: float | None = None) -> dict[str, Any]:
             "transfers": len(traffic.active),
         },
         "sources": [
-            {"id": s.id, "kind": _kind(s), "up": bool(stats.sources.get(s.id) and stats.sources[s.id].reachable)}
+            {
+                "id": s.id,
+                "kind": _kind(s),
+                "up": bool(stats.sources.get(s.id) and stats.sources[s.id].reachable),
+                "free": stats.sources[s.id].free if s.id in stats.sources else None,
+            }
             for s in runtime.config.sources
         ],
         "uptime": int((time.time() if now is None else now) - stats.started),

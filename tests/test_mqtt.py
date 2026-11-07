@@ -124,7 +124,9 @@ def test_the_state_is_a_versioned_document_without_paths_or_addresses(tmp_path: 
     assert doc["schema"] == SCHEMA == 1 and doc["ts"] == 1_000_000
     assert doc["bridge"] == {"uid": UID, "name": "Shelf", "version": doc["bridge"]["version"]}
     assert doc["status"] == "ok" and doc["files"]["hashed"] == 1 and doc["files"]["pending"] == 0
-    assert doc["sources"] == [{"id": "games", "kind": "folder", "up": True}]
+    (only,) = doc["sources"]
+    assert {k: only[k] for k in ("id", "kind", "up")} == {"id": "games", "kind": "folder", "up": True}
+    assert isinstance(only["free"], int)  # the room left on its volume
     assert set(doc["traffic"]) == {"requests", "sent_bytes", "errors", "refused", "transfers"}
     assert str(tmp_path) not in json.dumps(doc) and "Aurora" not in json.dumps(doc)
 

@@ -142,6 +142,8 @@ The pages answer the local network only (private and loopback addresses). Behind
 
 **Updates.** Off by default. With *Settings › Updates* (`update_check = true`) the bridge reads GitHub's latest release once a day and says on the overview when it is newer (and `update` in the MQTT state). It sends only the request, so GitHub sees the machine's address as for any download, and it downloads and installs nothing.
 
+**Disk space.** The overview shows the room left on the volume of each folder, and the health warns when the volume of the state (the index) has less than `low_disk_mb` free (500 MiB by default, *Settings*; it fails below 20 MiB). A folder full of games is not a fault, so a folder's room is shown and not judged.
+
 ### 🐳 In a container
 
 Build the image from a checkout (it needs the `sdk/` submodule) and mount the folders read-only: the hashes are then computed in place, which is the recommended way. The configuration and the state (index, pairings) live in `/config`.
