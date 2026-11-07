@@ -183,5 +183,7 @@
  "The original could not be deleted.": "Não foi possível excluir o original.",
  "The tool made no file.": "A ferramenta não gerou nenhum arquivo.",
  "smallest": "menor",
- "then the original is deleted": "depois o original é excluído"
+ "then the original is deleted": "depois o original é excluído",
+ "File deleted": "Arquivo excluído",
+ "File converted": "Arquivo convertido"
 }

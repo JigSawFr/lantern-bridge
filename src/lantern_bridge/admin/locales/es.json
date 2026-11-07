@@ -493,5 +493,7 @@
  "queued": "en cola",
  "running": "en curso",
  "smallest": "más pequeño",
- "then the original is deleted": "después se elimina el original"
+ "then the original is deleted": "después se elimina el original",
+ "File deleted": "Archivo eliminado",
+ "File converted": "Archivo convertido"
 }

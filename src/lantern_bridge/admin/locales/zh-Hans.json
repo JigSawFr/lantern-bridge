@@ -493,5 +493,7 @@
  "queued": "排队中",
  "running": "运行中",
  "smallest": "最小",
- "then the original is deleted": "然后删除原文件"
+ "then the original is deleted": "然后删除原文件",
+ "File deleted": "文件已删除",
+ "File converted": "文件已转换"
 }

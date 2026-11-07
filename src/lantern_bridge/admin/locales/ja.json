@@ -493,5 +493,7 @@
  "queued": "待機中",
  "running": "実行中",
  "smallest": "最小",
- "then the original is deleted": "その後、元のファイルを削除"
+ "then the original is deleted": "その後、元のファイルを削除",
+ "File deleted": "ファイルを削除",
+ "File converted": "ファイルを変換"
 }

@@ -493,5 +493,7 @@
  "queued": "wartend",
  "running": "läuft",
  "smallest": "kleinste",
- "then the original is deleted": "danach wird das Original gelöscht"
+ "then the original is deleted": "danach wird das Original gelöscht",
+ "File deleted": "Datei gelöscht",
+ "File converted": "Datei umgewandelt"
 }

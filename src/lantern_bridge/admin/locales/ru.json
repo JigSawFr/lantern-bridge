@@ -493,5 +493,7 @@
  "queued": "в очереди",
  "running": "выполняется",
  "smallest": "минимальный",
- "then the original is deleted": "затем оригинал удаляется"
+ "then the original is deleted": "затем оригинал удаляется",
+ "File deleted": "Файл удалён",
+ "File converted": "Файл преобразован"
 }

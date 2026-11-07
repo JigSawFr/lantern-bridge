@@ -122,6 +122,8 @@ _JOURNAL = (
     "pairing_refused",
     "revoked",
     "restored",
+    "deleted",
+    "converted",
 )
 
 

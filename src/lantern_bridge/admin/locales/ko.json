@@ -493,5 +493,7 @@
  "queued": "대기 중",
  "running": "실행 중",
  "smallest": "가장 작음",
- "then the original is deleted": "그 후 원본 삭제"
+ "then the original is deleted": "그 후 원본 삭제",
+ "File deleted": "파일 삭제됨",
+ "File converted": "파일 변환됨"
 }

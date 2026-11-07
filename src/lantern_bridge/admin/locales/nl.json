@@ -493,5 +493,7 @@
  "queued": "in de wachtrij",
  "running": "bezig",
  "smallest": "kleinste",
- "then the original is deleted": "daarna wordt het origineel verwijderd"
+ "then the original is deleted": "daarna wordt het origineel verwijderd",
+ "File deleted": "Bestand verwijderd",
+ "File converted": "Bestand omgezet"
 }

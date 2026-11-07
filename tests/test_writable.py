@@ -144,3 +144,12 @@ def test_the_texts_are_in_french_too(tmp_path: Path) -> None:
     client.post("/admin/lang", data={"lang": "fr", "next": "/admin/library"})
     page = client.get("/admin/library/0100AAAA00000000").text
     assert "Supprimer" in page and "irréversible" in page
+
+
+def test_a_deletion_is_a_labelled_kind_of_the_journal(tmp_path: Path) -> None:
+    client, _ = _shelf(tmp_path)
+    _delete(client, "games", UPDATE)
+    page = client.get("/admin/events").text
+    assert "File deleted" in page and "kind=deleted" in page and "1 file" in page
+    assert "File deleted" in client.get("/admin/events?kind=deleted").text
+    assert "File converted" in page  # it has its place in the filter too

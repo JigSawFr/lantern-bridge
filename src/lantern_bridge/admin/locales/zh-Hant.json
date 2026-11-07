@@ -493,5 +493,7 @@
  "queued": "排隊中",
  "running": "執行中",
  "smallest": "最小",
- "then the original is deleted": "然後刪除原始檔案"
+ "then the original is deleted": "然後刪除原始檔案",
+ "File deleted": "檔案已刪除",
+ "File converted": "檔案已轉換"
 }
