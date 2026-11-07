@@ -588,5 +588,7 @@
  "lantern.json is not valid JSON.": "lantern.json не является корректным JSON.",
  "lantern.json is too big.": "lantern.json слишком большой.",
  "not yet": "пока нет",
- "pre-releases": "пре-релизы"
+ "pre-releases": "пре-релизы",
+ "Variable holding its host check (optional)": "Переменная с проверкой хоста (необязательно)",
+ "Only for a shop served over HTTPS that checks its host (the Hauth of Tinfoil): the variable holds that value.": "Только для магазина по HTTPS, который проверяет свой хост (Hauth из Tinfoil): переменная содержит это значение."
 }

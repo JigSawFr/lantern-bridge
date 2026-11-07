@@ -150,11 +150,16 @@ class Runtime:
                 source.password_env,
             )
         user = source.user if password is not None else None
+        hauth = os.environ.get(source.hauth_env) if source.hauth_env else None
+        if source.hauth_env and hauth is None:
+            log.warning(
+                "source %s: the variable %s is not set; no host verification is sent", source.id, source.hauth_env
+            )
         if isinstance(source, AerofoilSource):
-            return AeroFoil(source.url, user=user, password=password)
+            return AeroFoil(source.url, user=user, password=password, hauth=hauth)
         if isinstance(source, OwnfoilSource):
             return Ownfoil(source.url, user=user, password=password)
-        return Shop(source.url, user=user, password=password)
+        return Shop(source.url, user=user, password=password, hauth=hauth)
 
     def open_shop(self, source: ShopSource) -> Shop:
         """A client for a shop of the configuration (the caller closes it)."""

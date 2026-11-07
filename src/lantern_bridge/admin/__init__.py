@@ -1674,6 +1674,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 "user": getattr(x, "user", None),
                 "password_env": getattr(x, "password_env", None),
                 "password_set": bool(getattr(x, "password_env", None)) and getattr(x, "password_env", "") in os.environ,
+                "hauth_env": getattr(x, "hauth_env", None),
+                "hauth_set": bool(getattr(x, "hauth_env", None)) and getattr(x, "hauth_env", "") in os.environ,
             }
             for x in file.sources
         ]
@@ -1939,7 +1941,10 @@ def mount(app: FastAPI, admin: Admin) -> None:
         user, env = f.get("user", "").strip() or None, f.get("password_env", "").strip() or None
         if env is not None and not _ENV_NAME.match(env):
             raise ConfigError("a variable's name is letters, digits and _")
-        built: Source = cls(id=sid, url=where, user=user, password_env=env)
+        hauth = f.get("hauth_env", "").strip() or None
+        if hauth is not None and not _ENV_NAME.match(hauth):
+            raise ConfigError("a variable's name is letters, digits and _")
+        built: Source = cls(id=sid, url=where, user=user, password_env=env, hauth_env=hauth)
         return built
 
     @router.post("/config/sources")

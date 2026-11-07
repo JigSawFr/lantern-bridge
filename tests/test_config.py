@@ -154,3 +154,19 @@ def test_a_tinfoil_source_needs_an_address_and_a_complete_login(tmp_path: Path, 
     path.write_text(f'[[sources]]\nid = "shop"\n{source}', encoding="utf-8")
     with pytest.raises(ConfigError):
         load(path)
+
+
+def test_a_shop_may_name_the_variable_that_holds_its_host_verification(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    path.write_text(
+        'schema = 1\nuid = "0c9c2a8e-5d3a-4c7e-8b0a-6f1d2e3c4b5a"\n'
+        '[[sources]]\nid = "aero"\nkind = "aerofoil"\nurl = "https://aero.example.org/"\nhauth_env = "AERO_HAUTH"\n',
+        encoding="utf-8",
+    )
+    config = load(path)
+    assert config.sources[0].hauth_env == "AERO_HAUTH"  # type: ignore[union-attr]
+    save(path, config)
+    assert 'hauth_env = "AERO_HAUTH"' in path.read_text(encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8").replace('"AERO_HAUTH"', '""'), encoding="utf-8")
+    with pytest.raises(ConfigError):
+        load(path)

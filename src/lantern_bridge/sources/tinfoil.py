@@ -148,12 +148,26 @@ class Shop:
     """One Tinfoil shop. `client` is injectable for tests; redirects are followed here, not by httpx."""
 
     def __init__(
-        self, url: str, *, user: str | None = None, password: str | None = None, client: httpx.Client | None = None
+        self,
+        url: str,
+        *,
+        user: str | None = None,
+        password: str | None = None,
+        client: httpx.Client | None = None,
+        hauth: str | None = None,
     ) -> None:
         self.url = url
+        self.hauth = hauth
         self._auth = httpx.BasicAuth(user, password) if user is not None and password is not None else None
         self._client = client or httpx.Client(timeout=TIMEOUT, follow_redirects=False)
         self._owns = client is None
+
+    def headers(self, **extra: str) -> dict[str, str]:
+        """What every call sends: the Tinfoil User-Agent, and the host-verification value when the shop has one."""
+        out = {"User-Agent": USER_AGENT, **extra}
+        if self.hauth:
+            out["Hauth"] = self.hauth
+        return out
 
     def address(self, path: str) -> str:
         """The URL of the file an index key stands for: always inside the shop's origin."""
@@ -174,7 +188,7 @@ class Shop:
             if origin(url) != here:
                 raise UpstreamError("the shop sent the bridge to another origin")
             try:
-                headers = {"Accept": accept, "User-Agent": USER_AGENT}
+                headers = self.headers(Accept=accept)
                 if body is not None:
                     headers["Content-Type"] = "application/json"
                 method = "GET" if body is None else "POST"
@@ -201,7 +215,7 @@ class Shop:
         UpstreamError, so that nothing is taken for the whole file.
         """
         url = self.address(path)
-        headers = {"User-Agent": USER_AGENT}
+        headers = self.headers()
         if first or length is not None:
             headers["Range"] = f"bytes={first}-" + ("" if length is None else str(first + length - 1))
         for _ in range(MAX_REDIRECTS + 1):
