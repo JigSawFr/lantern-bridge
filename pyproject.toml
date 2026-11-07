@@ -128,6 +128,10 @@ markers = [
 source = ["lantern_bridge"]
 branch = true
 
+[tool.coverage.report]
+# Today's 92 %, rounded down: a drop fails the run instead of going unnoticed
+fail_under = 90
+
 [[tool.mypy.overrides]]
 module = ["uvicorn", "uvicorn.*"]
 ignore_missing_imports = true
