@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Is there a newer release: one read of GitHub's latest release a day, if the settings allow it.
 
-Off by default, because it is the one call the bridge makes about itself. It sends nothing but the request (the
-address of the machine reaches GitHub, as with any download); it reads the tag name of the latest release and
-compares it with the running version. It never downloads or installs anything.
+On by default (the settings turn it off). With Atlas, it is the call the bridge makes about itself. It sends nothing
+but the request (the address of the machine reaches GitHub, as with any download); it reads the tag name of the
+latest release and compares it with the running version. It never downloads or installs anything.
 """
 
 from __future__ import annotations

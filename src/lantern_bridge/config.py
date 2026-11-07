@@ -146,8 +146,8 @@ class Config:
     mqtt: Mqtt | None = None
     # Megabytes free on the volume of the state below which the health says to look (it fails below 20).
     low_disk_mb: int = 500
-    # True: the bridge reads GitHub's latest release once a day and says on the overview when newer. Off by default.
-    update_check: bool = False
+    # True: the bridge reads GitHub's latest release once a day and says on the overview when newer. On by default.
+    update_check: bool = True
     # An address that gets a POST when scans found changes (a Home Assistant webhook, ntfy, any tool). None: no call.
     webhook: str | None = None
     sources: list[Source] = field(default_factory=list)
@@ -316,7 +316,7 @@ def _parse(data: dict[str, Any]) -> Config:
     low_disk = data.get("low_disk_mb", 500)
     if isinstance(low_disk, bool) or not isinstance(low_disk, int) or not 20 <= low_disk <= 10_000_000:
         raise ConfigError("`low_disk_mb` must be a number of megabytes, 20 or more")
-    update_check = data.get("update_check", False)
+    update_check = data.get("update_check", True)
     if not isinstance(update_check, bool):
         raise ConfigError("`update_check` must be true or false")
     mqtt = parse_mqtt(data.get("mqtt"))
