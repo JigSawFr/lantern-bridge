@@ -19,6 +19,7 @@ from lantern_bridge.atlas import Atlas
 from lantern_bridge.catalog import Browser
 from lantern_bridge.config import AerofoilSource, Config, FolderSource, OwnfoilSource, ShopSource
 from lantern_bridge.hashing import hash_pending, scan_packages
+from lantern_bridge.history import History
 from lantern_bridge.index import Index
 from lantern_bridge.library import Projection
 from lantern_bridge.sources.aerofoil import AeroFoil
@@ -75,7 +76,8 @@ class Runtime:
         self.browser = Browser(self.index, self.projection)
         self.atlas = Atlas(state_dir / "atlas.json") if config.atlas else None
         self.projection.atlas = self.atlas
-        self.traffic = Traffic()
+        self.history = History(state_dir / "activity.sqlite3")
+        self.traffic = Traffic(history=self.history)
         self.stats = Stats(sources={source.id: SourceState() for source in config.sources})
         # The first AeroFoil of the configuration keeps the saves, cheats and requests.
         self.ledger: Ledger | None = None
@@ -299,6 +301,8 @@ class Runtime:
             shop.close()
         if self.atlas is not None:
             self.atlas.close()
+        self.traffic.close()
+        self.history.close()
         self.index.close()
         if self.ledger is not None:
             self.ledger.close()

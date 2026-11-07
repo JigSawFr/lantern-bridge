@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: MIT
 """What goes through the server, for the administration pages: transfers, clients, rates, recent requests.
 
-A pure ASGI middleware that watches every HTTP request and keeps counters in memory (nothing is written
-anywhere, nothing leaves the process). It never reads a body and never changes an answer.
+A pure ASGI middleware that watches every HTTP request and keeps counters in memory; the totals by day and
+the machines seen are also written to ``activity.sqlite3`` (see history.py). Nothing leaves the process. It
+never reads a body, never keeps a token and never changes an answer.
 """
 
 from __future__ import annotations
 
+import hashlib
 import itertools
 import threading
 import time
@@ -15,6 +17,8 @@ from collections import deque
 from collections.abc import Awaitable, Callable, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any
+
+from lantern_bridge.history import Delta, History
 
 Scope = MutableMapping[str, Any]
 Message = MutableMapping[str, Any]
@@ -25,6 +29,8 @@ App = Callable[[Scope, Receive, Send], Awaitable[None]]
 #: The requests of the administration pages are not the library's traffic.
 _OWN = "/admin"
 WINDOW = 60  # seconds of history for the rates
+FLUSH = 15.0  # seconds between two writes to the history
+WHO_TTL = 60.0  # seconds a token's device is remembered (a revoked device is forgotten within a minute)
 
 
 @dataclass(slots=True)
@@ -39,6 +45,8 @@ class Transfer:
     sent: int = 0
     status: int = 0
     range: str | None = None
+    key: str = ""  # who asked: "device:<id>" or "addr:<address>"
+    label: str = ""  # the paired device's name and account, when the token is one
 
     @property
     def rate(self) -> float:
@@ -62,14 +70,20 @@ class Done:
 
 @dataclass(slots=True)
 class Client:
-    """A machine that called the library: by address, and the program it said it was."""
+    """A machine that called the library: a paired device when its token says so, else its address."""
 
+    key: str
     address: str
     agent: str
     first: float
     last: float
     requests: int = 0
     sent: int = 0
+    label: str = ""
+
+    @property
+    def name(self) -> str:
+        return self.label or self.address
 
 
 @dataclass(slots=True)
@@ -87,17 +101,48 @@ class Traffic:
     active: dict[int, Transfer] = field(default_factory=dict)
     recent: deque[Done] = field(default_factory=deque)
     clients: dict[str, Client] = field(default_factory=dict)
+    #: Where the days and the machines are kept across restarts (None: memory only).
+    history: History | None = None
+    #: Maps a bearer token to (device id, label) for a paired device; set by the application.
+    identify: Callable[[str], tuple[str, str] | None] | None = None
+    _pending: dict[str, list[Any]] = field(default_factory=dict)
+    _who: dict[str, tuple[float, tuple[str, str] | None]] = field(default_factory=dict)
+    _flushed: float = field(default_factory=time.monotonic)
     _buckets: dict[int, list[int]] = field(default_factory=dict)  # second -> [requests, bytes]
     _ids: Any = field(default_factory=itertools.count)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def __post_init__(self) -> None:
         self.recent = deque(maxlen=self.keep)
+        if self.history is not None:
+            for m in self.history.machines():
+                self.clients[m.key] = Client(m.key, m.address, m.agent, m.first, m.last, m.requests, m.sent, m.label)
+
+    def who(self, address: str, authorization: str | None) -> tuple[str, str]:
+        """(key, label) of the machine: the paired device behind a bearer token, else its address."""
+        parts = (authorization or "").split(None, 1)
+        if self.identify is not None and len(parts) == 2 and parts[0].lower() == "bearer":
+            digest = hashlib.sha256(parts[1].encode()).hexdigest()  # the token itself is never kept
+            now = time.monotonic()
+            with self._lock:
+                cached = self._who.get(digest)
+            if cached is None or cached[0] < now:
+                found = self.identify(parts[1])
+                with self._lock:
+                    if len(self._who) > 256:
+                        self._who.clear()
+                    self._who[digest] = cached = (now + WHO_TTL, found)
+            if cached[1] is not None:
+                return f"device:{cached[1][0]}", cached[1][1]
+        return f"addr:{address}", ""
 
     # -- recording -------------------------------------------------------------------------------
 
-    def begin(self, client: str, method: str, path: str, range_: str | None) -> Transfer:
-        transfer = Transfer(next(self._ids), client, method, path, time.monotonic(), range=range_)
+    def begin(
+        self, client: str, method: str, path: str, range_: str | None, authorization: str | None = None
+    ) -> Transfer:
+        key, label = self.who(client, authorization)
+        transfer = Transfer(next(self._ids), client, method, path, time.monotonic(), range=range_, key=key, label=label)
         with self._lock:
             self.active[transfer.id] = transfer
         return transfer
@@ -136,15 +181,39 @@ class Traffic:
                     agent,
                 )
             )
-            seen = self.clients.get(transfer.client)
+            seen = self.clients.get(transfer.key)
             if seen is None:
                 if len(self.clients) >= 200:  # a scan of addresses must not grow the table without end
                     oldest = min(self.clients.values(), key=lambda c: c.last)
-                    del self.clients[oldest.address]
-                seen = self.clients[transfer.client] = Client(transfer.client, agent, now, now)
-            seen.agent, seen.last = agent or seen.agent, now
+                    del self.clients[oldest.key]
+                seen = self.clients[transfer.key] = Client(transfer.key, transfer.client, agent, now, now)
+            seen.agent, seen.last, seen.address = agent or seen.agent, now, transfer.client
+            seen.label = transfer.label or seen.label
             seen.requests += 1
             seen.sent += transfer.sent
+            if self.history is not None:
+                pend = self._pending.setdefault(
+                    transfer.key, [transfer.label, transfer.client, agent, now, now, 0, 0, 0]
+                )
+                pend[0], pend[1], pend[2], pend[4] = transfer.label, transfer.client, agent or pend[2], now
+                pend[5] += 1
+                pend[6] += transfer.sent
+                pend[7] += 1 if transfer.status >= 500 else 0
+        self.flush()
+
+    def flush(self, *, force: bool = False) -> None:
+        """Writes what happened since the last write (at most every `FLUSH` seconds, or when forced)."""
+        if self.history is None:
+            return
+        with self._lock:
+            if not self._pending or (not force and time.monotonic() - self._flushed < FLUSH):
+                return
+            pending, self._pending = self._pending, {}
+            self._flushed = time.monotonic()
+        self.history.add(Delta(key, *values) for key, values in pending.items())
+
+    def close(self) -> None:
+        self.flush(force=True)
 
     # -- reading ---------------------------------------------------------------------------------
 
@@ -176,7 +245,9 @@ class TrafficMiddleware:
             return
         headers = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
         client = (scope.get("client") or ("-", 0))[0]
-        transfer = self.traffic.begin(client, scope.get("method", "GET"), path, headers.get("range"))
+        transfer = self.traffic.begin(
+            client, scope.get("method", "GET"), path, headers.get("range"), headers.get("authorization")
+        )
 
         async def counting(message: Message) -> None:
             if message["type"] == "http.response.start":

@@ -62,6 +62,12 @@ def make_app(
     )
     runtime.answer_request = lantern.answer_request
     include(app, lantern)
+
+    def identify(token: str) -> tuple[str, str] | None:
+        device = accounts.device_of(token)
+        return (device.id, f"{device.device} · {device.user}") if device is not None else None
+
+    runtime.traffic.identify = identify
     app.add_middleware(TrafficMiddleware, traffic=runtime.traffic)
     ring = LogRing()
     install(ring, json_lines=json_logs)
