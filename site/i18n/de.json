@@ -95,5 +95,15 @@
   "idf_no_format": "Kein Paket: Der Name muss auf .nsp, .nsz, .xci oder .xcz enden.",
   "idf_no_id": "Keine 16-stellige ID in eckigen Klammern: Die Bridge lässt diese Datei aus der Bibliothek weg.",
   "idf_count": "{ok} von {all} erkannt",
-  "idf_empty": "Fügen Sie mindestens einen Namen ein."
+  "idf_empty": "Fügen Sie mindestens einen Namen ein.",
+  "cmp_title": "Was jede Quelle liefert",
+  "cmp_row_library": "Titel, Versionen und Formate, per SHA-256 zusammengeführt",
+  "cmp_row_place": "Dateien dort gehasht, wo sie liegen, ohne Umweg über die Bridge",
+  "cmp_row_sheets": "Beschreibungen, Genres und Bilder",
+  "cmp_row_live": "Sofort neu gelesen, wenn sich die Quelle ändert",
+  "cmp_row_saves": "Spielstände in beide Richtungen gespiegelt",
+  "cmp_row_cheats": "Cheat-Sets",
+  "cmp_row_requests": "Anfragen",
+  "cmp_yes": "Ja",
+  "cmp_no": "Nein"
 }

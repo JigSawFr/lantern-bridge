@@ -95,5 +95,15 @@
   "idf_no_format": "Ce n'est pas un paquet : le nom doit finir par .nsp, .nsz, .xci ou .xcz.",
   "idf_no_id": "Pas d'identifiant de 16 chiffres entre crochets : le pont laisse ce fichier hors de la bibliothèque.",
   "idf_count": "{ok} sur {all} reconnus",
-  "idf_empty": "Collez au moins un nom."
+  "idf_empty": "Collez au moins un nom.",
+  "cmp_title": "Ce que donne chaque source",
+  "cmp_row_library": "Titres, versions et formats, fusionnés par SHA-256",
+  "cmp_row_place": "Fichiers hachés sur place, sans passer par le pont",
+  "cmp_row_sheets": "Descriptions, genres et images",
+  "cmp_row_live": "Relue dès que la source change",
+  "cmp_row_saves": "Sauvegardes recopiées dans les deux sens",
+  "cmp_row_cheats": "Jeux de cheats",
+  "cmp_row_requests": "Demandes",
+  "cmp_yes": "Oui",
+  "cmp_no": "Non"
 }

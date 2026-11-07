@@ -95,5 +95,15 @@
   "idf_no_format": "パッケージではありません。名前の末尾は .nsp、.nsz、.xci、.xcz のいずれかにしてください。",
   "idf_no_id": "角括弧に入った16桁のIDがないため、ブリッジはこのファイルをライブラリに含めません。",
   "idf_count": "{all}件中{ok}件を認識",
-  "idf_empty": "名前を1つ以上貼り付けてください。"
+  "idf_empty": "名前を1つ以上貼り付けてください。",
+  "cmp_title": "各ソースが提供するもの",
+  "cmp_row_library": "タイトル・バージョン・形式（SHA-256 で統合）",
+  "cmp_row_place": "ブリッジを通さず、その場でハッシュ計算",
+  "cmp_row_sheets": "説明・ジャンル・画像",
+  "cmp_row_live": "ソースが変わるとすぐに再読み込み",
+  "cmp_row_saves": "セーブデータを双方向にミラーリング",
+  "cmp_row_cheats": "チートセット",
+  "cmp_row_requests": "リクエスト",
+  "cmp_yes": "あり",
+  "cmp_no": "なし"
 }

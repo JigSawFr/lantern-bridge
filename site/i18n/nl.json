@@ -95,5 +95,15 @@
   "idf_no_format": "Geen pakket: de naam moet eindigen op .nsp, .nsz, .xci of .xcz.",
   "idf_no_id": "Geen id van 16 cijfers tussen blokhaken: de bridge laat dit bestand buiten de bibliotheek.",
   "idf_count": "{ok} van {all} herkend",
-  "idf_empty": "Plak minstens één naam."
+  "idf_empty": "Plak minstens één naam.",
+  "cmp_title": "Wat elke bron geeft",
+  "cmp_row_library": "Titels, versies en formaten, samengevoegd op SHA-256",
+  "cmp_row_place": "Bestanden gehasht waar ze staan, zonder omweg via de bridge",
+  "cmp_row_sheets": "Beschrijvingen, genres en afbeeldingen",
+  "cmp_row_live": "Opnieuw gelezen zodra de bron verandert",
+  "cmp_row_saves": "Savegames in beide richtingen gespiegeld",
+  "cmp_row_cheats": "Cheatsets",
+  "cmp_row_requests": "Verzoeken",
+  "cmp_yes": "Ja",
+  "cmp_no": "Nee"
 }
