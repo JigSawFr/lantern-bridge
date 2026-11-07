@@ -6,6 +6,8 @@ Topics, under `<prefix>/<uid>` (the prefix is `lantern-bridge` unless the settin
 
 - `state`: a JSON document, `schema` 1, retained, published every 30 seconds. A reader skips the keys it does not
   know and treats a newer `schema` as absent.
+- `event`: one JSON line per journal entry as it happens (`schema`, `ts`, `kind`, `subject`, `detail`; no path, no
+  title). Not retained: a reader that was away does not get the past, it has `state`.
 - `availability`: `online` while the bridge runs, `offline` (the last will, and what it publishes on a clean
   stop). Retained.
 - `order/rescan`: any payload reads every source again now. Orders are not retained; one that arrives retained
@@ -30,6 +32,7 @@ from paho.mqtt.enums import CallbackAPIVersion
 
 from lantern_bridge import __version__, health
 from lantern_bridge.config import AerofoilSource, FolderSource, Mqtt, OwnfoilSource
+from lantern_bridge.history import Event
 
 if TYPE_CHECKING:
     from lantern_bridge.runtime import Runtime
@@ -63,6 +66,7 @@ def state(runtime: Runtime, now: float | None = None) -> dict[str, Any]:
         "bridge": {"uid": runtime.config.uid, "name": runtime.config.name, "version": __version__},
         "status": health.overall(checks),
         "checks": [{"name": c.name, "status": c.status} for c in checks],
+        "problems": sum(c.status != health.OK for c in checks),
         "library": {"titles": titles, "apps": apps},
         "files": {"hashed": counts["hashed"], "pending": counts["pending"], "pending_bytes": index.pending_bytes()},
         "traffic": {
@@ -104,6 +108,8 @@ class Publisher:
         self._client.on_connect = self._on_connect
         self._client.on_message = self._on_message
         self._mqtt = mqtt
+        self.event_topic = f"{self.base}/event"
+        runtime.history.listener = self._on_event
 
     def start(self) -> None:
         self._client.connect_async(self._mqtt.host, self._mqtt.port)
@@ -123,6 +129,16 @@ class Publisher:
     def publish(self) -> None:
         payload = json.dumps(state(self.runtime), separators=(",", ":"))
         self._client.publish(self.state_topic, payload, qos=1, retain=True)
+
+    def _on_event(self, event: Event) -> None:
+        document = {
+            "schema": SCHEMA,
+            "ts": int(event.ts),
+            "kind": event.kind,
+            "subject": event.subject,
+            "detail": event.detail,
+        }
+        self._client.publish(self.event_topic, json.dumps(document, separators=(",", ":")), qos=1, retain=False)
 
     def _loop(self) -> None:
         while not self._stop.wait(EVERY):

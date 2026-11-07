@@ -191,3 +191,27 @@ def test_the_pages_save_the_broker_and_empty_host_turns_it_off(tmp_path: Path) -
     assert client.post("/admin/config/mqtt", data={"csrf": csrf, "host": ""}).status_code == 303
     assert load(path).mqtt is None
     assert new_uid()
+
+
+def test_each_journal_line_is_published_as_it_happens_and_the_state_counts_the_problems(tmp_path: Path) -> None:
+    publisher, client = _publisher(tmp_path)
+    runtime = publisher.runtime
+    assert publisher.event_topic == f"lantern-bridge/{UID}/event"
+    runtime.history.event("source_down", subject="games", detail="gone")
+    topic, payload, retained = client.published[-1]
+    assert topic == publisher.event_topic and retained is False
+    assert json.loads(payload) == {
+        "schema": SCHEMA,
+        "ts": json.loads(payload)["ts"],
+        "kind": "source_down",
+        "subject": "games",
+        "detail": "gone",
+    }
+    assert state(runtime)["problems"] >= 0
+
+    def boom(_event: Any) -> None:
+        raise RuntimeError("listener")
+
+    runtime.history.listener = boom
+    runtime.history.event("scan")  # a failing listener never reaches the caller
+    assert runtime.history.events(1)[0].kind == "scan"

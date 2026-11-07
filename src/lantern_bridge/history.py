@@ -15,7 +15,7 @@ import logging
 import sqlite3
 import threading
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -78,6 +78,8 @@ def today(now: float | None = None) -> str:
 class History:
     def __init__(self, path: Path) -> None:
         self._lock = threading.Lock()
+        #: Called with each line written to the journal (the MQTT publisher sets it); never raises into the caller.
+        self.listener: Callable[[Event], None] | None = None
         self._db: sqlite3.Connection | None = None
         try:
             db = sqlite3.connect(path, check_same_thread=False)
@@ -181,6 +183,12 @@ class History:
                 )
         except sqlite3.Error as error:
             log.warning("the journal could not be written: %s", error)
+            return
+        if self.listener is not None:
+            try:
+                self.listener(Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:120]))
+            except Exception:
+                log.exception("a journal listener failed")
 
     def events(self, limit: int = 200, kind: str = "") -> list[Event]:
         """The latest events, newest first."""
