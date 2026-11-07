@@ -82,5 +82,18 @@
   "gen_user": "Utente",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "Imposta ogni password nella variabile d'ambiente indicata nel file compose prima di avviare il container."
+  "gen_note": "Imposta ogni password nella variabile d'ambiente indicata nel file compose prima di avviare il container.",
+  "idf_title": "I miei file verranno riconosciuti?",
+  "idf_lede": "Il bridge legge l'identità di un gioco dal nome del file: un id di 16 cifre tra parentesi quadre e la versione in [v…]. Incolla i nomi dei tuoi file, uno per riga, per vedere cosa ne ricava. È la regola del bridge stesso, eseguita nella tua pagina: non viene inviato nulla.",
+  "idf_label": "Nomi dei file, uno per riga",
+  "idf_kind_base": "Gioco base",
+  "idf_kind_update": "Aggiornamento",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "Titolo",
+  "idf_f_app": "Applicazione",
+  "idf_f_ver": "Codice versione",
+  "idf_no_format": "Non è un pacchetto: il nome deve finire con .nsp, .nsz, .xci o .xcz.",
+  "idf_no_id": "Nessun id di 16 cifre tra parentesi quadre: il bridge lascia questo file fuori dalla libreria.",
+  "idf_count": "{ok} di {all} riconosciuti",
+  "idf_empty": "Incolla almeno un nome."
 }

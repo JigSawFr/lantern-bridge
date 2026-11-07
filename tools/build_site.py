@@ -131,6 +131,7 @@ def page_html(template: str, language: str, catalog: dict, lost: bool = False) -
                 f'data-failed="{html.escape(catalog["ui_copy_failed"], quote=True)}"></script>'
                 f'<script src="{root}assets/sim.js" defer></script>'
                 f'<script src="{root}assets/config.js" defer></script>'
+                f'<script src="{root}assets/identify.js" defer></script>'
             ),
         }
     )

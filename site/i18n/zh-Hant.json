@@ -82,5 +82,18 @@
   "gen_user": "使用者",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "啟動容器前，請在 compose 檔指明的環境變數中設定每個密碼。"
+  "gen_note": "啟動容器前，請在 compose 檔指明的環境變數中設定每個密碼。",
+  "idf_title": "我的檔案會被辨識嗎？",
+  "idf_lede": "橋接器從檔名讀取遊戲的身分：方括號中的 16 位 ID，以及 [v…] 中的版本。每行貼上一個檔名，看看它如何解讀。這是橋接器自己的規則，在你的頁面中執行：不會傳送任何內容。",
+  "idf_label": "檔名，每行一個",
+  "idf_kind_base": "本體遊戲",
+  "idf_kind_update": "更新",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "標題",
+  "idf_f_app": "應用程式",
+  "idf_f_ver": "版本號",
+  "idf_no_format": "不是套件：名稱必須以 .nsp、.nsz、.xci 或 .xcz 結尾。",
+  "idf_no_id": "方括號中沒有 16 位 ID：橋接器會把這個檔案排除在資料庫之外。",
+  "idf_count": "已辨識 {ok} / {all}",
+  "idf_empty": "請至少貼上一個名稱。"
 }

@@ -82,5 +82,18 @@
   "gen_user": "사용자",
   "gen_compose": "docker-compose.yml",
   "gen_config": "config.toml",
-  "gen_note": "컨테이너를 시작하기 전에 compose 파일에 적힌 환경 변수에 각 비밀번호를 설정하세요."
+  "gen_note": "컨테이너를 시작하기 전에 compose 파일에 적힌 환경 변수에 각 비밀번호를 설정하세요.",
+  "idf_title": "내 파일이 인식될까요?",
+  "idf_lede": "브리지는 파일 이름에서 게임을 알아냅니다. 대괄호 안의 16자리 ID와 [v…] 형태의 버전입니다. 파일 이름을 한 줄에 하나씩 붙여넣으면 각각 어떻게 읽히는지 볼 수 있습니다. 브리지 자체의 규칙을 이 페이지에서 실행할 뿐이며 아무것도 전송되지 않습니다.",
+  "idf_label": "파일 이름(한 줄에 하나)",
+  "idf_kind_base": "기본 게임",
+  "idf_kind_update": "업데이트",
+  "idf_kind_dlc": "DLC",
+  "idf_f_title": "타이틀",
+  "idf_f_app": "애플리케이션",
+  "idf_f_ver": "버전 코드",
+  "idf_no_format": "패키지가 아닙니다. 이름이 .nsp, .nsz, .xci 또는 .xcz로 끝나야 합니다.",
+  "idf_no_id": "대괄호 안의 16자리 ID가 없어 브리지가 이 파일을 라이브러리에서 제외합니다.",
+  "idf_count": "{all}개 중 {ok}개 인식",
+  "idf_empty": "이름을 하나 이상 붙여넣으세요."
 }

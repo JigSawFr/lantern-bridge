@@ -922,3 +922,18 @@ pre code .tk-k { color: #7cc4ff; }
 .gen-out { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 32px; margin-top: 20px; }
 @media (max-width: 900px) { .gen-out { grid-template-columns: minmax(0, 1fr); } }
 .gen-out h3 { margin: 0 0 8px; color: var(--snow); font: 600 1.0625rem/1.4 var(--display); }
+
+/* "Will my files be recognised?" (identify.js): names in, what the bridge makes of each out. */
+#identify[hidden] { display: none; }
+.idf { margin-top: 20px; display: grid; gap: 12px; }
+.idf textarea { min-height: 9rem; padding: 12px; border: 1px solid var(--night-line); border-radius: 10px; background: rgb(14 26 51 / 0.6); color: var(--snow); font: 0.875rem/1.5 var(--mono); resize: vertical; }
+.idf textarea:focus-visible { outline: 2px solid var(--aurora); outline-offset: 2px; }
+.idf-count { margin: 0; color: var(--mist); font-size: 0.9375rem; }
+.idf-out { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.idf-item { display: grid; gap: 4px; padding: 10px 14px; border: 1px solid var(--night-line); border-radius: 12px; background: rgb(14 26 51 / 0.55); overflow-wrap: anywhere; }
+.idf-yes { border-color: rgb(0 255 204 / 0.45); background: rgb(0 255 204 / 0.06); }
+.idf-file { color: var(--mist); font-size: 0.8125rem; }
+.idf-item strong { color: var(--snow); font-weight: 600; }
+.idf-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mist); font-size: 0.8125rem; }
+.idf-meta code { color: var(--ice); }
+.idf-why { color: var(--mist); font-size: 0.9375rem; }
