@@ -134,10 +134,10 @@ def _subscribe(push: Push, endpoint: str = ENDPOINT, lang: str = "en") -> tuple[
     return key, auth
 
 
-def test_the_key_is_made_once_and_kept_in_a_private_versioned_file(tmp_path: Path) -> None:
+def test_the_key_is_made_once_and_kept_in_a_versioned_file(tmp_path: Path) -> None:
     push = _push(tmp_path, [])
     path = tmp_path / "push.json"
-    assert path.exists() and stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert path.exists()
     data = json.loads(path.read_text())
     assert data["schema"] == SCHEMA == 1 and data["subscriptions"] == []
     key = push.public_key()
@@ -145,6 +145,14 @@ def test_the_key_is_made_once_and_kept_in_a_private_versioned_file(tmp_path: Pat
     assert _push(tmp_path, []).public_key() == key  # the same after a restart
     _subscribe(push)
     assert _push(tmp_path, []).count() == 1  # and so are the subscriptions
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+def test_the_file_is_private_when_it_is_made_and_when_it_is_written_again(tmp_path: Path) -> None:
+    push = _push(tmp_path, [])
+    path = tmp_path / "push.json"
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    _subscribe(push)  # written again
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
 
 
