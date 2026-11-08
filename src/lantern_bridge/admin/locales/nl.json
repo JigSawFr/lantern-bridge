@@ -656,5 +656,20 @@
  "This account holds a scope that only an administrator may change.": "Dit account heeft een recht dat alleen een beheerder mag wijzigen.",
  "Tick at least one scope.": "Vink minstens één recht aan.",
  "frozen": "bevroren",
- "unrated hidden": "zonder classificatie verborgen"
+ "unrated hidden": "zonder classificatie verborgen",
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "Een console die aan deze bridge gekoppeld is. Wat ze mag, is wat haar account toestaat, min wat u hier wegneemt.",
+ "A device name is 1 to 64 characters.": "De naam van een apparaat heeft 1 tot 64 tekens.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "Een geschorste console blijft gekoppeld maar kan niets doen tot u de schorsing opheft: ze krijgt het antwoord van een bevroren account. Intrekken daarentegen dwingt haar opnieuw te koppelen.",
+ "Compare the code and the key with the ones the console shows before you approve.": "Vergelijk de code en de sleutel met wat de console toont voordat u goedkeurt.",
+ "Device changed": "Apparaat gewijzigd",
+ "Device changed.": "Apparaat gewijzigd.",
+ "Keep at least one scope.": "Houd minstens één recht.",
+ "Key": "Sleutel",
+ "Last seen from": "Laatst gezien vanaf",
+ "Lift the suspension": "Schorsing opheffen",
+ "Suspend": "Schorsen",
+ "Suspend this console? It can do nothing until you lift the suspension.": "Deze console schorsen? Ze kan niets doen tot u de schorsing opheft.",
+ "Take rights away": "Rechten intrekken",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Haal het vinkje bij een recht weg om het van dit apparaat af te nemen, of geef het een eigen leeftijdsgrens. Om het meer te geven, koppel het opnieuw.",
+ "suspended": "geschorst"
 }
