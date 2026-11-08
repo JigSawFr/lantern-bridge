@@ -37,13 +37,13 @@ from urllib.parse import parse_qs
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from jinja2 import Environment, PackageLoader, select_autoescape
-from lantern.server import LanternApp
+from lantern.server import AccountError, LanternApp
 from lantern.server.pairing import Limiter
 from markupsafe import Markup
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, releases, selfcheck
-from lantern_bridge.admin import attention, nav, netguard
+from lantern_bridge.admin import attention, nav, netguard, presets
 from lantern_bridge.admin.auth import ROLES, AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
@@ -89,7 +89,6 @@ _HEADERS = {
     "Cache-Control": "no-store",
 }
 _USER_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")
-_DEFAULT_SCOPES = ("library", "saves", "cheats", "requests", "sync.read", "sync.write")
 _ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _STATIC = {
     "app.css": "text/css",
@@ -120,6 +119,9 @@ _DONE = {
     "operator_changed": "Operator changed.",
     "operator_removed": "Operator removed.",
     "password_changed": "Password changed.",
+    "account_added": "Account added.",
+    "account_changed": "Account changed.",
+    "account_deleted": "Account deleted.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -148,6 +150,9 @@ _JOURNAL = (
     "operator_changed",
     "operator_removed",
     "password_changed",
+    "account_added",
+    "account_changed",
+    "account_deleted",
 )
 
 
@@ -420,6 +425,12 @@ class Admin:
             developer=self.config.developer,
             reload_error=getattr(self.reloader, "error", None),
             badges=self.badges(session.role) if session else {},
+            preset_labels={
+                "full": tr("Full"),
+                "child": tr("Child"),
+                "guest": tr("Guest"),
+                "custom": tr("Custom"),
+            },
             roles={
                 "owner": tr("owner"),
                 "admin": tr("administrator"),
@@ -1596,6 +1607,20 @@ def mount(app: FastAPI, admin: Admin) -> None:
             raise HTTPException(404)
         return redirect("/developer?m=done", request)
 
+    def ensure_account(accounts: Any, name: str, preset: str) -> Any:
+        """The account of that name, made with the rights of the preset when it does not exist (a child's account
+        takes the usual age limit); None for a preset the pages do not know. An existing account keeps its own."""
+        found = accounts.user(name)
+        if found is not None:
+            return found
+        if preset not in presets.PRESETS:
+            return None
+        user = accounts.create_user(name, presets.PRESETS[preset])
+        if preset == "child":
+            user = accounts.update_user(name, rating_cap=presets.cap_from("child", "", False)[0])
+        admin.runtime.history.event("account_added", name)
+        return user
+
     @router.get("/pairings")
     async def pairings(request: Request) -> Response:
         session, _, refused = await authed(request)
@@ -1636,7 +1661,18 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 users=users,
                 error=admin.tr(request)("An account name is letters, digits, - _ and . (64 at most)."),
             )
-        user = accounts.user(name) or accounts.create_user(name, _DEFAULT_SCOPES)
+        user = ensure_account(accounts, name, fields.get("preset", "full"))
+        if user is None:
+            return admin.page(
+                request,
+                "pairings.html",
+                session,
+                status=400,
+                active="pairings",
+                waiting=desk.waiting(),
+                users=[u.name for u in accounts.users()],
+                error=admin.tr(request)("Choose a preset from the list."),
+            )
         granted = desk.approve(entry, user.name)
         log.info("pairing of %s approved for %s: %s", entry.device, user.name, ", ".join(granted) or "no scope")
         admin.runtime.history.event("paired", user.name)
@@ -2296,6 +2332,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
                     "name": user.name,
                     "state": user.state,
                     "scopes": list(user.scopes),
+                    "preset": presets.preset_of(user.scopes),
+                    "age": user.rating_cap.age if user.rating_cap is not None else None,
+                    "hide_unrated": user.rating_cap is not None and user.rating_cap.unrated == "hide",
                     "devices": len(accounts.devices(user.name)) if accounts is not None else 0,
                     "login": {
                         "user": login.user,
@@ -2314,6 +2353,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             status=status,
             active="accounts",
             rows=rows,
+            values={"preset": "full", "scopes": presets.PRESETS["full"], "age": "", "hide_unrated": False},
+            choices=presets.grantable(session.role if session else None),
             aero={"id": aero.id, "user": aero.user} if aero else None,
             restart=admin.restart_needed(),
             message=t(done) if done else None,
@@ -2324,6 +2365,185 @@ def mount(app: FastAPI, admin: Admin) -> None:
     async def accounts_get(request: Request) -> Response:
         session, _, refused = await authed(request)
         return refused if refused is not None else accounts_page(request, session)
+
+    # -- the accounts of the players -----------------------------------------------
+
+    def account_values(user: Any) -> dict[str, Any]:
+        cap = user.rating_cap
+        return {
+            "preset": presets.preset_of(user.scopes),
+            "scopes": user.scopes,
+            "age": "" if cap is None or cap.age is None else str(cap.age),
+            "hide_unrated": cap is not None and cap.unrated == "hide",
+        }
+
+    def account_view(
+        request: Request,
+        session: Session,
+        name: str,
+        *,
+        status: int = 200,
+        error: str | None = None,
+        values: dict[str, Any] | None = None,
+    ) -> Response:
+        accounts = admin.lantern.accounts
+        user = accounts.user(name) if accounts is not None else None
+        if accounts is None or user is None:
+            return Response("No such account.", 404, headers=_HEADERS)
+        done = _DONE.get(request.query_params.get("m", ""))
+        return admin.page(
+            request,
+            "account.html",
+            session,
+            status=status,
+            active="accounts",
+            account=user,
+            devices=accounts.devices(name),
+            invitations=[i for i in accounts.invitations() if i.user == name],
+            values=values or account_values(user),
+            choices=presets.grantable(session.role),
+            editable=not presets.holds_more_than(user.scopes, session.role),
+            message=admin.tr(request)(done) if done else None,
+            error=error,
+        )
+
+    def described(fields: dict[str, str], role: str) -> tuple[tuple[str, ...], Any, str | None]:
+        """The scopes and the rating cap a form asks for, and the fixed text of what is wrong with it."""
+        preset = fields.get("preset", "")
+        scopes, problem = presets.scopes_from(preset, fields, role)
+        if problem is not None:
+            return (), None, problem
+        cap, problem = presets.cap_from(preset, fields.get("age", ""), bool(fields.get("hide_unrated")))
+        return scopes, cap, problem
+
+    @router.post("/accounts")
+    async def account_create(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        t = admin.tr(request)
+        accounts = admin.lantern.accounts
+        if accounts is None:
+            return redirect("/", request)
+        name = fields.get("name", "").strip()
+        scopes, cap, problem = described(fields, session.role)
+        if not name or len(name) > 64 or not set(name) <= _USER_CHARS:
+            problem = "An account name is letters, digits, - _ and . (64 at most)."
+        elif accounts.user(name) is not None:
+            problem = "An account has that name already."
+        if problem is not None:
+            return accounts_page(request, session, 400, t(problem))
+        try:
+            accounts.create_user(name, scopes)
+            if cap is not None:
+                accounts.update_user(name, rating_cap=cap)
+        except AccountError as error:
+            return accounts_page(request, session, 400, error.detail)
+        log.info("account %s added from the pages", name)
+        admin.runtime.history.event("account_added", name)
+        return redirect(f"/accounts/{name}?m=account_added", request)
+
+    @router.get("/accounts/{account}")
+    async def account_get(account: str, request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        return account_view(request, session, account)
+
+    @router.post("/accounts/{account}/edit")
+    async def account_edit(account: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        t = admin.tr(request)
+        accounts = admin.lantern.accounts
+        user = accounts.user(account) if accounts is not None else None
+        if accounts is None or user is None:
+            return Response("No such account.", 404, headers=_HEADERS)
+        if presets.holds_more_than(user.scopes, session.role):
+            return account_view(
+                request,
+                session,
+                account,
+                status=403,
+                error=t("This account holds a scope that only an administrator may change."),
+            )
+        scopes, cap, problem = described(fields, session.role)
+        if problem is not None:
+            return account_view(
+                request,
+                session,
+                account,
+                status=400,
+                error=t(problem),
+                values={
+                    "preset": fields.get("preset", "full"),
+                    "scopes": tuple(s for s in presets.grantable(session.role) if fields.get(f"scope.{s}")),
+                    "age": fields.get("age", ""),
+                    "hide_unrated": bool(fields.get("hide_unrated")),
+                },
+            )
+        accounts.update_user(account, scopes=scopes, rating_cap=cap)
+        log.info("the rights of account %s were changed from the pages", account)
+        admin.runtime.history.event("account_changed", account)
+        return redirect(f"/accounts/{account}?m=account_changed", request)
+
+    @router.post("/accounts/{account}/state")
+    async def account_state(account: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        accounts = admin.lantern.accounts
+        state = fields.get("state", "")
+        if accounts is None or accounts.user(account) is None:
+            return Response("No such account.", 404, headers=_HEADERS)
+        if state not in ("active", "frozen"):
+            return Response("Choose active or frozen.", 400, headers=_HEADERS)
+        accounts.update_user(account, state=state)
+        log.info("account %s is now %s", account, state)
+        admin.runtime.history.event("account_changed", f"{account}: {state}")
+        return redirect(f"/accounts/{account}?m=account_changed", request)
+
+    @router.post("/accounts/{account}/delete")
+    async def account_delete(account: str, request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        t = admin.tr(request)
+        accounts = admin.lantern.accounts
+        user = accounts.user(account) if accounts is not None else None
+        if accounts is None or user is None:
+            return Response("No such account.", 404, headers=_HEADERS)
+        if presets.holds_more_than(user.scopes, session.role):
+            return account_view(
+                request,
+                session,
+                account,
+                status=403,
+                error=t("This account holds a scope that only an administrator may change."),
+            )
+        try:
+            admin.lantern.delete_account(account)
+        except AccountError as error:
+            return account_view(request, session, account, status=409, error=error.detail)
+        await drop_login(session, account)
+        log.info("account %s was deleted from the pages", account)
+        admin.runtime.history.event("account_deleted", account)
+        return redirect("/accounts?m=account_deleted", request)
+
+    async def drop_login(session: Session, account: str) -> None:
+        """An AeroFoil login tied to a deleted account goes with it, so that no name of a secret stays behind."""
+        try:
+            config = admin.file()
+            aero = admin.aerofoil(config)
+            if aero is None or not any(x.account == account for x in aero.logins):
+                return
+            kept = tuple(x for x in aero.logins if x.account != account)
+            config.sources[config.sources.index(aero)] = dataclasses.replace(aero, logins=kept)
+            admin.audit(session, admin.write(config), "login removed with its account")
+            await admin.apply()
+        except (ConfigError, OSError) as error:
+            log.warning("the AeroFoil login of the deleted account %s could not be removed: %s", account, error)
 
     @router.post("/accounts/{account}/login")
     async def account_login(account: str, request: Request) -> Response:
@@ -2403,7 +2623,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
             devices, days = 0, 0
         if not 1 <= devices <= 20 or days not in (1, 7, 30):
             return invitations_page(request, session, 400, t("Choose a number of devices from 1 to 20."))
-        user = accounts.user(name) or accounts.create_user(name, _DEFAULT_SCOPES)
+        user = ensure_account(accounts, name, fields.get("preset", "full"))
+        if user is None:
+            return invitations_page(request, session, 400, t("Choose a preset from the list."))
         until = (datetime.now(UTC) + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
         note = fields.get("note", "").strip()[:200] or None
         invitation = accounts.create_invitation(user.name, user.scopes, until, devices, note=note)

@@ -8,12 +8,12 @@
 {% if restart %}<p class="note" role="status">{{ _("The settings file changed but was not applied: the bridge keeps running with the settings it has.") }}{% if reload_error %} <code>{{ reload_error }}</code>{% endif %}</p>{% endif %}
 {% if aero %}<p class="muted">{{ _("AeroFoil source") }}: <strong>{{ aero.id }}</strong> · {{ _("service account") }}: {% if aero.user %}<code>{{ aero.user }}</code>{% else %}<span class="dim">{{ _("none") }}</span>{% endif %}</p>{% endif %}
 <div class="scroll"><table>
-  <thead><tr><th>{{ _("Account") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Devices") }}</th>{% if aero %}<th>{{ _("Acts on the AeroFoil as") }}</th>{% endif %}</tr></thead>
+  <thead><tr><th>{{ _("Account") }}</th><th>{{ _("Rights") }}</th><th>{{ _("Age limit") }}</th><th>{{ _("Devices") }}</th>{% if aero %}<th>{{ _("Acts on the AeroFoil as") }}</th>{% endif %}</tr></thead>
   <tbody>
   {% for a in rows %}
   <tr>
-    <td><strong>{{ a.name }}</strong>{% if a.state != "active" %} <span class="pill wait">{{ a.state }}</span>{% endif %}</td>
-    <td>{{ a.scopes | join(", ") }}</td><td>{{ a.devices }}</td>
+    <td><a href="/admin/accounts/{{ a.name }}"><strong>{{ a.name }}</strong></a>{% if a.state != "active" %} <span class="pill wait">{{ _("frozen") }}</span>{% endif %}</td>
+    <td title="{{ a.scopes | join(', ') }}">{{ preset_labels[a.preset] }}</td><td>{% if a.age is not none %}{{ a.age }}{% if a.hide_unrated %} <span class="dim small">({{ _("unrated hidden") }})</span>{% endif %}{% else %}<span class="dim">–</span>{% endif %}</td><td>{{ a.devices }}</td>
     {% if aero %}<td>
       {% if a.login %}
         <code>{{ a.login.user }}</code> <span class="pill {{ 'ok' if a.login.set else 'bad' }}">{{ a.login.password_env }}{{ '' if a.login.set else ' – ' ~ _('not set') }}</span>
@@ -30,9 +30,18 @@
     </td>{% endif %}
   </tr>
   {% else %}
-  <tr><td colspan="4">{{ _("No account yet: approve a pairing or send an invitation.") }}</td></tr>
+  <tr><td colspan="5">{{ _("No account yet: add one below, approve a pairing or send an invitation.") }}</td></tr>
   {% endfor %}
   </tbody>
 </table></div>
 <p class="dim">{{ _("Passwords are never stored here: only the name of the environment variable that holds one.") }}</p>
+<form method="post" action="/admin/accounts" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Add an account") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Name") }} <input name="name" maxlength="64" pattern="[A-Za-z0-9._-]{1,64}" autocomplete="off" required></label>
+  </div>
+  {% include "_account_fields.html" %}
+  <button>{{ _("Add") }}</button>
+</form>
 {% endblock %}
