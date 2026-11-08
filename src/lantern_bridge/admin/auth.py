@@ -1,10 +1,14 @@
 # SPDX-FileCopyrightText: 2026 JigSawFr
 # SPDX-License-Identifier: MIT
-"""The administrator of the pages: one local account, a session in a cookie.
+"""The operators of the pages: local accounts with a role, a session in a cookie.
 
-The account lives in ``admin.json`` (0600, versioned by ``schema``). It is made
-once, with a one-time code the server writes in its log, so that whoever
-reaches the page first does not become the administrator.
+The accounts live in ``admin.json`` (0600, versioned by ``schema``). The first one, the owner, is made once, with
+a one-time code the server writes in its log, so that whoever reaches the page first does not become the owner.
+The owner then adds the others.
+
+Four roles, each able to everything the one before can: ``observer`` (looks at a few pages, changes nothing),
+``manager`` (decides on consoles, accounts and invitations), ``admin`` (sources, settings, the library) and
+``owner`` (the operators, backups and imports as well). What each may open is in ``permissions.py``.
 """
 
 from __future__ import annotations
@@ -19,12 +23,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-SCHEMA = 1
+SCHEMA = 2
 SESSION_SECONDS = 8 * 3600
 #: A session nobody used for this long ends, whatever is left of its eight hours.
 IDLE_SECONDS = 30 * 60
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
 MIN_PASSWORD = 10
+#: From the least to the most: a role may do what the ones before it may.
+ROLES = ("observer", "manager", "admin", "owner")
+
+
+def rank(role: str | None) -> int:
+    """How far a role goes (0 for none, or a role this version does not know)."""
+    return ROLES.index(role) + 1 if role in ROLES else 0
 
 
 class AdminSchemaError(RuntimeError):
@@ -35,13 +46,33 @@ def _hash(password: str, salt: bytes, n: int, r: int, p: int) -> str:
     return hashlib.scrypt(password.encode(), salt=salt, n=n, r=r, p=p, dklen=32).hex()
 
 
+def _entry(name: str, role: str, password: str) -> dict[str, Any]:
+    salt = secrets.token_bytes(16)
+    return {
+        "name": name,
+        "role": role,
+        "salt": salt.hex(),
+        "hash": _hash(password, salt, **_SCRYPT),
+        "scrypt": _SCRYPT,
+        "created": time.time(),
+    }
+
+
+@dataclass(frozen=True, slots=True)
+class Operator:
+    name: str
+    role: str
+    created: float
+    last: float | None  # the last sign-in, by the clock on the wall
+
+
 @dataclass(slots=True)
 class Session:
     name: str
     csrf: str
     expires: float
     seen: float = 0.0
-    #: "admin", or "observer": an account that looks at a few pages and changes nothing.
+    #: One of ROLES; kept in step with the account when the owner changes it.
     role: str = "admin"
     #: Where it came from, for the list of open sessions (never the token, which only the cookie holds).
     address: str = ""
@@ -57,9 +88,32 @@ def short(token: str) -> str:
 class AdminStore:
     def __init__(self, path: Path) -> None:
         self.path = path
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._sessions: dict[str, Session] = {}
         self._setup_code: str | None = None
+        self._take_up()
+
+    def _take_up(self) -> None:
+        """Takes up a file of schema 1 (one administrator and an optional observer, at the top) as schema 2 (a
+        list of operators): the administrator becomes the owner. Written once, the old keys gone; this goes
+        when no file of schema 1 is left to open (the bridge has had no release yet)."""
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, ValueError):
+            return
+        if not isinstance(data, dict) or data.get("schema", 1) != 1:
+            return
+        operators: list[dict[str, Any]] = []
+        if data.get("name"):
+            keep = {k: data[k] for k in ("name", "salt", "hash", "scrypt") if k in data}
+            operators.append({**keep, "role": "owner", "created": time.time()})
+        observer = data.get("observer")
+        if isinstance(observer, dict) and observer.get("name"):
+            operators.append({**observer, "role": "observer", "created": time.time()})
+        for key in ("name", "salt", "hash", "scrypt", "observer"):
+            data.pop(key, None)
+        data["operators"] = operators
+        self._write(data)
 
     def _read(self) -> dict[str, Any]:
         try:
@@ -81,12 +135,16 @@ class AdminStore:
         finally:
             tmp.unlink(missing_ok=True)
 
+    def _entries(self, data: dict[str, Any]) -> list[dict[str, Any]]:
+        found = data.get("operators")
+        return [e for e in found if isinstance(e, dict) and e.get("name")] if isinstance(found, list) else []
+
     @property
     def configured(self) -> bool:
-        return bool(self._read().get("name"))
+        return any(e.get("role") == "owner" for e in self._entries(self._read()))
 
     def setup_code(self) -> str | None:
-        """The one-time code (made on first ask), or None once an administrator exists."""
+        """The one-time code (made on first ask), or None once an owner exists."""
         with self._lock:
             if self.configured:
                 self._setup_code = None
@@ -96,78 +154,137 @@ class AdminStore:
                 self._setup_code = f"{raw[:4]}-{raw[4:]}"
             return self._setup_code
 
+    @staticmethod
+    def _problem(name: str, password: str) -> str | None:
+        if not name or len(name) > 64:
+            return "Pick a name of 64 characters at most."
+        if len(password) < MIN_PASSWORD:
+            return f"Pick a password of at least {MIN_PASSWORD} characters."
+        return None
+
     def create(self, code: str, name: str, password: str) -> str | None:
-        """Make the administrator; the error to show, or None when it is done."""
+        """Make the owner; the error to show, or None when it is done."""
+        name = name.strip()
         with self._lock:
             if self.configured:
                 return "An administrator exists already."
             if self._setup_code is None or not secrets.compare_digest(code.strip().upper(), self._setup_code):
                 return "That is not the setup code."
-            if not name.strip() or len(name) > 64:
-                return "Pick a name of 64 characters at most."
-            if len(password) < MIN_PASSWORD:
-                return f"Pick a password of at least {MIN_PASSWORD} characters."
-            salt = secrets.token_bytes(16)
+            if problem := self._problem(name, password):
+                return problem
             data = self._read()
-            data.update(name=name.strip(), salt=salt.hex(), hash=_hash(password, salt, **_SCRYPT), scrypt=_SCRYPT)
+            data["operators"] = [*self._entries(data), _entry(name, "owner", password)]
             self._write(data)
             self._setup_code = None
             return None
 
     @staticmethod
-    def _matches(entry: dict[str, Any], name: str, password: str) -> bool:
+    def _matches(entry: dict[str, Any], password: str) -> bool:
         params = entry.get("scrypt", _SCRYPT)
         candidate = _hash(password, bytes.fromhex(entry["salt"]), params["n"], params["r"], params["p"])
-        return secrets.compare_digest(name.strip(), entry["name"]) & secrets.compare_digest(candidate, entry["hash"])
+        return secrets.compare_digest(candidate, entry["hash"])
 
     def identify(self, name: str, password: str) -> str | None:
-        """The role of the account this name and password open ("admin" or "observer"), else None."""
-        data = self._read()
-        if not data.get("name"):
+        """The role of the operator this name and password open, else None. An unknown name costs as long as a
+        wrong password does."""
+        name = name.strip()
+        found = next((e for e in self._entries(self._read()) if e["name"] == name), None)
+        if found is None:
+            _hash(password, b"\0" * 16, **_SCRYPT)
             return None
-        admin = self._matches(data, name, password)
-        observer = isinstance(data.get("observer"), dict) and self._matches(data["observer"], name, password)
-        return "admin" if admin else "observer" if observer else None
+        role = str(found.get("role", ""))
+        return role if self._matches(found, password) and role in ROLES else None
 
-    def check(self, name: str, password: str) -> bool:
-        return self.identify(name, password) == "admin"
+    def operators(self) -> list[Operator]:
+        """The operators, the owners first and then by name."""
+        rows = [
+            Operator(str(e["name"]), str(e.get("role", "")), float(e.get("created") or 0), e.get("last"))
+            for e in self._entries(self._read())
+        ]
+        return sorted(rows, key=lambda o: (-rank(o.role), o.name.casefold()))
 
-    @property
-    def observer(self) -> str | None:
-        """The name of the observer account, if there is one."""
-        entry = self._read().get("observer")
-        return entry.get("name") if isinstance(entry, dict) else None
+    def _owners(self, entries: list[dict[str, Any]]) -> int:
+        return sum(1 for e in entries if e.get("role") == "owner")
 
-    def set_observer(self, name: str, password: str) -> str | None:
-        """Make or replace the observer; the error to show, or None when it is done."""
+    def add(self, name: str, role: str, password: str) -> str | None:
+        """Adds an operator; the error to show, or None when it is done."""
         name = name.strip()
         with self._lock:
             data = self._read()
-            if not data.get("name"):
+            entries = self._entries(data)
+            if not entries:
                 return "There is no administrator yet."
-            if not name or len(name) > 64:
-                return "Pick a name of 64 characters at most."
-            if name.casefold() == str(data["name"]).casefold():
-                return "The observer needs a name of its own."
-            if len(password) < MIN_PASSWORD:
-                return f"Pick a password of at least {MIN_PASSWORD} characters."
-            salt = secrets.token_bytes(16)
-            data["observer"] = {
-                "name": name,
-                "salt": salt.hex(),
-                "hash": _hash(password, salt, **_SCRYPT),
-                "scrypt": _SCRYPT,
-            }
+            if role not in ROLES:
+                return "Choose a role from the list."
+            if problem := self._problem(name, password):
+                return problem
+            if any(str(e["name"]).casefold() == name.casefold() for e in entries):
+                return "An operator has that name already."
+            data["operators"] = [*entries, _entry(name, role, password)]
             self._write(data)
-            self._sessions = {t: s for t, s in self._sessions.items() if s.role != "observer"}
             return None
 
-    def clear_observer(self) -> None:
+    def set_role(self, name: str, role: str) -> str | None:
         with self._lock:
             data = self._read()
-            if data.pop("observer", None) is not None:
-                self._write(data)
-            self._sessions = {t: s for t, s in self._sessions.items() if s.role != "observer"}
+            entries = self._entries(data)
+            found = next((e for e in entries if e["name"] == name), None)
+            if found is None:
+                return "No such operator."
+            if role not in ROLES:
+                return "Choose a role from the list."
+            if found.get("role") == "owner" and role != "owner" and self._owners(entries) < 2:
+                return "The last owner keeps that role."
+            found["role"] = role
+            data["operators"] = entries
+            self._write(data)
+            for session in self._sessions.values():
+                if session.name == name:
+                    session.role = role
+            return None
+
+    def set_password(self, name: str, password: str, keep: str | None = None) -> str | None:
+        """A new password for an operator; the sessions it had end, but for the one of the cookie `keep`."""
+        with self._lock:
+            data = self._read()
+            entries = self._entries(data)
+            found = next((e for e in entries if e["name"] == name), None)
+            if found is None:
+                return "No such operator."
+            if len(password) < MIN_PASSWORD:
+                return f"Pick a password of at least {MIN_PASSWORD} characters."
+            found.update(
+                {k: v for k, v in _entry(name, str(found.get("role", "")), password).items() if k != "created"}
+            )
+            data["operators"] = entries
+            self._write(data)
+            self._drop(name, keep)
+            return None
+
+    def change_own_password(self, name: str, current: str, password: str, keep: str | None) -> str | None:
+        """An operator's own change: it needs the password it has; its other sessions end."""
+        with self._lock:
+            found = next((e for e in self._entries(self._read()) if e["name"] == name), None)
+            if found is None or not self._matches(found, current):
+                return "The current password is not right."
+            return self.set_password(name, password, keep)
+
+    def remove(self, name: str) -> str | None:
+        with self._lock:
+            data = self._read()
+            entries = self._entries(data)
+            found = next((e for e in entries if e["name"] == name), None)
+            if found is None:
+                return "No such operator."
+            if found.get("role") == "owner" and self._owners(entries) < 2:
+                return "The last owner keeps that role."
+            data["operators"] = [e for e in entries if e is not found]
+            self._write(data)
+            self._drop(name, None)
+            return None
+
+    def _drop(self, name: str, keep: str | None) -> None:
+        self._sessions = {t: s for t, s in self._sessions.items() if s.name != name or t == keep}
 
     def login(self, name: str, role: str = "admin", address: str = "", agent: str = "") -> tuple[str, Session]:
         token = secrets.token_urlsafe(32)
@@ -184,6 +301,12 @@ class AdminStore:
         with self._lock:
             self._sessions = {t: s for t, s in self._sessions.items() if s.expires > time.monotonic()}
             self._sessions[token] = session
+            data = self._read()
+            entries = self._entries(data)
+            if found := next((e for e in entries if e["name"] == name), None):
+                found["last"] = session.signed
+                data["operators"] = entries
+                self._write(data)
         return token, session
 
     def session(self, token: str | None, touch: bool = True) -> Session | None:

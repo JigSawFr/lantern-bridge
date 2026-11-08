@@ -82,7 +82,10 @@ def test_ending_your_own_session_signs_you_out(tmp_path: Path) -> None:
 def test_the_sessions_are_for_the_administrator_only(tmp_path: Path) -> None:
     client = _admin(_client(tmp_path))
     csrf = _csrf(client.get("/admin/config").text)
-    client.post("/admin/config/observer", data={"csrf": csrf, "name": "viewer", "password": "a long password 123"})
+    client.post(
+        "/admin/operators",
+        data={"csrf": csrf, "name": "viewer", "role": "observer", "password": "a long password 123"},
+    )
     viewer = TestClient(client.app, client=("127.0.0.1", 50002), follow_redirects=False)
     assert viewer.post("/admin/login", data={"name": "viewer", "password": "a long password 123"}).status_code == 303
     assert viewer.get("/admin/sessions").status_code == 403
@@ -107,4 +110,4 @@ def test_the_texts_are_in_french_too(tmp_path: Path) -> None:
     client = _admin(_client(tmp_path))
     client.post("/admin/lang", data={"lang": "fr", "next": "/admin/sessions"})
     page = client.get("/admin/sessions").text
-    assert "Sessions" in page and "celle-ci" in page and "administrateur" in page
+    assert "Sessions" in page and "celle-ci" in page and "propriétaire" in page

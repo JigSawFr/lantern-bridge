@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from lantern_bridge.admin.permissions import may
+
 
 @dataclass(frozen=True)
 class Entry:
@@ -30,14 +32,13 @@ def build(role: str | None, developer: bool, _: Callable[..., str]) -> Menu:
         Entry("overview", _("Overview"), "/admin/"),
         Entry("library", _("Library"), "/admin/library"),
         Entry("activity", _("Activity"), "/admin/activity"),
+        Entry("events", _("Journal"), "/admin/events"),
     ]
-    if role == "observer":
-        return Menu(main, [])
-    main.append(Entry("events", _("Journal"), "/admin/events"))
     manage = [
         Entry("pairings", _("Pairings"), "/admin/pairings"),
         Entry("devices", _("Devices"), "/admin/devices"),
         Entry("accounts", _("Accounts"), "/admin/accounts"),
+        Entry("operators", _("Operators"), "/admin/operators"),
         Entry("sessions", _("Sessions"), "/admin/sessions"),
         Entry("invitations", _("Invitations"), "/admin/invitations"),
         Entry("sources", _("Sources"), "/admin/sources"),
@@ -49,4 +50,8 @@ def build(role: str | None, developer: bool, _: Callable[..., str]) -> Menu:
     ]
     if developer:
         manage.append(Entry("developer", _("Developer"), "/admin/developer"))
-    return Menu(main, manage)
+    # Each role is offered what the table of permissions lets it open, and nothing else
+    return Menu(
+        [e for e in main if may(role, "GET", e.href)],
+        [e for e in manage if may(role, "GET", e.href)],
+    )

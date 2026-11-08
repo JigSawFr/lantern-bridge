@@ -40,7 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     backup.add_argument("-o", "--output", type=Path, help="the file to write (default: lantern-bridge-backup.zip)")
     restore = commands.add_parser("restore", help="restore a backup (stop the bridge first)")
     restore.add_argument("file", type=Path)
-    for command in (status, rehash, invite, backup, restore):
+    operator = commands.add_parser("operator", help="list the operators of the pages, or give one a new password")
+    actions = operator.add_subparsers(dest="action", required=True)
+    listing = actions.add_parser("list", help="the operators and their roles")
+    reset = actions.add_parser("reset", help="give an operator a new password, printed once (the bridge may run)")
+    reset.add_argument("name", help="the operator's name")
+    for command in (status, rehash, invite, backup, restore, listing, reset):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
     return parser
 
@@ -143,6 +148,34 @@ def _invite(args: argparse.Namespace) -> int:
     return 0
 
 
+def _operator(args: argparse.Namespace) -> int:
+    import secrets
+
+    from lantern_bridge.admin.auth import AdminSchemaError, AdminStore
+
+    file = args.config.resolve().parent / "admin.json"
+    if not file.exists():
+        print("lantern-bridge: no operator yet: open the pages, the setup page gives the code", file=sys.stderr)
+        return 1
+    try:
+        store = AdminStore(file)
+        if args.action == "list":
+            for found in store.operators():
+                print(f"{found.name}\t{found.role}")
+            return 0
+        password = secrets.token_urlsafe(12)
+        problem = store.set_password(args.name, password)
+    except (AdminSchemaError, OSError) as error:
+        print(f"lantern-bridge: {error}", file=sys.stderr)
+        return 1
+    if problem is not None:
+        print(f"lantern-bridge: {problem}", file=sys.stderr)
+        return 1
+    print(f"New password for {args.name}: {password}")
+    print("Sessions already open stay open until they end; restart the bridge to close them now.")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command in {"status", "rehash"}:
@@ -151,6 +184,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _invite(args)
     if args.command in {"backup", "restore"}:
         return _backup(args)
+    if args.command == "operator":
+        return _operator(args)
     if args.command != "serve":
         build_parser().print_help()
         return 0

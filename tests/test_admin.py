@@ -87,7 +87,7 @@ def test_the_admin_file_is_private_and_holds_no_password(tmp_path: Path) -> None
     if os.name != "nt":  # Windows has no POSIX permissions
         assert path.stat().st_mode & 0o777 == 0o600
     assert PASSWORD not in path.read_text()
-    assert json.loads(path.read_text())["schema"] == 1
+    assert json.loads(path.read_text())["schema"] == 2
 
 
 def test_signing_in_is_needed_and_throttled(tmp_path: Path) -> None:

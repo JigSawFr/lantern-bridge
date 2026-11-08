@@ -44,9 +44,10 @@ from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, releases, selfcheck
 from lantern_bridge.admin import attention, nav, netguard
-from lantern_bridge.admin.auth import AdminStore, Session
+from lantern_bridge.admin.auth import ROLES, AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
+from lantern_bridge.admin.permissions import may
 from lantern_bridge.catalog import FIRST_DOWN, KINDS, SORTS, Catalog, TitleInfo, search
 from lantern_bridge.compress import CONVERSIONS
 from lantern_bridge.config import (
@@ -115,6 +116,10 @@ _DONE = {
     "deleted": "The file was deleted from the disk.",
     "converting": "Queued: the conversion starts when the ones before it are done.",
     "ended": "The session was ended.",
+    "operator_added": "Operator added.",
+    "operator_changed": "Operator changed.",
+    "operator_removed": "Operator removed.",
+    "password_changed": "Password changed.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -139,6 +144,10 @@ _JOURNAL = (
     "converted",
     "signin_blocked",
     "session_ended",
+    "operator_added",
+    "operator_changed",
+    "operator_removed",
+    "password_changed",
 )
 
 
@@ -205,18 +214,6 @@ async def _ask(request: Request, target: str) -> str | None:
 
 
 _KINDS = {"folder": FolderSource, "tinfoil": TinfoilSource, "ownfoil": OwnfoilSource, "aerofoil": AerofoilSource}
-
-
-#: What an observer may read: the overview, the library with its checks and exports, the activity.
-_OBSERVER_PAGES = ("/admin", "/admin/", "/admin/api/state", "/admin/api/badges", "/admin/activity", "/admin/live")
-_OBSERVER_PREFIXES = ("/admin/library", "/admin/static/")
-
-
-def _observer_may(request: Request) -> bool:
-    path = request.url.path
-    if request.method == "POST":
-        return path == "/admin/logout"
-    return request.method == "GET" and (path in _OBSERVER_PAGES or path.startswith(_OBSERVER_PREFIXES))
 
 
 def is_local(host: str | None) -> bool:
@@ -415,12 +412,19 @@ class Admin:
         html = self.env.get_template(template).render(
             session=session,
             menu=nav.build(session.role if session else None, self.config.developer, tr),
+            can=(lambda path, method="GET": may(session.role, method, path)) if session else (lambda *_: False),
             version=__version__,
             draft=SPEC_DRAFT,
             name=self.config.name,
             developer=self.config.developer,
             reload_error=getattr(self.reloader, "error", None),
             badges=self.badges(session.role) if session else {},
+            roles={
+                "owner": tr("owner"),
+                "admin": tr("administrator"),
+                "manager": tr("manager"),
+                "observer": tr("read-only"),
+            },
             lang=lang,
             theme="light" if request.cookies.get(_THEME_COOKIE) == "light" else "dark",
             mode=request.cookies.get(_THEME_COOKIE)
@@ -520,8 +524,8 @@ class Admin:
         failed = sum(1 for j in jobs if j.state == "failed" and time.time() - j.finished < 3600)
         busy = sum(1 for j in jobs if j.state in ("queued", "running"))
         put("tasks", failed or busy, "bad" if failed else "info")
-        if role == "observer":
-            return {k: v for k, v in found.items() if k in ("overview", "activity", "library")}
+        # Only the pages the role may open carry a dot
+        found = {k: v for k, v in found.items() if may(role, "GET", "/admin/" if k == "overview" else f"/admin/{k}")}
         held = [found[k] for k in ("pairings", "sources", "homebrew", "tasks") if k in found]
         put(
             "manage",
@@ -594,7 +598,7 @@ class Admin:
         out.append(
             f"- Atlas: {'on' if config.atlas else 'off'} · update check: {'on' if config.update_check else 'off'}"
             f" · metrics: {'on' if config.metrics else 'off'}"
-            f" · read-only account: {'yes' if self.store.observer else 'no'}"
+            f" · operators: {len(self.store.operators())}"
         )
         out += ["", "Health:"]
         for found in health.run(runtime):
@@ -819,7 +823,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         session = admin.session(request)
         if session is None:
             return None, {}, redirect("/login", request)
-        if session.role == "observer" and not _observer_may(request):
+        if not may(session.role, request.method, request.url.path):
             return None, {}, admin.page(request, "observer.html", session, status=403, active="")
         fields: dict[str, str] = {}
         if request.method == "POST":
@@ -867,6 +871,126 @@ def mount(app: FastAPI, admin: Admin) -> None:
         log.info("an administration session was ended from the pages")
         # Ending your own is signing out: the cookie no longer opens anything, so the next page is the sign-in.
         return redirect("/sessions?m=ended", request)
+
+    # -- operators and one's own account ---------------------------------------
+
+    def operators_page(
+        request: Request, session: Session, status: int = 200, error: str | None = None, message: str | None = None
+    ) -> Response:
+        open_sessions: dict[str, int] = {}
+        for row in admin.store.listing():
+            open_sessions[row["name"]] = open_sessions.get(row["name"], 0) + 1
+        return admin.page(
+            request,
+            "operators.html",
+            session,
+            status=status,
+            active="operators",
+            operators=admin.store.operators(),
+            open_sessions=open_sessions,
+            role_names=ROLES,
+            error=error,
+            message=message,
+        )
+
+    @router.get("/operators")
+    async def operators_get(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        key = request.query_params.get("m")
+        return operators_page(request, session, message=admin.tr(request)(_DONE[key]) if key in _DONE else None)
+
+    @router.post("/operators")
+    async def operators_add(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        name = fields.get("name", "").strip()
+        problem = admin.store.add(name, fields.get("role", ""), fields.get("password", ""))
+        if problem is not None:
+            return operators_page(request, session, 400, error=admin.tr(request)(problem))
+        log.info("operator %s added as %s", name, fields.get("role"))
+        admin.runtime.history.event("operator_added", name)
+        return redirect("/operators?m=operator_added", request)
+
+    @router.post("/operators/role")
+    async def operators_role(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        name = fields.get("name", "").strip()
+        problem = admin.store.set_role(name, fields.get("role", ""))
+        if problem is not None:
+            return operators_page(request, session, 400, error=admin.tr(request)(problem))
+        log.info("operator %s is now %s", name, fields.get("role"))
+        admin.runtime.history.event("operator_changed", name)
+        return redirect("/operators?m=operator_changed", request)
+
+    @router.post("/operators/password")
+    async def operators_password(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        name = fields.get("name", "").strip()
+        keep = request.cookies.get(_COOKIE) if name == session.name else None
+        problem = admin.store.set_password(name, fields.get("password", ""), keep)
+        if problem is not None:
+            return operators_page(request, session, 400, error=admin.tr(request)(problem))
+        log.info("the password of operator %s was set by the owner", name)
+        admin.runtime.history.event("password_changed", name)
+        return redirect("/operators?m=password_changed", request)
+
+    @router.post("/operators/remove")
+    async def operators_remove(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        name = fields.get("name", "").strip()
+        if name == session.name:
+            return operators_page(request, session, 400, error=admin.tr(request)("You cannot remove yourself."))
+        problem = admin.store.remove(name)
+        if problem is not None:
+            return operators_page(request, session, 400, error=admin.tr(request)(problem))
+        log.info("operator %s removed", name)
+        admin.runtime.history.event("operator_removed", name)
+        return redirect("/operators?m=operator_removed", request)
+
+    def me_page(
+        request: Request, session: Session, status: int = 200, error: str | None = None, message: str | None = None
+    ) -> Response:
+        return admin.page(request, "me.html", session, status=status, active="", error=error, message=message)
+
+    @router.get("/me")
+    async def me_get(request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        key = request.query_params.get("m")
+        return me_page(request, session, message=admin.tr(request)(_DONE[key]) if key in _DONE else None)
+
+    @router.post("/me")
+    async def me_post(request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        t = admin.tr(request)
+        key, who = admin.client(request), "name:" + session.name.lower()
+        if wait := max(admin.attempts.wait(key), admin.accounts.wait(who)):  # a stolen session cannot guess it
+            return me_page(request, session, 429, error=t("Too many tries: wait {wait} s.", wait=f"{wait:.0f}"))
+        if fields.get("password", "") != fields.get("again", ""):
+            return me_page(request, session, 400, error=t("The two new passwords differ."))
+        problem = admin.store.change_own_password(
+            session.name, fields.get("current", ""), fields.get("password", ""), request.cookies.get(_COOKIE)
+        )
+        if problem is not None:
+            if problem == "The current password is not right.":
+                admin.attempts.record(key)
+                admin.accounts.record(who)
+            return me_page(request, session, 400, error=t(problem))
+        log.info("operator %s changed their password", session.name)
+        admin.runtime.history.event("password_changed", session.name)
+        return redirect("/me?m=password_changed", request)
 
     @router.post("/logout")
     async def logout(request: Request) -> Response:
@@ -1661,7 +1785,6 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 can_undo=False,
                 atlas_info=None,
                 updates=None,
-                observer=None,
                 preview=None,
                 imported="",
             )
@@ -1696,7 +1819,6 @@ def mount(app: FastAPI, admin: Admin) -> None:
             can_undo=admin.previous_path.exists(),
             atlas_info=admin.runtime.atlas,
             updates=admin.runtime.updates,
-            observer=admin.store.observer,
             preview=preview,
             imported=imported,
         )
@@ -1883,22 +2005,6 @@ def mount(app: FastAPI, admin: Admin) -> None:
             headers=_HEADERS,
             background=BackgroundTask(Path(scratch.name).unlink, missing_ok=True),
         )
-
-    @router.post("/config/observer")
-    async def config_observer(request: Request) -> Response:
-        session, fields, refused = await authed(request)
-        if refused is not None:
-            return refused
-        t = admin.tr(request)
-        if fields.get("action") == "remove":
-            admin.store.clear_observer()
-            log.info("the observer account was removed")
-            return redirect("/config?m=done", request)
-        problem = admin.store.set_observer(fields.get("name", ""), fields.get("password", ""))
-        if problem is not None:
-            return settings_page(request, session, 400, error=t(problem))
-        log.info("an observer account was set")
-        return redirect("/config?m=saved", request)
 
     @router.post("/config/mqtt")
     async def config_mqtt(request: Request) -> Response:
@@ -2164,7 +2270,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             file = admin.file()
         except ConfigError:
             file = admin.config
-        aero = admin.aerofoil(file)
+        # An AeroFoil login holds the name of a secret: only the roles that may tie one see it
+        aero = admin.aerofoil(file) if session and may(session.role, "POST", "/admin/accounts/x/login") else None
         logins = {x.account: x for x in aero.logins} if aero else {}
         rows = []
         for user in accounts.users() if accounts is not None else []:
