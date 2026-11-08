@@ -330,7 +330,7 @@ def test_the_command_line_lists_and_resets(
     assert store.identify("boss", "typed-new-password-1") == "owner" and store.identify("boss", PASSWORD) is None
     monkeypatch.setattr("sys.stdin", io.StringIO("typed-new-password-1\n"))
     assert main(["operator", "reset", "nobody", "--config", str(config)]) == 1
-    assert "No such operator" in capsys.readouterr().err
+    assert "no such operator" in capsys.readouterr().err
     monkeypatch.setattr("sys.stdin", io.StringIO("short\n"))
     assert main(["operator", "reset", "boss", "--config", str(config)]) == 1
     assert "at least 10 characters" in capsys.readouterr().err

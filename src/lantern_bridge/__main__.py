@@ -164,7 +164,7 @@ def _typed_password() -> str | None:
 
 
 def _operator(args: argparse.Namespace) -> int:
-    from lantern_bridge.admin.auth import AdminSchemaError, AdminStore
+    from lantern_bridge.admin.auth import MIN_PASSWORD, AdminSchemaError, AdminStore
 
     file = args.config.resolve().parent / "admin.json"
     if not file.exists():
@@ -176,14 +176,20 @@ def _operator(args: argparse.Namespace) -> int:
             for found in store.operators():
                 print(f"{found.name}\t{found.role}")
             return 0
+        if args.name not in {found.name for found in store.operators()}:
+            print("lantern-bridge: no such operator", file=sys.stderr)
+            return 1
         if (typed := _typed_password()) is None:
             return 1
-        problem = store.set_password(args.name, typed)
+        if len(typed) < MIN_PASSWORD:
+            print(f"lantern-bridge: a password has at least {MIN_PASSWORD} characters", file=sys.stderr)
+            return 1
+        refused = store.set_password(args.name, typed) is not None
     except (AdminSchemaError, OSError) as error:
         print(f"lantern-bridge: {error}", file=sys.stderr)
         return 1
-    if problem is not None:
-        print(f"lantern-bridge: {problem}", file=sys.stderr)
+    if refused:
+        print("lantern-bridge: the password could not be set", file=sys.stderr)
         return 1
     print(f"The password of {args.name} is set.")
     print("Sessions already open stay open until they end; restart the bridge to close them now.")
