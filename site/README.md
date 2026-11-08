@@ -6,7 +6,7 @@ Pages (Settings › Pages › Source: GitHub Actions, custom domain
 `bridge.lantern.boreale.dev`).
 
 It says what the bridge will read (folders, Tinfoil shops, Ownfoil, AeroFoil),
-how it works, how to run it from a checkout, and what makes it distrustful.
+how it works, who may do what (operators and their roles, accounts with presets, a page for each console, signing in through a proxy or a provider), how to run it from a checkout, and what makes it distrustful.
 It says plainly that nothing is released yet, and names no draft: the text
 changes with the bridge, not with the specification.
 
