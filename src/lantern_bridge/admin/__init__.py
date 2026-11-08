@@ -187,6 +187,7 @@ _FOLLOWED = (
     "/admin",
     "/admin/",
     "/admin/activity",
+    "/admin/events",
     "/admin/start",
     "/admin/api/state",
     "/admin/api/badges",
@@ -1467,7 +1468,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         kind = kind if kind in _JOURNAL else ""
         return admin.page(
             request,
-            "events.html",
+            "_events.html" if request.query_params.get("fragment") else "events.html",
             session,
             active="events",
             events=admin.runtime.history.events(200, kind),

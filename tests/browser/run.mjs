@@ -334,6 +334,20 @@ await test("the library: j and k walk the shelf, Space looks at a title, the arr
   assert.equal(await page.inputValue("#q"), "j");
 });
 
+await test("the journal follows the server: a new line slides in by itself", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/events`);
+  await page.waitForFunction(() => document.querySelector("[data-live]").dataset.html !== undefined, null, { timeout: 4000 });
+  const before = await page.locator(".timeline .ev").count();
+  const other = await page.context().newPage();
+  await other.goto(`${BASE}/config`);
+  await other.fill("input[name=webhook]", `https://example.org/hook-${Date.now()}`);
+  await other.locator("[data-saveall] button").click();
+  await other.waitForURL(/config\?m=/);
+  await page.waitForFunction((n) => document.querySelectorAll(".timeline .ev").length > n, before, { timeout: 8000 });
+  assert.ok((await page.locator(".timeline .ev").first().innerText()).includes("Settings saved"));
+  await other.close();
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);
