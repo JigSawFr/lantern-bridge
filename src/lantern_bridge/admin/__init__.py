@@ -300,10 +300,10 @@ class Admin:
         self.oidc: signin.OidcSignIn | None = None
         if self.sign_in is not None and self.sign_in.oidc is not None:
             oidc = self.sign_in.oidc
-            secret = os.environ.get(oidc.secret_env) if oidc.secret_env else None
-            if oidc.secret_env and not secret:
-                log.warning("sign_in.oidc.secret_env names %s, which is not set", oidc.secret_env)
-            self.oidc = signin.OidcSignIn(oidc, secret)
+            client_key = os.environ.get(oidc.secret_env) if oidc.secret_env else None
+            if oidc.secret_env and not client_key:
+                log.warning("single sign-on: the variable the settings name for the client's key is not set")
+            self.oidc = signin.OidcSignIn(oidc, client_key)
         self.attempts = Limiter(5, 300.0)  # wrong passwords, per address
         self.accounts = Limiter(30, 900.0)  # and per name, wide enough that a stranger cannot lock the real one out
         self.streams: dict[str, int] = {}  # open /admin/live streams, per session
