@@ -1172,6 +1172,18 @@ def mount(app: FastAPI, admin: Admin) -> None:
             headers={**_HEADERS, "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"},
         )
 
+    @router.get("/library/find")
+    async def library_find(request: Request) -> Response:
+        """The titles whose name or id holds the text: what the command box offers beside the pages."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return Response(status_code=401, headers=_HEADERS)
+        catalog = admin.runtime.browser.catalog()
+        found = search(catalog, q=request.query_params.get("q", "")[:100], per_page=8)
+        icons = icons_of(t.title_id for t in found.titles)
+        rows = [{"id": t.title_id, "name": t.name, "icon": t.title_id in icons} for t in found.titles]
+        return Response(json.dumps(rows), media_type="application/json", headers=_HEADERS)
+
     @router.get("/library")
     async def library_page(request: Request) -> Response:
         session, _, refused = await authed(request)

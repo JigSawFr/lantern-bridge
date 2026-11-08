@@ -234,3 +234,11 @@ def test_a_transfer_in_progress_shows_its_share_and_the_page_draws_the_rates(tmp
     transfer.total = 0  # no length announced: no bar, and nothing divides by zero
     assert 'max="0"' not in client.get("/admin/activity?fragment=1").text
     traffic.end(transfer, "")
+
+
+def test_the_command_box_finds_titles_by_name_and_only_for_a_signed_in_session(tmp_path: Path) -> None:
+    client = _dev(tmp_path)  # signed in already
+    assert client.get("/admin/library/find?q=zzzz").json() == []
+    assert client.get("/admin/library/find?q=").status_code == 200
+    anonymous = TestClient(client.app, client=("127.0.0.1", 50001), follow_redirects=False)
+    assert anonymous.get("/admin/library/find?q=a").status_code == 401

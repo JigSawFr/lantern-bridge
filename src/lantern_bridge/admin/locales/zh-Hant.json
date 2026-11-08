@@ -621,6 +621,7 @@
  "Operator changed": "已變更操作員",
  "Operator removed": "已移除操作員",
  "Password changed": "密碼已變更",
+ "Keyboard shortcuts": "鍵盤快速鍵",
  "A frozen account can do nothing for now: its devices stay paired and are answered as frozen until you thaw it.": "被凍結的帳號暫時什麼都做不了：它的裝置仍保持配對，在解凍之前都會收到「已凍結」的回應。",
  "Account added": "已新增帳號",
  "Account added.": "已新增帳號。",

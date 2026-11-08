@@ -621,6 +621,7 @@
  "Operator changed": "オペレーター変更",
  "Operator removed": "オペレーター削除",
  "Password changed": "パスワード変更",
+ "Keyboard shortcuts": "キーボードショートカット",
  "A frozen account can do nothing for now: its devices stay paired and are answered as frozen until you thaw it.": "凍結されたアカウントは当面何もできません。デバイスはペアリングされたままで、解凍するまで「凍結」と応答されます。",
  "Account added": "アカウント追加",
  "Account added.": "アカウントを追加しました。",

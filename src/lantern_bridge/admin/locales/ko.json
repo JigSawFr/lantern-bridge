@@ -621,6 +621,7 @@
  "Operator changed": "운영자 변경됨",
  "Operator removed": "운영자 삭제됨",
  "Password changed": "비밀번호 변경됨",
+ "Keyboard shortcuts": "키보드 단축키",
  "A frozen account can do nothing for now: its devices stay paired and are answered as frozen until you thaw it.": "동결된 계정은 당분간 아무것도 할 수 없습니다. 기기는 페어링된 채로 남고, 해제할 때까지 '동결됨'으로 응답받습니다.",
  "Account added": "계정 추가됨",
  "Account added.": "계정을 추가했습니다.",

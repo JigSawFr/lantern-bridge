@@ -621,6 +621,7 @@
  "Operator changed": "已更改操作员",
  "Operator removed": "已移除操作员",
  "Password changed": "密码已修改",
+ "Keyboard shortcuts": "键盘快捷键",
  "A frozen account can do nothing for now: its devices stay paired and are answered as frozen until you thaw it.": "被冻结的账户暂时什么都做不了：它的设备仍保持配对，在解冻之前都会收到“已冻结”的回应。",
  "Account added": "已添加账户",
  "Account added.": "已添加账户。",
