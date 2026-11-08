@@ -48,6 +48,9 @@ class Fake:
         self.requests: dict[str, list[dict[str, Any]]] = {}
         self.calls: list[tuple[str, str, str]] = []
         self.broken = False
+        self.sessions: dict[str, str] = {}  # session cookie -> user
+        self.passwords: dict[str, str] = {"svc": "x", "alice": "pw"}
+        self.logins = 0
 
     def client(self) -> httpx.Client:
         return httpx.Client(transport=httpx.MockTransport(self.handle))
@@ -56,6 +59,25 @@ class Fake:
         header = request.headers.get("authorization", "")
         user = base64.b64decode(header[6:]).decode().split(":")[0] if header.startswith("Basic ") else "anonymous"
         path, method = request.url.path, request.method
+        if path == "/login" and method == "POST":  # the web login: the way to the session-only calls below
+            form = {k: v[0] for k, v in parse_qs(request.content.decode()).items()}
+            if self.passwords.get(form.get("user", "")) != form.get("password"):
+                return httpx.Response(302, headers={"location": "/login"})
+            self.logins += 1
+            cookie = f"s{self.logins}"
+            self.sessions[cookie] = form["user"]
+            return httpx.Response(302, headers={"location": "/", "set-cookie": f"session={cookie}; Path=/"})
+        wants_session = (
+            path.startswith("/api/requests")
+            or (path == "/api/cheats")
+            or (path.startswith("/api/cheats/") and method == "DELETE")
+        )
+        if wants_session:  # a stock AeroFoil does not read Basic here: it sends the caller to its login page
+            match = re.search(r"session=(\w+)", request.headers.get("cookie", ""))
+            user = self.sessions.get(match.group(1), "") if match else ""
+            if not user:
+                self.calls.append(("anonymous", method, path))
+                return httpx.Response(302, headers={"location": "/login?next=" + path})
         self.calls.append((user, method, path))
         if self.broken:
             return httpx.Response(503)
@@ -396,3 +418,54 @@ def test_the_bridge_serves_the_cheats_of_its_aerofoil(tmp_path: Path) -> None:
     assert (cheat["title_id"], cheat["build_id"], cheat["source"]) == (GAME, BUILD, "af")
     assert client.get(f"/api/lantern/v1/cheats/{cheat['id']}").status_code in (200, 404)
     runtime.stop()
+
+
+# -- the session a stock AeroFoil wants for the cheat list, the cheat writes and the requests -------------------
+
+
+def test_the_session_is_made_once_and_kept() -> None:
+    fake = Fake()
+    shop = AeroFoil(BASE, user="svc", password="x", client=fake.client())
+    shop.cheats()
+    shop.cheats()
+    shop.requests()
+    assert fake.logins == 1
+    assert [c for c in fake.calls if c[2] == "/api/requests"] == [("svc", "GET", "/api/requests")]
+
+
+def test_each_user_has_its_own_session_on_a_shared_connection() -> None:
+    fake = Fake()
+    client = fake.client()
+    svc = AeroFoil(BASE, user="svc", password="x", client=client)
+    alice = svc.as_user("alice", "pw")
+    svc.ask(GAME, "A game")
+    alice.requests()
+    assert fake.logins == 2
+    assert fake.calls[-1][0] == "alice"
+    assert [r.title_id for r in svc.requests()] == [GAME]
+    assert alice.requests() == []
+
+
+def test_a_session_that_ended_is_made_again() -> None:
+    fake = Fake()
+    shop = AeroFoil(BASE, user="svc", password="x", client=fake.client())
+    shop.cheats()
+    fake.sessions.clear()
+    assert len(shop.cheats()) == 1
+    assert fake.logins == 2
+
+
+def test_a_refused_login_is_an_error_not_a_loop() -> None:
+    fake = Fake()
+    shop = AeroFoil(BASE, user="svc", password="wrong", client=fake.client())
+    with pytest.raises(UpstreamError, match="refused the login"):
+        shop.requests()
+    assert fake.logins == 0
+
+
+def test_the_saves_and_the_cheat_files_stay_on_basic() -> None:
+    fake = Fake()
+    shop = AeroFoil(BASE, user="svc", password="x", client=fake.client())
+    shop.saves()
+    shop.cheat(GAME, BUILD)
+    assert fake.logins == 0

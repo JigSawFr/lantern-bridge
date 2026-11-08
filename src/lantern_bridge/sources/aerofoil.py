@@ -5,6 +5,10 @@
 AeroFoil answers its shop index like any Tinfoil shop (``Shop``); the CyberFoil functions are plain HTTP
 endpoints under ``/api``, called here with the login of a user: the service account of the source, or the
 one a Lantern account is tied to.
+
+A stock AeroFoil takes that login as HTTP Basic for the saves and the cheat files only; its cheat list, its
+cheat writes and its requests want a web session. For those the login is made the way the web page does it
+(the ``/login`` form, with the same user and password) and the session cookie is kept, per user.
 """
 
 from __future__ import annotations
@@ -62,12 +66,49 @@ def _text(value: object) -> str:
     return value if isinstance(value, str) else ""
 
 
+def _wants_session(method: str, path: str) -> bool:
+    """Whether a stock AeroFoil answers this call only to a web session, not to a Basic login."""
+    route = path.split("?", maxsplit=1)[0]
+    return (
+        route.startswith("/api/requests")
+        or route == "/api/cheats"
+        or (route.startswith("/api/cheats/") and method == "DELETE")
+    )
+
+
+class _SessionEnded(Exception):
+    """The AeroFoil sent a call with a session cookie to its login page."""
+
+
 class AeroFoil(Shop):
     """One AeroFoil, read with one user's login."""
 
     def as_user(self, user: str | None, password: str | None) -> AeroFoil:
         """The same AeroFoil, called as another user (the connection is shared)."""
         return AeroFoil(self.url, user=user, password=password, client=self._client, hauth=self.hauth)
+
+    def __init__(self, url: str, *, user: str | None = None, password: str | None = None, **kw: Any) -> None:
+        super().__init__(url, user=user, password=password, **kw)
+        self._login_form = {"user": user, "password": password} if user is not None and password is not None else None
+        self._session: str | None = None
+
+    def _sign_in(self) -> str:
+        """Sign in as the web page does and return the session cookie; anything else is an error."""
+        if self._login_form is None:
+            raise UpstreamError("the AeroFoil needs a login for this call")
+        try:
+            reply = self._client.post(
+                self._root() + "/login", data=self._login_form, headers=self.headers(Accept="text/html, */*")
+            )
+        except httpx.HTTPError as error:
+            raise UpstreamError(f"the AeroFoil cannot be reached ({type(error).__name__})") from error
+        cookie = reply.cookies.get("session")
+        self._client.cookies.clear()  # the connection is shared: a session belongs to its user, not to the jar
+        # A refused login is sent back to the login page; an accepted one is sent on, with a session.
+        if reply.status_code not in (302, 303) or not cookie or reply.headers.get("location", "").endswith("/login"):
+            raise UpstreamError("the AeroFoil refused the login")
+        self._session = cookie
+        return cookie
 
     def _root(self) -> str:
         parts = urlsplit(self.url)
@@ -85,16 +126,48 @@ class AeroFoil(Shop):
     ) -> bytes:
         """The body of the answer to `method path` of the AeroFoil (a redirect is an error: the API does not
         send any). Raises UpstreamError for anything but a 200."""
+        if _wants_session(method, path):
+            return self._call_in_session(method, path, limit=limit, data=data, files=files, document=document)
+        return self._send(method, path, limit=limit, data=data, files=files, document=document)
+
+    def _call_in_session(self, method: str, path: str, **kw: Any) -> bytes:
+        """The same call with the session cookie; the session is made first, and made again once if it ended."""
+        try:
+            return self._send(method, path, cookie=self._session or self._sign_in(), **kw)
+        except _SessionEnded:
+            self._session = None
+        try:
+            return self._send(method, path, cookie=self._sign_in(), **kw)
+        except _SessionEnded:
+            self._session = None
+            raise UpstreamError("the AeroFoil did not keep the session") from None
+
+    def _send(
+        self,
+        method: str,
+        path: str,
+        *,
+        limit: int,
+        data: dict[str, str] | None,
+        files: dict[str, tuple[str, bytes, str]] | None,
+        document: object,
+        cookie: str | None = None,
+    ) -> bytes:
+        headers = self.headers(Accept="application/json, */*")
+        if cookie is not None:
+            headers["Cookie"] = f"session={cookie}"
         try:
             with self._client.stream(
                 method,
                 self._root() + path,
-                auth=self._auth,
-                headers=self.headers(Accept="application/json, */*"),
+                auth=None if cookie is not None else self._auth,
+                headers=headers,
                 data=data,
                 files=files,
                 json=document,
             ) as reply:
+                if cookie is not None and reply.status_code in (302, 303, 401):
+                    raise _SessionEnded
                 if reply.status_code != 200:
                     raise UpstreamError(
                         f"the AeroFoil answered {reply.status_code} to {method} {path.split('?', maxsplit=1)[0]}"
