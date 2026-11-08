@@ -27,6 +27,7 @@
   </tbody>
 </table></div>
 
+<div class="notv">
 {% if jobs %}
 <h2>{{ _("Conversions") }} <a class="small" href="/admin/tasks">{{ _("Tasks") }}</a></h2>
 <div class="scroll"><table>
@@ -73,9 +74,11 @@
   </tbody>
 </table></div>
 
+</div>
+
 <h2>{{ _("Hashing") }}</h2>
 <div class="card{% if state.pending %} working{% endif %}">
   <progress{% if state.pending %} class="working"{% endif %} max="{{ state.total or 1 }}" value="{{ state.hashed }}"></progress>
   <p>{% if state.pending %}<span class="pill wait live">{{ _("running") }}</span> {% endif %}{{ state.hashed }} / {{ state.total }} {{ _("files hashed") }} · {{ state.pending_bytes | size }} {{ _("to go") }}{% if state.rate %} · {{ state.rate | size }}/s{% endif %}{% if state.eta %} · {{ _("time left") }} {{ (state.eta / 60) | round | int }} min{% endif %}</p>
 </div>
-<p class="dim small">{{ _("Up for") }} {{ (uptime / 60) | round | int }} min. {{ _("The tiles above start again with the bridge; the days and the machines are kept for 90 days.") }}</p>
+<p class="dim small notv">{{ _("Up for") }} {{ (uptime / 60) | round | int }} min. {{ _("The tiles above start again with the bridge; the days and the machines are kept for 90 days.") }}</p>

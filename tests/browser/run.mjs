@@ -348,6 +348,27 @@ await test("the journal follows the server: a new line slides in by itself", { w
   await other.close();
 });
 
+await test("the activity page as a screen across the room: only the big figures, and a way out", { width: 1280, height: 720 }, async (page) => {
+  await page.goto(`${BASE}/activity`);
+  assert.ok(await page.locator("body:not(.tv) .top").isVisible());
+  await page.locator("[data-tv]").click();
+  await page.waitForSelector("body.tv");
+  assert.ok(!(await page.locator(".top").isVisible()) && !(await page.locator("footer").isVisible()), "the header and the footer are gone");
+  assert.ok(await page.locator(".tile").first().isVisible() && await page.locator(".daychart").isVisible());
+  assert.ok(!(await page.locator(".notv").first().isVisible()), "the long tables are left out");
+  const size = await page.locator(".tile .n").first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(size >= 48, `the figures are big (${size}px)`);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 400), "the figures and the day fit a screen, the transfers may go below");
+  assert.ok(await page.locator("[data-tv-exit]").isVisible());
+  await page.locator("[data-tv-exit]").click();
+  await page.waitForSelector("body:not(.tv)");
+  assert.ok(await page.locator(".top").isVisible());
+  await page.goto(`${BASE}/activity?tv=1`); // a screen that opens the address by itself
+  await page.waitForSelector("body.tv");
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("body:not(.tv)");
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);

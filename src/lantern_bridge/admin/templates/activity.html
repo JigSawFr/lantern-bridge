@@ -2,6 +2,7 @@
 {% block title %}{{ _("Activity") }}{% endblock %}
 {% block body %}
 <h1>{{ _("Activity") }}</h1>
-<p class="lede">{{ _("Who is reading the library right now, and how far the hashing has come.") }}</p>
+<p class="lede">{{ _("Who is reading the library right now, and how far the hashing has come.") }} <button type="button" class="link" data-tv>{{ _("Full screen") }}</button></p>
 <div id="live" data-live="/admin/activity?fragment=1">{% include "_activity.html" %}</div>
+<button type="button" class="tvexit ghost" data-tv-exit aria-label="{{ _('Cancel') }}" title="{{ _('Cancel') }}" hidden>×</button>
 {% endblock %}
