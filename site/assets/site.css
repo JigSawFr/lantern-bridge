@@ -854,6 +854,7 @@ pre code .tk-k { color: #7cc4ff; }
 
 /* The four sources: a row of four where there is room (three left one alone). */
 @media (min-width: 861px) { .cards-small.sources { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.cards-small.accounts .card h3, .cards-small.accounts .card p { overflow-wrap: anywhere; }
 
 /* "Nothing released yet": a note that is seen, with the aurora bar of a state. */
 .bridge-status { max-width: 62ch; margin: 28px 0 0; padding: 10px 16px; border-left: 3px solid var(--aurora); border-radius: 4px; background: rgb(0 255 204 / 0.06); color: var(--snow); font-size: 0.9375rem; }
