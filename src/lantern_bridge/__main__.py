@@ -40,7 +40,14 @@ def build_parser() -> argparse.ArgumentParser:
     backup.add_argument("-o", "--output", type=Path, help="the file to write (default: lantern-bridge-backup.zip)")
     restore = commands.add_parser("restore", help="restore a backup (stop the bridge first)")
     restore.add_argument("file", type=Path)
-    for command in (status, rehash, invite, backup, restore):
+    operator = commands.add_parser("operator", help="list the operators of the pages, or give one a new password")
+    actions = operator.add_subparsers(dest="action", required=True)
+    listing = actions.add_parser("list", help="the operators and their roles")
+    reset = actions.add_parser(
+        "reset", help="set an operator's password, typed twice (or one line on the standard input; the bridge may run)"
+    )
+    reset.add_argument("name", help="the operator's name")
+    for command in (status, rehash, invite, backup, restore, listing, reset):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
     return parser
 
@@ -143,6 +150,52 @@ def _invite(args: argparse.Namespace) -> int:
     return 0
 
 
+def _typed_password() -> str | None:
+    """The new password: typed twice on a terminal (never shown), or one line on the standard input."""
+    import getpass
+
+    if not sys.stdin.isatty():
+        return sys.stdin.readline().rstrip("\r\n")
+    first = getpass.getpass("New password: ")
+    if first != getpass.getpass("Again: "):
+        print("lantern-bridge: the two passwords differ", file=sys.stderr)
+        return None
+    return first
+
+
+def _operator(args: argparse.Namespace) -> int:
+    from lantern_bridge.admin.auth import MIN_LENGTH, AdminSchemaError, AdminStore
+
+    file = args.config.resolve().parent / "admin.json"
+    if not file.exists():
+        print("lantern-bridge: no operator yet: open the pages, the setup page gives the code", file=sys.stderr)
+        return 1
+    try:
+        store = AdminStore(file)
+        if args.action == "list":
+            for found in store.operators():
+                print(f"{found.name}\t{found.role}")
+            return 0
+        if args.name not in {found.name for found in store.operators()}:
+            print("lantern-bridge: no such operator", file=sys.stderr)
+            return 1
+        if (typed := _typed_password()) is None:
+            return 1
+        if len(typed) < MIN_LENGTH:
+            print(f"lantern-bridge: a password has at least {MIN_LENGTH} characters", file=sys.stderr)
+            return 1
+        refused = store.set_password(args.name, typed) is not None
+    except (AdminSchemaError, OSError) as error:
+        print(f"lantern-bridge: {error}", file=sys.stderr)
+        return 1
+    if refused:
+        print("lantern-bridge: the password could not be set", file=sys.stderr)
+        return 1
+    print(f"The password of {args.name} is set.")
+    print("Sessions already open stay open until they end; restart the bridge to close them now.")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command in {"status", "rehash"}:
@@ -151,6 +204,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _invite(args)
     if args.command in {"backup", "restore"}:
         return _backup(args)
+    if args.command == "operator":
+        return _operator(args)
     if args.command != "serve":
         build_parser().print_help()
         return 0

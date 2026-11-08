@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/admin/static/icon-192.png">
 <link rel="stylesheet" href="/admin/static/app.css">
 </head>
-<body data-cancel="{{ _('Cancel') }}" data-confirm-label="{{ _('Confirm') }}" data-copy="{{ _('Copy') }}" data-copied="{{ _('Copied') }}" data-show="{{ _('Show') }}" data-hide="{{ _('Hide') }}" data-working="{{ _('Working…') }}" data-search="{{ _('Search') }}" data-open="{{ _('Open') }}" data-scan="{{ _('Scan now') }}"{% if session and menu.manage %} data-csrf="{{ session.csrf }}"{% endif %} data-t-overview="{{ _('Something needs a look.') }}" data-t-pairings="{{ _('A device is waiting to pair.') }}" data-t-sources="{{ _('A source does not answer.') }}" data-t-tasks="{{ _('A conversion failed.') }}">
+<body data-cancel="{{ _('Cancel') }}" data-confirm-label="{{ _('Confirm') }}" data-copy="{{ _('Copy') }}" data-copied="{{ _('Copied') }}" data-show="{{ _('Show') }}" data-hide="{{ _('Hide') }}" data-working="{{ _('Working…') }}" data-search="{{ _('Search') }}" data-open="{{ _('Open') }}" data-scan="{{ _('Scan now') }}"{% if session and can("/admin/scan", "POST") %} data-csrf="{{ session.csrf }}"{% endif %} data-t-overview="{{ _('Something needs a look.') }}" data-t-pairings="{{ _('A device is waiting to pair.') }}" data-t-sources="{{ _('A source does not answer.') }}" data-t-tasks="{{ _('A conversion failed.') }}">
 {% macro dot(key) %}{% set b = badges.get(key) %}<span class="dot {{ b.level if b else 'info' }}" data-badge="{{ key }}"{% if not b %} hidden{% endif %}>{{ b.n if b else '' }}</span>{% endmacro %}
 <a class="skip" href="#content">{{ _("Skip to content") }}</a>
 <header class="top"><div class="bar">
@@ -54,7 +54,7 @@
 {% block body %}{% endblock %}
 </main>
 <div id="toasts" role="region" aria-live="polite" aria-label="{{ _('Notifications') }}"></div>
-<footer>lantern-bridge {{ version }} · Lantern draft {{ draft }} · {{ _("A bridge to your own library") }}</footer>
+<footer>lantern-bridge {{ version }} · Lantern draft {{ draft }} · {{ _("A bridge to your own library") }}{% if session %} · <a href="/admin/me">{{ _("My account") }} ({{ session.name }})</a>{% endif %}</footer>
 <script src="/admin/static/app.js" defer></script>
 </body>
 </html>

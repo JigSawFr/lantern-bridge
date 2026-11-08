@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Operators") }}{% endblock %}
+{% block body %}
+<h1>{{ _("Operators") }}</h1>
+<p class="lede">{{ _("Who signs in to these pages, and what each may do. An owner can do everything; an administrator runs the sources, the settings and the library; a manager decides on consoles, accounts and invitations; a read-only operator looks at the overview, the library and the activity.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Name") }}</th><th>{{ _("Role") }}</th><th>{{ _("Last signed in") }}</th><th>{{ _("Sessions") }}</th><th></th></tr></thead>
+  <tbody>
+  {% for o in operators %}
+  <tr>
+    <td><strong>{{ o.name }}</strong>{% if o.name == session.name %} <span class="pill ok">{{ _("this one") }}</span>{% endif %}</td>
+    <td>
+      <form method="post" action="/admin/operators/role" class="row">
+        <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="name" value="{{ o.name }}">
+        <select name="role" aria-label="{{ _('Role') }}">{% for r in role_names %}<option value="{{ r }}"{% if r == o.role %} selected{% endif %}>{{ roles[r] }}</option>{% endfor %}</select>
+        <button class="ghost small">{{ _("Save") }}</button>
+      </form>
+    </td>
+    <td>{% if o.last %}{{ o.last | when }}{% else %}<span class="dim">–</span>{% endif %}</td>
+    <td>{{ open_sessions.get(o.name, 0) }}</td>
+    <td>
+      <form method="post" action="/admin/operators/password" class="row">
+        <input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="name" value="{{ o.name }}">
+        <input name="password" type="password" minlength="10" autocomplete="new-password" placeholder="{{ _('New password') }}" aria-label="{{ _('New password') }}" required>
+        <button class="ghost small" data-confirm="{{ _('Set this password? The sessions of this operator end.') }}">{{ _("Set") }}</button>
+      </form>
+      {% if o.name != session.name %}
+      <form method="post" action="/admin/operators/remove"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="name" value="{{ o.name }}"><button class="danger small" data-confirm="{{ _('Remove this operator? Their sessions end.') }}">{{ _("Remove") }}</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<form method="post" action="/admin/operators" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Add an operator") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Name") }} <input name="name" maxlength="64" autocomplete="off" required></label>
+    <label>{{ _("Role") }} <select name="role">{% for r in role_names %}<option value="{{ r }}"{% if r == "manager" %} selected{% endif %}>{{ roles[r] }}</option>{% endfor %}</select></label>
+    <label>{{ _("Password") }} <input name="password" type="password" minlength="10" autocomplete="new-password" required></label>
+  </div>
+  <p class="dim small">{{ _("Give the password to them yourself; they can change it from their own account. If you lose yours, run lantern-bridge operator reset on the machine that runs the bridge.") }}</p>
+  <button>{{ _("Add") }}</button>
+</form>
+{% endblock %}

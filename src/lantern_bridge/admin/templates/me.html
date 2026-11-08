@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ _("My account") }}{% endblock %}
+{% block body %}
+<h1>{{ _("My account") }}</h1>
+<p class="lede">{{ session.name }} · {{ roles[session.role] if session.role in roles else session.role }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/admin/me" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Change my password") }}</h2>
+  <div class="form-grid">
+    <label>{{ _("Current password") }} <input name="current" type="password" autocomplete="current-password" required></label>
+    <label>{{ _("New password") }} <input name="password" type="password" minlength="10" autocomplete="new-password" required></label>
+    <label>{{ _("New password again") }} <input name="again" type="password" minlength="10" autocomplete="new-password" required></label>
+  </div>
+  <p class="dim small">{{ _("Your other sessions end when the password changes.") }}</p>
+  <button>{{ _("Save") }}</button>
+</form>
+{% endblock %}

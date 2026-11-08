@@ -32,5 +32,5 @@ def test_the_journal_line_has_the_account_the_address_and_the_change(tmp_path: P
     form = {"csrf": csrf, "remote_rate": "10", "admin_lan_only": "on", "name": "Audited"}
     assert client.post("/admin/config/settings", data=form).status_code in (200, 303)
     page = client.get("/admin/events?kind=settings").text
-    assert "boss" in page and "(admin)" in page
+    assert "boss" in page and "(owner)" in page
     assert "name" in page and "Audited" not in page.split("<h1>")[1].split("</nav>")[1]  # the value stays out

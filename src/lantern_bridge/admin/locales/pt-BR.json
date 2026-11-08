@@ -52,8 +52,6 @@
  "Download a backup": "Baixar uma backup",
  "you run": "você está usando",
  "Updates: read GitHub's latest release once a day and say here when it is newer (nothing is downloaded)": "Atualizações: ler a última versão do GitHub uma vez por dia e indicar aqui quando for mais recente (nada é baixado)",
- "This account looks at the overview, the library and the activity. It cannot open this page or change anything.": "Esta conta consulta a visão geral, a biblioteca e a atividade. Não pode abrir esta página nem alterar nada.",
- "An account that signs in to the overview, the library and the activity and changes nothing: for someone who only looks. It cannot open the settings, the pairings, the logs or the developer page.": "Uma conta que faz login na visão geral, na biblioteca e na atividade e não altera nada: para quem só quer consultar. Não pode abrir as configurações, os pareamentos, os logs nem a página de desenvolvedor.",
  "set": "configurada",
  "The bridge publishes its state on an MQTT broker, where Home Assistant reads it. Leave the host empty to publish nothing. The password is read from the environment variable named below.": "A ponte publica o seu estado num broker MQTT, onde o Home Assistant o lê. Deixe o host vazio para não publicar nada. A senha é lida da variável de ambiente indicada abaixo.",
  "Host": "Host",
