@@ -22,7 +22,7 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-SCHEMA = 1
+SCHEMA = 2
 KEEP_DAYS = 90
 MAX_MACHINES = 200
 MAX_EVENTS = 1000
@@ -46,9 +46,10 @@ class Delta:
 @dataclass(frozen=True, slots=True)
 class Event:
     ts: float
-    kind: str  # started, scan, source_down, source_up, update, settings, paired, revoked
+    kind: str  # started, scan, source_down, source_up, update, settings, paired, revoked...
     subject: str  # a source id or an account, or empty
     detail: str  # short (300 characters at most); never a path or a title
+    actor: str = ""  # the operator who did it, from the pages or the command line; empty when the bridge did it itself
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,10 +95,15 @@ class History:
                     PRIMARY KEY (day, key));
                 CREATE TABLE IF NOT EXISTS machines (key TEXT PRIMARY KEY, label TEXT, address TEXT, agent TEXT,
                     first REAL, last REAL, requests INTEGER, sent INTEGER);
-                CREATE TABLE IF NOT EXISTS events (ts REAL, kind TEXT, subject TEXT, detail TEXT);
+                CREATE TABLE IF NOT EXISTS events (ts REAL, kind TEXT, subject TEXT, detail TEXT,
+                    actor TEXT NOT NULL DEFAULT '');
                 CREATE INDEX IF NOT EXISTS events_ts ON events (ts);
                 """
             )
+            # Taking up a schema-1 file (no `actor` column) happens once and goes before the first release, with the
+            # other schema-1 takeovers (plans/lantern/suivi.md).
+            if "actor" not in {row[1] for row in db.execute("PRAGMA table_info(events)")}:
+                db.execute("ALTER TABLE events ADD COLUMN actor TEXT NOT NULL DEFAULT ''")
             db.execute(f"PRAGMA user_version = {SCHEMA}")
             self._db = db
             self._prune()
@@ -171,20 +177,22 @@ class History:
             rows = self._db.execute("SELECT * FROM machines ORDER BY last DESC LIMIT ?", (MAX_MACHINES,)).fetchall()
         return [Seen(*r) for r in rows]
 
-    def event(self, kind: str, subject: str = "", detail: str = "", now: float | None = None) -> None:
+    def event(
+        self, kind: str, subject: str = "", detail: str = "", now: float | None = None, *, actor: str = ""
+    ) -> None:
         """Adds a line to the journal (nothing happens when the file is off)."""
         if self._db is None:
             return
         try:
             with self._lock, self._db:
                 self._db.execute(
-                    "INSERT INTO events VALUES (?,?,?,?)",
-                    (time.time() if now is None else now, kind[:32], subject[:64], detail[:300]),
+                    "INSERT INTO events VALUES (?,?,?,?,?)",
+                    (time.time() if now is None else now, kind[:32], subject[:64], detail[:300], actor[:64]),
                 )
         except sqlite3.Error as error:
             log.warning("the journal could not be written: %s", error)
             return
-        line = Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:300])
+        line = Event(time.time() if now is None else now, kind[:32], subject[:64], detail[:300], actor[:64])
         for listener in list(self.listeners):
             try:
                 listener(line)
@@ -198,12 +206,13 @@ class History:
         with self._lock:
             if kind:
                 rows = self._db.execute(
-                    "SELECT ts, kind, subject, detail FROM events WHERE kind = ? ORDER BY ts DESC, rowid DESC LIMIT ?",
+                    "SELECT ts, kind, subject, detail, actor FROM events WHERE kind = ? "
+                    "ORDER BY ts DESC, rowid DESC LIMIT ?",
                     (kind, limit),
                 ).fetchall()
             else:
                 rows = self._db.execute(
-                    "SELECT ts, kind, subject, detail FROM events ORDER BY ts DESC, rowid DESC LIMIT ?", (limit,)
+                    "SELECT ts, kind, subject, detail, actor FROM events ORDER BY ts DESC, rowid DESC LIMIT ?", (limit,)
                 ).fetchall()
         return [Event(*r) for r in rows]
 

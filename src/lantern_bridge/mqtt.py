@@ -137,6 +137,7 @@ class Publisher:
             "kind": event.kind,
             "subject": event.subject,
             "detail": event.detail,
+            "actor": event.actor,
         }
         self._client.publish(self.event_topic, json.dumps(document, separators=(",", ":")), qos=1, retain=False)
 

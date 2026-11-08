@@ -30,7 +30,7 @@ def _console(client: TestClient, scopes: tuple[str, ...] = ("library", "saves", 
 
 
 def _events(client: TestClient) -> list[str]:
-    return [e.subject or "" for e in client.app.state.runtime.history.events() if e.kind == "device_changed"]  # type: ignore[attr-defined]
+    return [e.detail or "" for e in client.app.state.runtime.history.events() if e.kind == "device_changed"]  # type: ignore[attr-defined]
 
 
 def test_a_console_has_a_page_with_what_the_bridge_knows_of_it(tmp_path: Path) -> None:

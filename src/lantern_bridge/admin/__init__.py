@@ -384,7 +384,7 @@ class Admin:
         who = f"{session.name} ({session.role})"
         where = f" from {session.address}" if session.address else ""
         what = ", ".join(done) if done else how
-        self.runtime.history.event("settings", subject=who[:64], detail=f"{how}{where}: {what}")
+        self.runtime.history.event("settings", subject=who[:64], detail=f"{how}{where}: {what}", actor=session.name)
 
     def undo(self) -> list[str]:
         """Brings the settings from before the last change back (and that change becomes the one to take back)."""
@@ -868,23 +868,23 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/sessions/others/end")
     async def sessions_end_others(request: Request) -> Response:
-        _, _, refused = await authed(request)
-        if refused is not None:
-            return refused
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         ended = admin.store.revoke_others(request.cookies.get(_COOKIE))
         if ended:
             log.info("%d other administration session(s) ended from the pages", ended)
-            admin.runtime.history.event("session_ended", detail=f"{ended} session(s)")
+            admin.runtime.history.event("session_ended", detail=f"{ended} session(s)", actor=session.name)
         return redirect("/sessions?m=ended", request)
 
     @router.post("/sessions/{sid}/end")
     async def session_end(sid: str, request: Request) -> Response:
-        _, _, refused = await authed(request)
-        if refused is not None:
-            return refused
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         if not admin.store.revoke(sid):
             return Response("No such session.", 404, headers=_HEADERS)
-        admin.runtime.history.event("session_ended", detail="1 session")
+        admin.runtime.history.event("session_ended", detail="1 session", actor=session.name)
         log.info("an administration session was ended from the pages")
         # Ending your own is signing out: the cookie no longer opens anything, so the next page is the sign-in.
         return redirect("/sessions?m=ended", request)
@@ -928,7 +928,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if problem is not None:
             return operators_page(request, session, 400, error=admin.tr(request)(problem))
         log.info("operator %s added as %s", name, fields.get("role"))
-        admin.runtime.history.event("operator_added", name)
+        admin.runtime.history.event("operator_added", name, actor=session.name)
         return redirect("/operators?m=operator_added", request)
 
     @router.post("/operators/role")
@@ -941,7 +941,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if problem is not None:
             return operators_page(request, session, 400, error=admin.tr(request)(problem))
         log.info("operator %s is now %s", name, fields.get("role"))
-        admin.runtime.history.event("operator_changed", name)
+        admin.runtime.history.event("operator_changed", name, actor=session.name)
         return redirect("/operators?m=operator_changed", request)
 
     @router.post("/operators/password")
@@ -955,7 +955,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if problem is not None:
             return operators_page(request, session, 400, error=admin.tr(request)(problem))
         log.info("the password of operator %s was set by the owner", name)
-        admin.runtime.history.event("password_changed", name)
+        admin.runtime.history.event("password_changed", name, actor=session.name)
         return redirect("/operators?m=password_changed", request)
 
     @router.post("/operators/remove")
@@ -970,7 +970,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if problem is not None:
             return operators_page(request, session, 400, error=admin.tr(request)(problem))
         log.info("operator %s removed", name)
-        admin.runtime.history.event("operator_removed", name)
+        admin.runtime.history.event("operator_removed", name, actor=session.name)
         return redirect("/operators?m=operator_removed", request)
 
     def me_page(
@@ -1006,7 +1006,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 admin.accounts.record(who)
             return me_page(request, session, 400, error=t(problem))
         log.info("operator %s changed their password", session.name)
-        admin.runtime.history.event("password_changed", session.name)
+        admin.runtime.history.event("password_changed", session.name, actor=session.name)
         return redirect("/me?m=password_changed", request)
 
     @router.post("/logout")
@@ -1357,8 +1357,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
     async def title_delete(title_id: str, request: Request) -> Response:
         """Deletes one file of a title from the disk (only in a folder the settings open to changes)."""
         session, fields, refused = await authed(request)
-        if refused is not None:
-            return refused
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         title = admin.runtime.browser.catalog().titles.get(title_id.upper())
         if title is None:
             return admin.page(request, "missing.html", session, status=404, active="library")
@@ -1375,7 +1375,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 headers=_HEADERS,
             )
         log.info("a file of %s was deleted from the pages (source %s)", title.title_id, fields.get("source", ""))
-        admin.runtime.history.event("deleted", subject=title.title_id, detail="1 file")
+        admin.runtime.history.event("deleted", subject=title.title_id, detail="1 file", actor=session.name)
         admin.runtime.forget_file(fields.get("source", ""), fields.get("path", ""))
         last = len(title.files) == 1  # nothing of the title is left: back to the library
         where = "/admin/library?m=deleted" if last else f"/admin/library/{title.title_id}?m=deleted"
@@ -1495,7 +1495,14 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 {
                     "schema": 1,
                     "events": [
-                        {"ts": iso_time(e.ts), "kind": e.kind, "subject": e.subject, "detail": e.detail} for e in rows
+                        {
+                            "ts": iso_time(e.ts),
+                            "kind": e.kind,
+                            "subject": e.subject,
+                            "detail": e.detail,
+                            "actor": e.actor,
+                        }
+                        for e in rows
                     ],
                 },
                 indent=2,
@@ -1503,9 +1510,9 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return Response(body, media_type="application/json", headers=_attachment("json"))
         out = io.StringIO()
         writer = csv.writer(out)
-        writer.writerow(("time", "kind", "subject", "detail"))
+        writer.writerow(("time", "kind", "subject", "detail", "actor"))
         for e in rows:
-            writer.writerow([iso_time(e.ts), *(_csv_safe(v) for v in (e.kind, e.subject, e.detail))])
+            writer.writerow([iso_time(e.ts), *(_csv_safe(v) for v in (e.kind, e.subject, e.detail, e.actor))])
         return Response(out.getvalue(), media_type="text/csv; charset=utf-8", headers=_attachment("csv"))
 
     @router.get("/activity")
@@ -1610,7 +1617,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             raise HTTPException(404)
         return redirect("/developer?m=done", request)
 
-    def ensure_account(accounts: Any, name: str, preset: str) -> Any:
+    def ensure_account(accounts: Any, name: str, preset: str, actor: str) -> Any:
         """The account of that name, made with the rights of the preset when it does not exist (a child's account
         takes the usual age limit); None for a preset the pages do not know. An existing account keeps its own."""
         found = accounts.user(name)
@@ -1621,7 +1628,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         user = accounts.create_user(name, presets.PRESETS[preset])
         if preset == "child":
             user = accounts.update_user(name, rating_cap=presets.cap_from("child", "", False)[0])
-        admin.runtime.history.event("account_added", name)
+        admin.runtime.history.event("account_added", name, actor=actor)
         return user
 
     @router.get("/pairings")
@@ -1640,8 +1647,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
     @router.post("/pairings/{pairing_id}")
     async def decide(pairing_id: str, request: Request) -> Response:
         session, fields, refused = await authed(request)
-        if refused is not None:
-            return refused
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         desk, accounts = admin.lantern.desk, admin.lantern.accounts
         entry = desk.by_id(pairing_id) if desk is not None else None
         if desk is None or accounts is None or entry is None:
@@ -1649,7 +1656,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if fields.get("decision") == "refuse":
             desk.refuse(entry)
             log.info("pairing of %s refused", entry.device)
-            admin.runtime.history.event("pairing_refused")
+            admin.runtime.history.event("pairing_refused", detail=entry.device[:64], actor=session.name)
             return redirect("/pairings", request)
         name = fields.get("user", "").strip()
         if not name or len(name) > 64 or not set(name) <= _USER_CHARS:
@@ -1664,7 +1671,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
                 users=users,
                 error=admin.tr(request)("An account name is letters, digits, - _ and . (64 at most)."),
             )
-        user = ensure_account(accounts, name, fields.get("preset", "full"))
+        user = ensure_account(accounts, name, fields.get("preset", "full"), session.name)
         if user is None:
             return admin.page(
                 request,
@@ -1678,7 +1685,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             )
         granted = desk.approve(entry, user.name)
         log.info("pairing of %s approved for %s: %s", entry.device, user.name, ", ".join(granted) or "no scope")
-        admin.runtime.history.event("paired", user.name)
+        admin.runtime.history.event("paired", user.name, entry.device[:64], actor=session.name)
         return redirect("/pairings", request)
 
     @router.get("/devices")
@@ -1758,7 +1765,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             )
         admin.lantern.accounts.update_device(device_id, device=name)  # type: ignore[union-attr]
         log.info("device %s renamed from the pages", device_id)
-        admin.runtime.history.event("device_changed", name)
+        admin.runtime.history.event("device_changed", found.user, name, actor=session.name)
         return redirect(f"/devices/{device_id}?m=device_changed", request)
 
     @router.post("/devices/{device_id}/rights")
@@ -1783,7 +1790,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return device_view(request, session, device_id, status=400, error=t(problem), values=typed)
         admin.lantern.accounts.update_device(device_id, scopes=kept, rating_cap=cap)  # type: ignore[union-attr]
         log.info("the rights of device %s were reduced from the pages", device_id)
-        admin.runtime.history.event("device_changed", found.device[:64])
+        admin.runtime.history.event("device_changed", found.user, found.device[:64], actor=session.name)
         return redirect(f"/devices/{device_id}?m=device_changed", request)
 
     @router.post("/devices/{device_id}/suspend")
@@ -1799,18 +1806,21 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return Response("Choose suspended or active.", 400, headers=_HEADERS)
         admin.lantern.accounts.update_device(device_id, suspended=state == "suspended")  # type: ignore[union-attr]
         log.info("device %s is now %s", device_id, state)
-        admin.runtime.history.event("device_changed", f"{found.device[:48]}: {state}")
+        admin.runtime.history.event("device_changed", found.user, f"{found.device[:48]}: {state}", actor=session.name)
         return redirect(f"/devices/{device_id}?m=device_changed", request)
 
     @router.post("/devices/{device_id}/revoke")
     async def revoke(device_id: str, request: Request) -> Response:
-        _, _, refused = await authed(request)
-        if refused is not None:
-            return refused
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        known = device_known(device_id)
         accounts = admin.lantern.accounts
         if accounts is not None and accounts.revoke(device_id):
             log.info("device %s revoked", device_id)
-            admin.runtime.history.event("revoked")
+            admin.runtime.history.event(
+                "revoked", known.user if known else "", known.device[:64] if known else "", actor=session.name
+            )
         return redirect("/devices", request)
 
     @router.get("/logs")
@@ -2550,7 +2560,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
         except AccountError as error:
             return accounts_page(request, session, 400, error.detail)
         log.info("account %s added from the pages", name)
-        admin.runtime.history.event("account_added", name)
+        admin.runtime.history.event("account_added", name, actor=session.name)
         return redirect(f"/accounts/{name}?m=account_added", request)
 
     @router.get("/accounts/{account}")
@@ -2595,7 +2605,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             )
         accounts.update_user(account, scopes=scopes, rating_cap=cap)
         log.info("the rights of account %s were changed from the pages", account)
-        admin.runtime.history.event("account_changed", account)
+        admin.runtime.history.event("account_changed", account, actor=session.name)
         return redirect(f"/accounts/{account}?m=account_changed", request)
 
     @router.post("/accounts/{account}/state")
@@ -2611,7 +2621,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return Response("Choose active or frozen.", 400, headers=_HEADERS)
         accounts.update_user(account, state=state)
         log.info("account %s is now %s", account, state)
-        admin.runtime.history.event("account_changed", f"{account}: {state}")
+        admin.runtime.history.event("account_changed", account, state, actor=session.name)
         return redirect(f"/accounts/{account}?m=account_changed", request)
 
     @router.post("/accounts/{account}/delete")
@@ -2638,7 +2648,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return account_view(request, session, account, status=409, error=error.detail)
         await drop_login(session, account)
         log.info("account %s was deleted from the pages", account)
-        admin.runtime.history.event("account_deleted", account)
+        admin.runtime.history.event("account_deleted", account, actor=session.name)
         return redirect("/accounts?m=account_deleted", request)
 
     async def drop_login(session: Session, account: str) -> None:
@@ -2716,8 +2726,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
     @router.post("/invitations")
     async def invitation_create(request: Request) -> Response:
         session, fields, refused = await authed(request)
-        if refused is not None:
-            return refused
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         t = admin.tr(request)
         accounts = admin.lantern.accounts
         if accounts is None:
@@ -2733,7 +2743,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             devices, days = 0, 0
         if not 1 <= devices <= 20 or days not in (1, 7, 30):
             return invitations_page(request, session, 400, t("Choose a number of devices from 1 to 20."))
-        user = ensure_account(accounts, name, fields.get("preset", "full"))
+        user = ensure_account(accounts, name, fields.get("preset", "full"), session.name)
         if user is None:
             return invitations_page(request, session, 400, t("Choose a preset from the list."))
         until = (datetime.now(UTC) + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")

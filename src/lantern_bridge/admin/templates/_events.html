@@ -4,7 +4,7 @@
 <ul class="timeline">
   {% for e in events %}
   {% if loop.first or (e.ts | day) != (events[loop.index0 - 1].ts | day) %}<li class="day"><h2>{{ e.ts | day }}</h2></li>{% endif %}
-  <li class="ev {{ e.kind }}"><time datetime="{{ e.ts | iso }}">{{ e.ts | clock }}</time> <strong>{{ labels.get(e.kind, e.kind) }}</strong>{% if e.subject %} <span class="pill">{{ e.subject }}</span>{% endif %}{% if e.detail %} <span class="dim small">{{ e.detail }}</span>{% endif %}</li>
+  <li class="ev {{ e.kind }}"><time datetime="{{ e.ts | iso }}">{{ e.ts | clock }}</time> <strong>{{ labels.get(e.kind, e.kind) }}</strong>{% if e.subject %} <span class="pill">{{ e.subject }}</span>{% endif %}{% if e.detail %} <span class="dim small">{{ e.detail }}</span>{% endif %}{% if e.actor %} <span class="dim small" title="{{ _("Done by") }}">· {{ e.actor }}</span>{% endif %}</li>
   {% endfor %}
 </ul>
 {% else %}

@@ -671,5 +671,6 @@
  "Suspend this console? It can do nothing until you lift the suspension.": "Приостановить эту консоль? Она ничего не сможет, пока вы не снимете приостановку.",
  "Take rights away": "Отнять права",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Снимите отметку с права, чтобы отнять его у этого устройства, или задайте ему собственное возрастное ограничение. Чтобы дать больше, сопрягите его заново.",
- "suspended": "приостановлено"
+ "suspended": "приостановлено",
+ "Done by": "Выполнил"
 }

@@ -671,5 +671,6 @@
  "Suspend this console? It can do nothing until you lift the suspension.": "Deze console schorsen? Ze kan niets doen tot u de schorsing opheft.",
  "Take rights away": "Rechten intrekken",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Haal het vinkje bij een recht weg om het van dit apparaat af te nemen, of geef het een eigen leeftijdsgrens. Om het meer te geven, koppel het opnieuw.",
- "suspended": "geschorst"
+ "suspended": "geschorst",
+ "Done by": "Gedaan door"
 }

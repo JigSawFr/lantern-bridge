@@ -671,5 +671,6 @@
  "Suspend this console? It can do nothing until you lift the suspension.": "このコンソールを一時停止しますか？ 解除するまで何もできません。",
  "Take rights away": "権限を外す",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "スコープのチェックを外すと、このデバイスから外せます。デバイス専用の年齢制限も設定できます。権限を増やすには、もう一度ペアリングしてください。",
- "suspended": "一時停止中"
+ "suspended": "一時停止中",
+ "Done by": "実行者"
 }
