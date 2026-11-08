@@ -49,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     reset.add_argument("name", help="the operator's name")
     for command in (status, rehash, invite, backup, restore, listing, reset):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
+    from lantern_bridge import cli_accounts
+
+    cli_accounts.add_parsers(commands, _DEFAULT_CONFIG, _CONFIG_HELP)
     return parser
 
 
@@ -206,6 +209,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _backup(args)
     if args.command == "operator":
         return _operator(args)
+    if args.command in {"account", "device"}:
+        from lantern_bridge import cli_accounts
+
+        return cli_accounts.run(args)
     if args.command != "serve":
         build_parser().print_help()
         return 0
