@@ -3,6 +3,7 @@ they live in."""
 
 from __future__ import annotations
 
+import io
 import json
 import re
 from pathlib import Path
@@ -314,19 +315,40 @@ def test_an_unknown_role_or_name_opens_nothing(tmp_path: Path) -> None:
 # The command line, for an owner who lost the password.
 
 
-def test_the_command_line_lists_and_resets(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_the_command_line_lists_and_resets(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     _admin(_client(tmp_path))
     config = tmp_path / "state" / "config.toml"
     assert main(["operator", "list", "--config", str(config)]) == 0
     assert capsys.readouterr().out.split() == ["boss", "owner"]
+    monkeypatch.setattr("sys.stdin", io.StringIO("typed-new-password-1\n"))
     assert main(["operator", "reset", "boss", "--config", str(config)]) == 0
-    printed = capsys.readouterr().out
-    new = re.search(r"New password for boss: (\S+)", printed)
-    assert new
+    printed = capsys.readouterr()
+    assert "typed-new-password-1" not in printed.out + printed.err  # a password is typed, never shown
     store = AdminStore(tmp_path / "state" / "admin.json")
-    assert store.identify("boss", new.group(1)) == "owner" and store.identify("boss", PASSWORD) is None
+    assert store.identify("boss", "typed-new-password-1") == "owner" and store.identify("boss", PASSWORD) is None
+    monkeypatch.setattr("sys.stdin", io.StringIO("typed-new-password-1\n"))
     assert main(["operator", "reset", "nobody", "--config", str(config)]) == 1
     assert "No such operator" in capsys.readouterr().err
+    monkeypatch.setattr("sys.stdin", io.StringIO("short\n"))
+    assert main(["operator", "reset", "boss", "--config", str(config)]) == 1
+    assert "at least 10 characters" in capsys.readouterr().err
+    assert store.identify("boss", "typed-new-password-1") == "owner"  # a refused password changes nothing
+
+
+def test_the_command_line_asks_twice_on_a_terminal(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _admin(_client(tmp_path))
+    config = tmp_path / "state" / "config.toml"
+    monkeypatch.setattr("sys.stdin", type("Tty", (io.StringIO,), {"isatty": lambda self: True})())
+    answers = iter(["terminal-password-1", "terminal-password-2", "terminal-password-1", "terminal-password-1"])
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": next(answers))
+    assert main(["operator", "reset", "boss", "--config", str(config)]) == 1  # they differ
+    assert "differ" in capsys.readouterr().err
+    assert main(["operator", "reset", "boss", "--config", str(config)]) == 0
+    assert AdminStore(tmp_path / "state" / "admin.json").identify("boss", "terminal-password-1") == "owner"
 
 
 def test_the_command_line_says_when_there_is_no_operator_yet(

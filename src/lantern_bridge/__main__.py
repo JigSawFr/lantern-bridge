@@ -43,7 +43,9 @@ def build_parser() -> argparse.ArgumentParser:
     operator = commands.add_parser("operator", help="list the operators of the pages, or give one a new password")
     actions = operator.add_subparsers(dest="action", required=True)
     listing = actions.add_parser("list", help="the operators and their roles")
-    reset = actions.add_parser("reset", help="give an operator a new password, printed once (the bridge may run)")
+    reset = actions.add_parser(
+        "reset", help="set an operator's password, typed twice (or one line on the standard input; the bridge may run)"
+    )
     reset.add_argument("name", help="the operator's name")
     for command in (status, rehash, invite, backup, restore, listing, reset):
         command.add_argument("--config", type=Path, default=_DEFAULT_CONFIG, help=_CONFIG_HELP)
@@ -148,9 +150,20 @@ def _invite(args: argparse.Namespace) -> int:
     return 0
 
 
-def _operator(args: argparse.Namespace) -> int:
-    import secrets
+def _typed_password() -> str | None:
+    """The new password: typed twice on a terminal (never shown), or one line on the standard input."""
+    import getpass
 
+    if not sys.stdin.isatty():
+        return sys.stdin.readline().rstrip("\r\n")
+    first = getpass.getpass("New password: ")
+    if first != getpass.getpass("Again: "):
+        print("lantern-bridge: the two passwords differ", file=sys.stderr)
+        return None
+    return first
+
+
+def _operator(args: argparse.Namespace) -> int:
     from lantern_bridge.admin.auth import AdminSchemaError, AdminStore
 
     file = args.config.resolve().parent / "admin.json"
@@ -163,15 +176,16 @@ def _operator(args: argparse.Namespace) -> int:
             for found in store.operators():
                 print(f"{found.name}\t{found.role}")
             return 0
-        password = secrets.token_urlsafe(12)
-        problem = store.set_password(args.name, password)
+        if (typed := _typed_password()) is None:
+            return 1
+        problem = store.set_password(args.name, typed)
     except (AdminSchemaError, OSError) as error:
         print(f"lantern-bridge: {error}", file=sys.stderr)
         return 1
     if problem is not None:
         print(f"lantern-bridge: {problem}", file=sys.stderr)
         return 1
-    print(f"New password for {args.name}: {password}")
+    print(f"The password of {args.name} is set.")
     print("Sessions already open stay open until they end; restart the bridge to close them now.")
     return 0
 
