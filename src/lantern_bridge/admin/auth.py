@@ -28,7 +28,8 @@ SESSION_SECONDS = 8 * 3600
 #: A session nobody used for this long ends, whatever is left of its eight hours.
 IDLE_SECONDS = 30 * 60
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
-MIN_PASSWORD = 10
+#: The fewest characters an operator's password may have (a length, not a secret).
+MIN_LENGTH = 10
 #: From the least to the most: a role may do what the ones before it may.
 ROLES = ("observer", "manager", "admin", "owner")
 
@@ -158,8 +159,8 @@ class AdminStore:
     def _problem(name: str, password: str) -> str | None:
         if not name or len(name) > 64:
             return "Pick a name of 64 characters at most."
-        if len(password) < MIN_PASSWORD:
-            return f"Pick a password of at least {MIN_PASSWORD} characters."
+        if len(password) < MIN_LENGTH:
+            return f"Pick a password of at least {MIN_LENGTH} characters."
         return None
 
     def create(self, code: str, name: str, password: str) -> str | None:
@@ -251,8 +252,8 @@ class AdminStore:
             found = next((e for e in entries if e["name"] == name), None)
             if found is None:
                 return "No such operator."
-            if len(password) < MIN_PASSWORD:
-                return f"Pick a password of at least {MIN_PASSWORD} characters."
+            if len(password) < MIN_LENGTH:
+                return f"Pick a password of at least {MIN_LENGTH} characters."
             found.update(
                 {k: v for k, v in _entry(name, str(found.get("role", "")), password).items() if k != "created"}
             )
