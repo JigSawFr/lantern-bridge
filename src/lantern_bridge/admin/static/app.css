@@ -454,3 +454,16 @@ dialog.palette ul[aria-busy="true"]::after{content:"";display:block;height:.35re
   [data-live],.tile .n,progress{transition:opacity .3s,filter .3s}
 }
 body[data-down] [data-live]{opacity:.55;filter:saturate(.5)}
+
+/* -- keys: a ring on the title the keys are on, the panel's arrows, the list of keys ------------------------------- */
+.game:focus-visible,table.dense td a:focus-visible{outline:2px solid var(--aurora);outline-offset:3px;border-radius:var(--radius)}
+.peekmove{display:inline-flex;gap:.3rem;margin-left:auto;margin-right:.5rem}
+.peekmove button:disabled{opacity:.35;cursor:default}
+dialog.helpbox{width:min(24rem,calc(100vw - 2rem));padding:1.2rem 1.4rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--night);color:var(--snow);box-shadow:0 30px 80px -20px rgb(0 0 0 / .9)}
+dialog.helpbox::backdrop{background:rgb(7 13 24 / .72);backdrop-filter:blur(3px)}
+:root[data-theme="light"] dialog.helpbox::backdrop{background:rgb(15 27 48 / .45)}
+dialog.helpbox h2{margin:0 0 .8rem}
+dialog.helpbox dl{display:grid;grid-template-columns:auto 1fr;gap:.45rem 1rem;margin:0;align-items:center}
+dialog.helpbox dt,dialog.helpbox dd{margin:0}
+dialog.helpbox dd{color:var(--mist)}
+dialog.helpbox .key{position:static;transform:none;display:inline-block;min-width:1.6rem;padding:.05rem .45rem;text-align:center;color:var(--mist);font-size:.8rem}

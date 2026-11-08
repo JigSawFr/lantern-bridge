@@ -308,6 +308,32 @@ await test("the command box finds titles by name, and the live blocks look old w
   await page.waitForSelector("body:not([data-down])", { timeout: 8000 });
 });
 
+await test("the library: j and k walk the shelf, Space looks at a title, the arrows go to the next, ? lists the keys", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/library`);
+  await page.keyboard.press("j");
+  const first = await page.evaluate(() => document.activeElement.getAttribute("href"));
+  assert.match(first, /\/admin\/library\/0100/);
+  await page.keyboard.press("j");
+  const second = await page.evaluate(() => document.activeElement.getAttribute("href"));
+  assert.notEqual(first, second);
+  await page.keyboard.press("k");
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute("href")), first);
+  await page.keyboard.press(" ");
+  await page.locator("dialog.peekpanel[open] .hero h1").waitFor();
+  const name = (await page.locator("dialog.peekpanel h1").innerText()).trim();
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction((old) => document.querySelector("dialog.peekpanel .hero h1")?.textContent.trim() !== old, name);
+  await page.keyboard.press("ArrowLeft");
+  await page.waitForFunction((old) => document.querySelector("dialog.peekpanel .hero h1")?.textContent.trim() === old, name);
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("?");
+  assert.ok((await page.locator("dialog.helpbox[open] dt").count()) >= 5);
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("dialog.helpbox[open]").count(), 0);
+  await page.fill("#q", "j"); // typing is left alone
+  assert.equal(await page.inputValue("#q"), "j");
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);

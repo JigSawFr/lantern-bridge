@@ -566,10 +566,13 @@
     });
   }
 
-  // -- a title's sheet beside the shelf, without leaving it ---------------------------------------------------
+  // -- a title's sheet beside the shelf, without leaving it; the arrows go to the next or the previous one -----------
+  let peekAt = null; // opens the sheet of the title at this place in the shelf (set once the panel exists)
   if (document.querySelector("[data-peek]") && typeof HTMLDialogElement === "function") {
-    let panel = null, body;
+    let panel = null, body, shown = -1;
+    const buttons = () => [...document.querySelectorAll("[data-peek]")];
     const close = () => { if (panel && panel.open) panel.close(); };
+    const step = (by) => { const to = shown + by; if (to >= 0 && to < buttons().length) peekAt(to); };
     const make = () => {
       panel = document.createElement("dialog");
       panel.className = "peekpanel";
@@ -578,33 +581,99 @@
       const go = document.createElement("a");
       go.className = "button small";
       go.textContent = `${say("open")} →`;
+      const move = document.createElement("span");
+      move.className = "peekmove";
+      const arrow = (text, name, by) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "ghost small"; b.textContent = text; b.setAttribute("aria-label", say(name)); b.title = say(name);
+        b.addEventListener("click", () => step(by));
+        return b;
+      };
+      move.append(arrow("←", "previous", -1), arrow("→", "next", 1));
       const x = document.createElement("button");
       x.type = "button"; x.className = "ghost small"; x.textContent = "×"; x.setAttribute("aria-label", say("cancel"));
       x.addEventListener("click", close);
-      bar.append(go, x);
+      bar.append(go, move, x);
       body = document.createElement("div");
       body.className = "peekbody";
       panel.append(bar, body);
       panel.addEventListener("click", (e) => { if (e.target === panel) close(); });
-      panel.go = go;
+      panel.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); step(e.key === "ArrowRight" ? 1 : -1); }
+      });
+      panel.addEventListener("close", () => { const list = buttons(); if (list[shown]) list[shown].focus(); });
+      panel.go = go; panel.move = move;
       document.body.append(panel);
     };
-    document.addEventListener("click", (e) => {
-      const button = e.target.closest && e.target.closest("[data-peek]");
-      if (!button) return;
+    peekAt = (index) => {
+      const list = buttons();
+      if (!list[index]) return;
       if (!panel) make();
-      const href = button.dataset.peek;
+      shown = index;
+      const href = list[index].dataset.peek;
       panel.go.href = href;
+      panel.move.children[0].disabled = index === 0;
+      panel.move.children[1].disabled = index === list.length - 1;
       body.replaceChildren();
       body.setAttribute("aria-busy", "true");
-      panel.showModal();
+      if (!panel.open) panel.showModal();
       fetch(href, { credentials: "same-origin" }).then((r) => (r.ok ? r.text() : Promise.reject(r.status))).then((html) => {
+        if (shown !== index) return; // the arrows went on
         const doc = new DOMParser().parseFromString(html, "text/html");
         const parts = [...doc.querySelectorAll("main > .hero, main > .shots, main > .atlas")];
         if (!parts.length) { location.href = href; return; }
         body.replaceChildren(...parts.map((p) => document.importNode(p, true)));
         body.removeAttribute("aria-busy");
-      }).catch(() => { location.href = href; });
+      }).catch(() => { if (shown === index) location.href = href; });
+    };
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest && e.target.closest("[data-peek]");
+      if (button) peekAt(buttons().indexOf(button));
+    });
+  }
+
+  // -- keys: j and k walk the shelf (or the list), Space looks at the title, ? lists them ---------------------------
+  {
+    const typing = (el) => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+    const rows = () => [...document.querySelectorAll(".shelf > li a.game, table.dense tbody tr td:nth-child(2) a")];
+    let help = null;
+    const showHelp = () => {
+      if (typeof HTMLDialogElement !== "function") return;
+      if (!help) {
+        help = document.createElement("dialog");
+        help.className = "helpbox";
+        help.setAttribute("aria-label", say("shortcuts"));
+        const title = document.createElement("h2");
+        title.textContent = say("shortcuts");
+        const list = document.createElement("dl");
+        const rowsOf = [["Ctrl K", say("search")], ["/", say("search")], ["j", say("next")], ["k", say("previous")], ["Space", say("open")], ["?", say("shortcuts")]];
+        for (const [key, label] of rowsOf) {
+          const dt = document.createElement("dt"), kbd = document.createElement("kbd");
+          kbd.className = "key"; kbd.textContent = key; dt.append(kbd);
+          const dd = document.createElement("dd"); dd.textContent = label;
+          list.append(dt, dd);
+        }
+        help.append(title, list);
+        help.addEventListener("click", (e) => { if (e.target === help) help.close(); });
+        document.body.append(help);
+      }
+      if (help.open) help.close(); else help.showModal();
+    };
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || typing(e.target) || e.target.closest("dialog[open]") && e.key !== "?") return;
+      if (e.key === "?") { e.preventDefault(); showHelp(); return; }
+      const list = rows();
+      if (!list.length) return;
+      const here = list.findIndex((a) => a === document.activeElement || a.closest("li, tr").contains(document.activeElement));
+      if (e.key === "j" || e.key === "k") {
+        e.preventDefault();
+        const to = Math.max(0, Math.min(list.length - 1, here < 0 ? 0 : here + (e.key === "j" ? 1 : -1)));
+        list[to].focus();
+        list[to].scrollIntoView({ block: "nearest" });
+      } else if (e.key === " " && here >= 0 && peekAt) {
+        const button = list[here].closest("li").querySelector("[data-peek]");
+        if (button) { e.preventDefault(); peekAt([...document.querySelectorAll("[data-peek]")].indexOf(button)); }
+      }
     });
   }
 
