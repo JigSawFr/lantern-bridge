@@ -25,7 +25,7 @@
 <div class="scroll"><table>
   <thead><tr><th>{{ _("Device") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Paired") }}</th><th>{{ _("Last used") }}</th></tr></thead>
   <tbody>
-  {% for d in devices %}<tr><td><strong>{{ d.device }}</strong></td><td>{{ d.scopes | join(", ") }}</td><td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td></tr>
+  {% for d in devices %}<tr><td><a href="/admin/devices/{{ d.id }}"><strong>{{ d.device }}</strong></a>{% if d.suspended %} <span class="pill wait">{{ _("suspended") }}</span>{% endif %}</td><td>{{ d.scopes | join(", ") }}</td><td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td></tr>
   {% else %}<tr><td colspan="4">{{ _("No device is paired with this account.") }}</td></tr>{% endfor %}
   </tbody>
 </table></div>

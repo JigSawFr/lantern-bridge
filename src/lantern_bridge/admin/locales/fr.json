@@ -1,6 +1,7 @@
 {
  "Find a setting…": "Chercher un réglage…",
  "Find a setting": "Chercher un réglage",
+ "The last 24 hours": "Les dernières 24 heures",
  "No setting matches.": "Aucun réglage ne correspond.",
  "The settings could not be saved.": "Les réglages n'ont pas pu être enregistrés.",
  "Unsaved changes in": "Modifications non enregistrées dans",
@@ -657,5 +658,19 @@
  "Tick at least one scope.": "Cochez au moins un droit.",
  "frozen": "gelé",
  "unrated hidden": "non classés masqués",
- "The last 24 hours": "Les dernières 24 heures"
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "Une console appairée avec ce pont. Ce qu'elle peut faire, c'est ce que son compte permet, moins ce que vous lui retirez ici.",
+ "A device name is 1 to 64 characters.": "Le nom d'un appareil fait de 1 à 64 caractères.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "Une console suspendue reste appairée mais ne peut rien faire jusqu'à la levée de la suspension : on lui répond comme à un compte gelé. La révoquer, à la place, l'oblige à s'appairer de nouveau.",
+ "Compare the code and the key with the ones the console shows before you approve.": "Comparez le code et la clé avec ceux que la console affiche avant d'approuver.",
+ "Device changed": "Appareil modifié",
+ "Device changed.": "Appareil modifié.",
+ "Keep at least one scope.": "Gardez au moins un droit.",
+ "Key": "Clé",
+ "Last seen from": "Vue pour la dernière fois depuis",
+ "Lift the suspension": "Lever la suspension",
+ "Suspend": "Suspendre",
+ "Suspend this console? It can do nothing until you lift the suspension.": "Suspendre cette console ? Elle ne pourra rien faire jusqu'à la levée de la suspension.",
+ "Take rights away": "Retirer des droits",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Décochez un droit pour le retirer à cet appareil, ou donnez-lui une limite d'âge propre. Pour lui en donner plus, appairez-le de nouveau.",
+ "suspended": "suspendu"
 }

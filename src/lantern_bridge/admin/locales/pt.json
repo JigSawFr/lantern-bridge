@@ -1,6 +1,7 @@
 {
  "Find a setting…": "Procurar uma definição…",
  "Find a setting": "Procurar uma definição",
+ "The last 24 hours": "As últimas 24 horas",
  "No setting matches.": "Nenhuma definição corresponde.",
  "The settings could not be saved.": "Não foi possível guardar as definições.",
  "Unsaved changes in": "Alterações por guardar em",
@@ -657,5 +658,19 @@
  "Tick at least one scope.": "Assinale pelo menos um âmbito.",
  "frozen": "congelada",
  "unrated hidden": "sem classificação ocultos",
- "The last 24 hours": "As últimas 24 horas"
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "Uma consola emparelhada com esta ponte. O que pode fazer é o que a sua conta permite, menos o que lhe retirar aqui.",
+ "A device name is 1 to 64 characters.": "O nome de um dispositivo tem de 1 a 64 carateres.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "Uma consola suspensa continua emparelhada mas não pode fazer nada até levantar a suspensão: recebe a resposta de uma conta congelada. Revogá-la, em vez disso, obriga-a a emparelhar de novo.",
+ "Compare the code and the key with the ones the console shows before you approve.": "Compare o código e a chave com os que a consola mostra antes de aprovar.",
+ "Device changed": "Dispositivo alterado",
+ "Device changed.": "Dispositivo alterado.",
+ "Keep at least one scope.": "Mantenha pelo menos um âmbito.",
+ "Key": "Chave",
+ "Last seen from": "Vista pela última vez a partir de",
+ "Lift the suspension": "Levantar a suspensão",
+ "Suspend": "Suspender",
+ "Suspend this console? It can do nothing until you lift the suspension.": "Suspender esta consola? Não poderá fazer nada até levantar a suspensão.",
+ "Take rights away": "Retirar permissões",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Desmarque um âmbito para o retirar a este dispositivo, ou dê-lhe um limite de idade próprio. Para lhe dar mais, emparelhe-o de novo.",
+ "suspended": "suspenso"
 }

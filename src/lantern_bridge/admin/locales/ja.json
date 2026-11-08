@@ -1,6 +1,7 @@
 {
  "Find a setting…": "設定を検索…",
  "Find a setting": "設定を検索",
+ "The last 24 hours": "過去24時間",
  "No setting matches.": "一致する設定はありません。",
  "The settings could not be saved.": "設定を保存できませんでした。",
  "Unsaved changes in": "未保存の変更:",
@@ -657,5 +658,19 @@
  "Tick at least one scope.": "スコープを1つ以上チェックしてください。",
  "frozen": "凍結",
  "unrated hidden": "評価なしは非表示",
- "The last 24 hours": "過去24時間"
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "このブリッジにペアリングされたコンソールです。できることは、アカウントが許すことから、ここで外した分を引いたものです。",
+ "A device name is 1 to 64 characters.": "デバイス名は1〜64文字です。",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "一時停止したコンソールはペアリングされたままですが、停止を解除するまで何もできません。凍結されたアカウントと同じ応答になります。代わりに取り消すと、もう一度ペアリングが必要です。",
+ "Compare the code and the key with the ones the console shows before you approve.": "承認する前に、コードとキーをコンソールに表示されているものと照らし合わせてください。",
+ "Device changed": "デバイス変更",
+ "Device changed.": "デバイスを変更しました。",
+ "Keep at least one scope.": "スコープを1つ以上残してください。",
+ "Key": "キー",
+ "Last seen from": "最後に確認した接続元",
+ "Lift the suspension": "停止を解除",
+ "Suspend": "一時停止",
+ "Suspend this console? It can do nothing until you lift the suspension.": "このコンソールを一時停止しますか？ 解除するまで何もできません。",
+ "Take rights away": "権限を外す",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "スコープのチェックを外すと、このデバイスから外せます。デバイス専用の年齢制限も設定できます。権限を増やすには、もう一度ペアリングしてください。",
+ "suspended": "一時停止中"
 }

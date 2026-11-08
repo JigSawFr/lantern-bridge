@@ -1,6 +1,7 @@
 {
  "Find a setting…": "尋找設定…",
  "Find a setting": "尋找設定",
+ "The last 24 hours": "過去 24 小時",
  "No setting matches.": "沒有符合的設定。",
  "The settings could not be saved.": "無法儲存設定。",
  "Unsaved changes in": "有未儲存的變更，位於",
@@ -657,5 +658,19 @@
  "Tick at least one scope.": "請至少勾選一項權限範圍。",
  "frozen": "已凍結",
  "unrated hidden": "隱藏未分級內容",
- "The last 24 hours": "過去 24 小時"
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "與此橋樑配對的遊戲機。它能做的，是其帳號允許的，減去你在這裡拿走的。",
+ "A device name is 1 to 64 characters.": "裝置名稱為 1 到 64 個字元。",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "被暫停的遊戲機仍保持配對，但在解除暫停之前什麼都做不了：它會收到與已凍結帳號相同的回應。若改為撤銷，它必須重新配對。",
+ "Compare the code and the key with the ones the console shows before you approve.": "核准之前，請把代碼和金鑰與遊戲機上顯示的核對。",
+ "Device changed": "裝置已變更",
+ "Device changed.": "已變更裝置。",
+ "Keep at least one scope.": "請至少保留一項權限範圍。",
+ "Key": "金鑰",
+ "Last seen from": "最近一次來自",
+ "Lift the suspension": "解除暫停",
+ "Suspend": "暫停",
+ "Suspend this console? It can do nothing until you lift the suspension.": "暫停這台遊戲機？在解除暫停之前它什麼都做不了。",
+ "Take rights away": "收回權限",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "取消勾選某項權限範圍即可從此裝置收回，也可以給它設定單獨的年齡限制。若要給它更多，請重新配對。",
+ "suspended": "已暫停"
 }

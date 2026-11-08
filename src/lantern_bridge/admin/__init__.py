@@ -37,6 +37,8 @@ from urllib.parse import parse_qs
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from jinja2 import Environment, PackageLoader, select_autoescape
+from lantern import ratings
+from lantern import signatures as sig
 from lantern.server import AccountError, LanternApp
 from lantern.server.pairing import Limiter
 from markupsafe import Markup
@@ -122,6 +124,7 @@ _DONE = {
     "account_added": "Account added.",
     "account_changed": "Account changed.",
     "account_deleted": "Account deleted.",
+    "device_changed": "Device changed.",
     "done": "Done.",
     "scan": "Reading the sources again.",
     "undone": "The previous settings are back. Restart the bridge to apply them.",
@@ -153,6 +156,7 @@ _JOURNAL = (
     "account_added",
     "account_changed",
     "account_deleted",
+    "device_changed",
 )
 
 
@@ -425,6 +429,7 @@ class Admin:
             developer=self.config.developer,
             reload_error=getattr(self.reloader, "error", None),
             badges=self.badges(session.role) if session else {},
+            fingerprint=lambda key: sig.short_fingerprint(key) if key else "",
             preset_labels={
                 "full": tr("Full"),
                 "child": tr("Child"),
@@ -1691,6 +1696,113 @@ def mount(app: FastAPI, admin: Admin) -> None:
             active="devices",
             devices=accounts.devices() if accounts else [],
         )
+
+    def device_view(
+        request: Request,
+        session: Session,
+        device_id: str,
+        *,
+        status: int = 200,
+        error: str | None = None,
+        values: dict[str, Any] | None = None,
+    ) -> Response:
+        accounts = admin.lantern.accounts
+        found = next((d for d in accounts.devices() if d.id == device_id), None) if accounts is not None else None
+        if accounts is None or found is None:
+            return Response("No such device.", 404, headers=_HEADERS)
+        owner = accounts.user(found.user)
+        cap = found.rating_cap
+        in_force = ratings.stricter(cap, owner.rating_cap if owner is not None else None)
+        done = _DONE.get(request.query_params.get("m", ""))
+        return admin.page(
+            request,
+            "device.html",
+            session,
+            status=status,
+            active="devices",
+            device=found,
+            account=owner,
+            seen=admin.runtime.traffic.clients.get(f"device:{device_id}"),
+            in_force=in_force.age if in_force is not None else None,
+            values=values
+            or {
+                "scopes": found.scopes,
+                "age": "" if cap is None or cap.age is None else str(cap.age),
+                "hide_unrated": cap is not None and cap.unrated == "hide",
+            },
+            message=admin.tr(request)(done) if done else None,
+            error=error,
+        )
+
+    @router.get("/devices/{device_id}")
+    async def device_get(device_id: str, request: Request) -> Response:
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        return device_view(request, session, device_id)
+
+    def device_known(device_id: str) -> Any:
+        accounts = admin.lantern.accounts
+        return next((d for d in accounts.devices() if d.id == device_id), None) if accounts is not None else None
+
+    @router.post("/devices/{device_id}/rename")
+    async def device_rename(device_id: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        found = device_known(device_id)
+        if found is None:
+            return Response("No such device.", 404, headers=_HEADERS)
+        name = " ".join(fields.get("name", "").split())
+        if not name or len(name) > 64:
+            return device_view(
+                request, session, device_id, status=400, error=admin.tr(request)("A device name is 1 to 64 characters.")
+            )
+        admin.lantern.accounts.update_device(device_id, device=name)  # type: ignore[union-attr]
+        log.info("device %s renamed from the pages", device_id)
+        admin.runtime.history.event("device_changed", name)
+        return redirect(f"/devices/{device_id}?m=device_changed", request)
+
+    @router.post("/devices/{device_id}/rights")
+    async def device_rights(device_id: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        found = device_known(device_id)
+        if found is None:
+            return Response("No such device.", 404, headers=_HEADERS)
+        t = admin.tr(request)
+        kept = tuple(s for s in found.scopes if fields.get(f"scope.{s}"))
+        cap, problem = presets.cap_from("device", fields.get("age", ""), bool(fields.get("hide_unrated")))
+        if not kept:
+            problem = "Keep at least one scope."
+        if problem is not None:
+            typed = {
+                "scopes": kept,
+                "age": fields.get("age", ""),
+                "hide_unrated": bool(fields.get("hide_unrated")),
+            }
+            return device_view(request, session, device_id, status=400, error=t(problem), values=typed)
+        admin.lantern.accounts.update_device(device_id, scopes=kept, rating_cap=cap)  # type: ignore[union-attr]
+        log.info("the rights of device %s were reduced from the pages", device_id)
+        admin.runtime.history.event("device_changed", found.device[:64])
+        return redirect(f"/devices/{device_id}?m=device_changed", request)
+
+    @router.post("/devices/{device_id}/suspend")
+    async def device_suspend(device_id: str, request: Request) -> Response:
+        session, fields, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
+        found = device_known(device_id)
+        if found is None:
+            return Response("No such device.", 404, headers=_HEADERS)
+        state = fields.get("state", "")
+        if state not in ("suspended", "active"):
+            return Response("Choose suspended or active.", 400, headers=_HEADERS)
+        admin.lantern.accounts.update_device(device_id, suspended=state == "suspended")  # type: ignore[union-attr]
+        log.info("device %s is now %s", device_id, state)
+        admin.runtime.history.event("device_changed", f"{found.device[:48]}: {state}")
+        return redirect(f"/devices/{device_id}?m=device_changed", request)
 
     @router.post("/devices/{device_id}/revoke")
     async def revoke(device_id: str, request: Request) -> Response:

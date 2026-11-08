@@ -1,6 +1,7 @@
 {
  "Find a setting…": "Buscar un ajuste…",
  "Find a setting": "Buscar un ajuste",
+ "The last 24 hours": "Las últimas 24 horas",
  "No setting matches.": "Ningún ajuste coincide.",
  "The settings could not be saved.": "No se pudieron guardar los ajustes.",
  "Unsaved changes in": "Cambios sin guardar en",
@@ -657,5 +658,19 @@
  "Tick at least one scope.": "Marque al menos un permiso.",
  "frozen": "congelada",
  "unrated hidden": "sin clasificación oculta",
- "The last 24 hours": "Las últimas 24 horas"
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "Una consola vinculada a este puente. Lo que puede hacer es lo que permite su cuenta, menos lo que usted le quite aquí.",
+ "A device name is 1 to 64 characters.": "El nombre de un dispositivo tiene de 1 a 64 caracteres.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "Una consola suspendida sigue vinculada pero no puede hacer nada hasta que levante la suspensión: se le responde como a una cuenta congelada. Revocarla, en cambio, la obliga a vincularse de nuevo.",
+ "Compare the code and the key with the ones the console shows before you approve.": "Compare el código y la clave con los que muestra la consola antes de aprobar.",
+ "Device changed": "Dispositivo modificado",
+ "Device changed.": "Dispositivo modificado.",
+ "Keep at least one scope.": "Conserve al menos un permiso.",
+ "Key": "Clave",
+ "Last seen from": "Vista por última vez desde",
+ "Lift the suspension": "Levantar la suspensión",
+ "Suspend": "Suspender",
+ "Suspend this console? It can do nothing until you lift the suspension.": "¿Suspender esta consola? No podrá hacer nada hasta que levante la suspensión.",
+ "Take rights away": "Quitar permisos",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Desmarque un permiso para quitárselo a este dispositivo, o póngale un límite de edad propio. Para darle más, vincúlelo de nuevo.",
+ "suspended": "suspendido"
 }
