@@ -77,6 +77,7 @@
       if (!el || !seen) return;
       const up = down.size === 0, text = up ? el.dataset.on : el.dataset.off;
       el.hidden = false;
+      document.body.toggleAttribute("data-down", !up);
       el.classList.toggle("down", !up);
       el.title = text;
       el.setAttribute("aria-label", text);
@@ -468,7 +469,7 @@
     const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
     opener.querySelector("kbd").textContent = mac ? "⌘K" : "Ctrl K";
     opener.hidden = false;
-    let box = null, input, list, items = [], at = 0;
+    let box = null, input, list, items = [], at = 0, titles = [], asked = 0, wait = 0;
     const build = () => {
       box = document.createElement("dialog");
       box.className = "palette";
@@ -482,7 +483,7 @@
       list.setAttribute("role", "listbox");
       box.append(input, list);
       document.body.append(box);
-      input.addEventListener("input", render);
+      input.addEventListener("input", () => { render(); lookup(); });
       input.addEventListener("keydown", (e) => {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); at = (at + (e.key === "ArrowDown" ? 1 : items.length - 1)) % Math.max(1, items.length); mark(); }
         else if (e.key === "Enter") { e.preventDefault(); if (items[at]) items[at].run(); }
@@ -496,10 +497,24 @@
         return { label, run: () => { location.href = a.href; } };
       }).filter((p) => p.label && !seen.has(p.label) && seen.add(p.label));
     };
+    // The titles that match come from the bridge once the typing pauses; they join the list when they arrive.
+    const lookup = () => {
+      clearTimeout(wait);
+      const q = input.value.trim();
+      if (q.length < 2) { titles = []; asked++; list.removeAttribute("aria-busy"); render(); return; }
+      list.setAttribute("aria-busy", "true");
+      wait = setTimeout(() => {
+        const mine = ++asked;
+        fetch(`/admin/library/find?q=${encodeURIComponent(q)}`, { credentials: "same-origin" })
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .then((rows) => { if (mine === asked) { titles = rows; list.removeAttribute("aria-busy"); render(true); } })
+          .catch(() => { if (mine === asked) list.removeAttribute("aria-busy"); });
+      }, 160);
+    };
     const mark = () => {
       [...list.children].forEach((li, i) => { li.setAttribute("aria-selected", String(i === at)); if (i === at) li.scrollIntoView({ block: "nearest" }); });
     };
-    const render = () => {
+    const render = (keep) => {
       const q = input.value.trim().toLowerCase();
       items = pages().filter((p) => !q || p.label.toLowerCase().includes(q));
       if (document.body.dataset.csrf && (!q || say("scan").toLowerCase().includes(q))) {
@@ -510,12 +525,14 @@
           document.body.append(form); form.submit();
         } });
       }
+      if (q) for (const t of titles) items.push({ label: t.name, hint: t.id, run: () => { location.href = `/admin/library/${t.id}`; } });
       if (q) items.push({ label: `“${input.value.trim()}”`, run: () => { location.href = `/admin/library?q=${encodeURIComponent(input.value.trim())}`; } });
-      at = 0;
+      at = keep ? Math.min(at, Math.max(0, items.length - 1)) : 0;
       list.replaceChildren(...items.map((item, i) => {
         const li = document.createElement("li");
         li.setAttribute("role", "option");
         li.textContent = item.label;
+        if (item.hint) { const id = document.createElement("code"); id.textContent = item.hint; li.append(" ", id); }
         li.addEventListener("click", () => item.run());
         li.addEventListener("mousemove", () => { at = i; mark(); });
         return li;
@@ -526,6 +543,7 @@
       if (!box) build();
       if (box.open) return;
       input.value = "";
+      titles = [];
       render();
       box.showModal();
       input.focus();

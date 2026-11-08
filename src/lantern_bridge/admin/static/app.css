@@ -444,3 +444,13 @@ dialog.peekpanel::backdrop{background:rgb(7 13 24 / .6);backdrop-filter:blur(2px
   dialog.peekpanel[open]{animation:lb-slide .22s cubic-bezier(.2,.7,.2,1)}
   .peekbody[aria-busy="true"]{background:linear-gradient(100deg,transparent 30%,rgb(255 255 255 / .1) 50%,transparent 70%) 0 0/200% 100%,rgb(255 255 255 / .05);animation:lb-shimmer 1.1s linear infinite}
 }
+
+/* -- the command box finds titles; a page that lost the server shows its figures as old ----------------------- */
+dialog.palette li code{margin-left:.4rem;color:var(--dusk);font-size:.78em}
+dialog.palette li[aria-selected="true"] code{color:inherit;opacity:.7}
+dialog.palette ul[aria-busy="true"]::after{content:"";display:block;height:.35rem;margin:.3rem .8rem;border-radius:999px;background:rgb(255 255 255 / .08)}
+@media (prefers-reduced-motion:no-preference){
+  dialog.palette ul[aria-busy="true"]::after{background:linear-gradient(100deg,transparent 30%,rgb(255 255 255 / .16) 50%,transparent 70%) 0 0/200% 100%,rgb(255 255 255 / .06);animation:lb-shimmer 1.1s linear infinite}
+  [data-live],.tile .n,progress{transition:opacity .3s,filter .3s}
+}
+body[data-down] [data-live]{opacity:.55;filter:saturate(.5)}

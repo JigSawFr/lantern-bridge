@@ -292,6 +292,22 @@ await test("the library: a title's sheet opens in a panel, and the chosen view i
   assert.ok(!page.url().includes("view="), "the grid is the default: no redirect");
 });
 
+await test("the command box finds titles by name, and the live blocks look old when the server is lost", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/`);
+  await page.keyboard.press("Control+k");
+  await page.fill("dialog.palette input", "harbor");
+  await page.waitForSelector("dialog.palette li:has-text('Night Harbor')");
+  await page.locator("dialog.palette li:has-text('Night Harbor')").click();
+  await page.waitForURL(/library\/0100BBBB00000000/);
+  await page.goto(`${BASE}/activity`);
+  await page.waitForSelector("[data-livestate]:not([hidden]):not(.down)", { timeout: 4000 });
+  await page.context().setOffline(true);
+  await page.waitForSelector("body[data-down]", { timeout: 4000 });
+  assert.ok(Number(await page.locator("[data-live]").first().evaluate((el) => getComputedStyle(el).opacity)) < 1);
+  await page.context().setOffline(false);
+  await page.waitForSelector("body:not([data-down])", { timeout: 8000 });
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);
