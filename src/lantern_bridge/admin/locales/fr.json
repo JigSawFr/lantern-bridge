@@ -1,6 +1,9 @@
 {
  "Find a setting…": "Chercher un réglage…",
  "Find a setting": "Chercher un réglage",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "Les pages peuvent s'installer comme une application (depuis le menu du navigateur) et afficher une alerte quand quelque chose demande un coup d'œil : une source qui ne répond pas, un appareil qui attend d'être associé, une conversion échouée. Les alertes arrivent tant que les pages sont ouvertes, dans un onglet ou dans l'application.",
+ "Alerts also arrive when no page is open.": "Les alertes arrivent aussi quand aucune page n'est ouverte.",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "Pour joindre cet appareil quand aucune page n'est ouverte, le pont envoie un message chiffré par le service push du navigateur (Google, Mozilla, Apple ou Microsoft), qui voit qu'un message passe mais pas ce qu'il dit.",
  "Full screen": "Plein écran",
  "The last 24 hours": "Les dernières 24 heures",
  "No setting matches.": "Aucun réglage ne correspond.",
@@ -539,7 +542,6 @@
  "This browser refuses alerts from this page: allow them in its site settings.": "Ce navigateur refuse les alertes de cette page : autorisez-les dans les réglages du site.",
  "This browser cannot show alerts.": "Ce navigateur ne sait pas afficher d'alertes.",
  "Alerts on this device": "Alertes sur cet appareil",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "Les pages peuvent s'installer comme une application (depuis le menu du navigateur) et afficher une alerte quand quelque chose demande un coup d'œil : une source qui ne répond pas, un appareil qui attend d'être associé, une conversion échouée. Les alertes arrivent tant que les pages sont ouvertes, dans un onglet ou dans l'application ; rien ne passe par un tiers.",
  "Turn alerts on": "Activer les alertes",
  "Speed": "Vitesse",
  "Files hashed at once (0: automatic)": "Fichiers hachés en même temps (0 : automatique)",

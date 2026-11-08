@@ -1,6 +1,9 @@
 {
  "Find a setting…": "Найти настройку…",
  "Find a setting": "Найти настройку",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "Страницы можно установить как приложение (из меню браузера); они показывают уведомление, когда что-то требует внимания: источник не отвечает, устройство ожидает сопряжения, сбой преобразования. Уведомления приходят, пока страницы открыты, во вкладке или в приложении.",
+ "Alerts also arrive when no page is open.": "Оповещения приходят и тогда, когда ни одна страница не открыта.",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "Чтобы достучаться до этого устройства, когда ни одна страница не открыта, шлюз отправляет зашифрованное сообщение через push-сервис браузера (Google, Mozilla, Apple или Microsoft); он видит, что сообщение проходит, но не видит его содержимого.",
  "Full screen": "Полный экран",
  "The last 24 hours": "Последние 24 часа",
  "No setting matches.": "Подходящих настроек нет.",
@@ -539,7 +542,6 @@
  "This browser refuses alerts from this page: allow them in its site settings.": "Браузер отклоняет уведомления от этой страницы: разрешите их в настройках сайта.",
  "This browser cannot show alerts.": "Этот браузер не может показывать уведомления.",
  "Alerts on this device": "Уведомления на этом устройстве",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "Страницы можно установить как приложение (из меню браузера); они показывают уведомление, когда что-то требует внимания: источник не отвечает, устройство ожидает сопряжения, сбой преобразования. Уведомления приходят, пока страницы открыты, во вкладке или в приложении; ничего не отправляется через третьи стороны.",
  "Turn alerts on": "Включить уведомления",
  "Speed": "Скорость",
  "Files hashed at once (0: automatic)": "Файлов для хеширования одновременно (0: автоматически)",

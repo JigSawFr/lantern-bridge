@@ -1,6 +1,9 @@
 {
  "Find a setting…": "尋找設定…",
  "Find a setting": "尋找設定",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "這些頁面可以安裝為應用程式（透過瀏覽器選單），並會在有需要查看的情況時顯示通知：來源沒有回應、裝置正在等待配對、轉換失敗。通知會在頁面開啟期間（在分頁或應用程式中）送達。",
+ "Alerts also arrive when no page is open.": "即使沒有開啟任何頁面，也會收到提醒。",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "為了在沒有開啟任何頁面時也能聯絡此裝置，橋接器會透過瀏覽器的推播服務（Google、Mozilla、Apple 或 Microsoft）傳送加密訊息；推播服務只知道有訊息經過，看不到訊息內容。",
  "Full screen": "全螢幕",
  "The last 24 hours": "過去 24 小時",
  "No setting matches.": "沒有符合的設定。",
@@ -539,7 +542,6 @@
  "This browser refuses alerts from this page: allow them in its site settings.": "此瀏覽器拒絕了本頁面的通知：請在網站設定中允許。",
  "This browser cannot show alerts.": "此瀏覽器無法顯示通知。",
  "Alerts on this device": "此裝置上的通知",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "這些頁面可以安裝為應用程式（透過瀏覽器選單），並會在有需要查看的情況時顯示通知：來源沒有回應、裝置正在等待配對、轉換失敗。通知會在頁面開啟期間（在分頁或應用程式中）送達；不會透過第三方傳送任何內容。",
  "Turn alerts on": "開啟通知",
  "Speed": "速度",
  "Files hashed at once (0: automatic)": "同時計算雜湊的檔案數(0:自動)",

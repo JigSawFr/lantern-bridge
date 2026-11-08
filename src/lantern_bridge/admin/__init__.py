@@ -1873,6 +1873,42 @@ def mount(app: FastAPI, admin: Admin) -> None:
             return Response(status_code=401, headers=_HEADERS)
         return Response(json.dumps(admin.badges(session.role)), media_type="application/json", headers=_HEADERS)
 
+    @router.get("/push/key")
+    async def push_key(request: Request) -> Response:
+        """The key a browser subscribes to push with, or null when push is off (a file of a newer schema)."""
+        _, _, refused = await authed(request)
+        if refused is not None:
+            return Response(status_code=403, headers=_HEADERS)
+        push = admin.runtime.push
+        body = {"key": push.public_key() if push.on else None}
+        return Response(json.dumps(body), media_type="application/json", headers=_HEADERS)
+
+    @router.post("/push/subscribe")
+    async def push_subscribe(request: Request) -> Response:
+        _, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        kept = admin.runtime.push.subscribe(
+            fields.get("endpoint", ""),
+            fields.get("p256dh", ""),
+            fields.get("auth", ""),
+            admin.lang(request),
+            request.headers.get("user-agent", ""),
+        )
+        if not kept:
+            return Response("This subscription is not acceptable.", 400, headers=_HEADERS)
+        log.info("a device subscribed to the alerts that come without a page open")
+        return Response(status_code=204, headers=_HEADERS)
+
+    @router.post("/push/unsubscribe")
+    async def push_unsubscribe(request: Request) -> Response:
+        _, fields, refused = await authed(request)
+        if refused is not None:
+            return refused
+        if admin.runtime.push.unsubscribe(fields.get("endpoint", "")):
+            log.info("a device left the alerts that come without a page open")
+        return Response(status_code=204, headers=_HEADERS)
+
     @router.get("/live")
     async def live(request: Request) -> Response:
         """Server-sent events for one block of a page: its fresh content, sent when it changes (not every pass)."""

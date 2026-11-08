@@ -1,6 +1,8 @@
 {
  "Find a setting…": "Buscar uma definição…",
  "Find a setting": "Buscar uma definição",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "As páginas podem ser instaladas como app (pelo menu do navegador) e mostram um alerta quando algo precisa de atenção: uma fonte que não responde, um dispositivo aguardando para parear, uma conversão com falha. Os alertas chegam enquanto as páginas estão abertas, em uma aba ou no app.",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "Para chegar a este dispositivo quando nenhuma página está aberta, a ponte envia uma mensagem criptografada por meio do serviço push do navegador (Google, Mozilla, Apple ou Microsoft), que vê que uma mensagem passa, mas não o que ela diz.",
  "Full screen": "Tela cheia",
  "The settings could not be saved.": "Não foi possível salvar as configurações.",
  "Unsaved changes in": "Alterações não salvas em",
@@ -216,7 +218,6 @@
  "Alerts are off for this browser.": "Os alertas estão desligados neste navegador.",
  "This browser refuses alerts from this page: allow them in its site settings.": "Este navegador bloqueia os alertas desta página: permita-os nas configurações do site.",
  "This browser cannot show alerts.": "Este navegador não pode exibir alertas.",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "As páginas podem ser instaladas como app (pelo menu do navegador) e mostram um alerta quando algo precisa de atenção: uma fonte que não responde, um dispositivo aguardando para parear, uma conversão com falha. Os alertas chegam enquanto as páginas estão abertas, em uma aba ou no app; nada é enviado por meio de terceiros.",
  "Turn alerts on": "Ativar alertas",
  "Files hashed at once (0: automatic)": "Arquivos processados ao mesmo tempo (0: automático)",
  "The hashing uses the processor's own SHA-256 instructions when it has them. Several files at once use several cores; on a spinning disk or a network share, one or two is kinder.": "O cálculo do hash usa as instruções SHA-256 do próprio processador, quando existem. Vários arquivos ao mesmo tempo usam vários núcleos; em um HD mecânico ou em um compartilhamento de rede, um ou dois é mais prudente.",

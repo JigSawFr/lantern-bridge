@@ -369,6 +369,45 @@ await test("the activity page as a screen across the room: only the big figures,
   await page.waitForSelector("body:not(.tv)");
 });
 
+await test("push: the service worker shows a message of the bridge as an alert, and none when a page is in front", { width: 1200, height: 800 }, async (page) => {
+  // The headless browser never grants notifications, so the worker's call to show one is replaced by a spy: the push
+  // event is a real one (delivered through the browser's own protocol), what the worker decides to show is read back.
+  const context = page.context();
+  await page.goto(`${BASE}/config`);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  assert.ok((await page.locator("[data-push-note]").textContent()).includes("push service"), "a browser that can push is told how it goes");
+  assert.ok(!(await page.locator("#alerts").innerText()).includes("third party"), "the card no longer says that nothing leaves");
+  const cdp = await context.newCDPSession(page);
+  const registrations = [];
+  cdp.on("ServiceWorker.workerRegistrationUpdated", (e) => registrations.push(...e.registrations));
+  await cdp.send("ServiceWorker.enable");
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const registration = registrations.find((r) => r.scopeURL.endsWith("/admin/"));
+  assert.ok(registration, "the worker of the pages is registered");
+  const worker = context.serviceWorkers()[0];
+  await worker.evaluate(() => {
+    self.__shown = [];
+    self.registration.showNotification = (title, options) => { self.__shown.push({ title, body: options.body, tag: options.tag, url: options.data.url }); return Promise.resolve(); };
+  });
+  const shown = () => worker.evaluate(() => self.__shown);
+  const deliver = (data) => cdp.send("ServiceWorker.deliverPushMessage", { origin: new URL(BASE).origin, registrationId: registration.registrationId, data: typeof data === "string" ? data : JSON.stringify(data) });
+  const message = { title: "Test shelf", body: "Source down: games", tag: "lb-sources", url: "/admin/events" };
+  await deliver(message); // a page is in front: it alerts by itself, the worker stays quiet
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  assert.deepEqual(await shown(), []);
+  await page.goto("about:blank"); // no page of the bridge any more
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  await deliver(message);
+  await deliver({ ...message, tag: "lb-update", url: "https://evil.example/" }); // not a page of the bridge: not followed
+  await deliver("not json at all"); // a message that is not ours still shows something (a push must always be visible)
+  for (let i = 0; i < 30 && (await shown()).length < 3; i++) await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.deepEqual(await shown(), [
+    { title: "Test shelf", body: "Source down: games", tag: "lb-sources", url: "/admin/events" },
+    { title: "Test shelf", body: "Source down: games", tag: "lb-update", url: "/admin/" },
+    { title: "Lantern Bridge", body: "", tag: undefined, url: "/admin/" },
+  ]);
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);
