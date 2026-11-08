@@ -1,6 +1,9 @@
 {
  "Find a setting…": "Einstellung suchen…",
  "Find a setting": "Einstellung suchen",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "Die Seiten lassen sich als App installieren (über das Browsermenü) und zeigen eine Benachrichtigung, wenn etwas einen Blick braucht: eine Quelle, die nicht antwortet, ein Gerät, das auf die Kopplung wartet, eine fehlgeschlagene Konvertierung. Benachrichtigungen kommen, solange die Seiten geöffnet sind, in einem Tab oder in der App.",
+ "Alerts also arrive when no page is open.": "Meldungen kommen auch an, wenn keine Seite geöffnet ist.",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "Um dieses Gerät auch ohne geöffnete Seite zu erreichen, sendet die Bridge eine verschlüsselte Nachricht über den Push-Dienst des Browsers (Google, Mozilla, Apple oder Microsoft); dieser sieht, dass eine Nachricht durchgeht, aber nicht, was darin steht.",
  "Full screen": "Vollbild",
  "The last 24 hours": "Die letzten 24 Stunden",
  "No setting matches.": "Keine Einstellung gefunden.",
@@ -539,7 +542,6 @@
  "This browser refuses alerts from this page: allow them in its site settings.": "Dieser Browser lehnt Benachrichtigungen dieser Seite ab: In den Website-Einstellungen zulassen.",
  "This browser cannot show alerts.": "Dieser Browser kann keine Benachrichtigungen anzeigen.",
  "Alerts on this device": "Benachrichtigungen auf diesem Gerät",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "Die Seiten lassen sich als App installieren (über das Browsermenü) und zeigen eine Benachrichtigung, wenn etwas einen Blick braucht: eine Quelle, die nicht antwortet, ein Gerät, das auf die Kopplung wartet, eine fehlgeschlagene Konvertierung. Benachrichtigungen kommen, solange die Seiten geöffnet sind, in einem Tab oder in der App; es wird nichts über Dritte gesendet.",
  "Turn alerts on": "Benachrichtigungen einschalten",
  "Speed": "Geschwindigkeit",
  "Files hashed at once (0: automatic)": "Gleichzeitig gehashte Dateien (0: automatisch)",

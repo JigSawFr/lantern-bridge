@@ -174,7 +174,7 @@
   };
   // Alerts: when the dots show something new that needs a look, a browser that allowed it shows a notification
   // (through the service worker, so that an installed app gets it too). Only this device decides, and only while
-  // the pages are open: nothing goes through a third party. The texts are kept in the browser when alerts are
+  // the pages are open (and, when push is on, through the push service of the browser, encrypted). The texts are kept in the browser when alerts are
   // turned on, so that any page can show them.
   const ALERTS = "lb-alerts", TEXTS = "lb-alert-texts";
   const store = (key, value) => { try { if (value === null) localStorage.removeItem(key); else if (value !== undefined) localStorage.setItem(key, value); return localStorage.getItem(key); } catch (_) { return null; } };
@@ -199,10 +199,36 @@
   if (card) {
     const state = card.querySelector("[data-notify-state]"), button = card.querySelector("[data-notify-toggle]");
     const labels = { on: button.textContent, off: card.dataset.turnOff };
+    // Push: with alerts on, a browser that can also subscribes to its push service, so that the bridge reaches it
+    // while no page is open (the message is encrypted for this browser). Optional: without it, the open pages alert.
+    const pushable = "PushManager" in window && "serviceWorker" in navigator;
+    const note = card.querySelector("[data-push-note]");
+    let pushed = false;
+    const unb64 = (text) => Uint8Array.from(atob(text.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(text.length / 4) * 4, "=")), (c) => c.charCodeAt(0));
+    const b64 = (buffer) => btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const send = (path, fields) => fetch(path, { method: "POST", credentials: "same-origin", body: new URLSearchParams({ csrf: card.dataset.csrf, ...fields }) });
+    const pushSync = async (want) => {
+      if (!pushable) return;
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!want) {
+        if (sub) { await send("/admin/push/unsubscribe", { endpoint: sub.endpoint }); await sub.unsubscribe(); }
+        pushed = false;
+        return;
+      }
+      const found = await fetch("/admin/push/key", { credentials: "same-origin" }).then((r) => (r.ok ? r.json() : { key: null }));
+      if (!found.key) return;
+      const key = unb64(found.key);
+      const same = sub && sub.options && sub.options.applicationServerKey && b64(sub.options.applicationServerKey) === found.key;
+      if (sub && !same) { await sub.unsubscribe(); sub = null; } // made for another key of the bridge
+      sub = sub || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      pushed = (await send("/admin/push/subscribe", { endpoint: sub.endpoint, p256dh: b64(sub.getKey("p256dh")), auth: b64(sub.getKey("auth")) })).ok;
+    };
     const show = () => {
       if (!("Notification" in window) || !("serviceWorker" in navigator)) { state.textContent = card.dataset.unsupported; button.hidden = true; return; }
       if (Notification.permission === "denied") { state.textContent = card.dataset.blocked; button.hidden = true; return; }
-      state.textContent = alertsOn() ? card.dataset.on : card.dataset.off;
+      if (note) note.hidden = !pushable;
+      state.textContent = alertsOn() ? card.dataset.on + (pushed ? ` ${card.dataset.pushed}` : "") : card.dataset.off;
       button.textContent = alertsOn() ? labels.off : labels.on;
     };
     button.addEventListener("click", async () => {
@@ -215,8 +241,11 @@
         }
       } catch (_) { /* skipped */ }
       show();
+      try { await pushSync(alertsOn()); } catch (_) { /* push is a plus: the open pages still alert */ }
+      show();
     });
     show();
+    if (alertsOn()) pushSync(true).catch(() => {}).then(show); // the bridge may have lost this subscription (a new file)
   }
   if (document.querySelector("[data-badge]")) {
     follow("/admin/api/badges", (text) => { try { const found = typeof text === "string" ? JSON.parse(text) : text; dots(found); notify(found); } catch (_) { /* skipped */ } });

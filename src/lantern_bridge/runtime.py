@@ -30,6 +30,7 @@ from lantern_bridge.library import Projection
 from lantern_bridge.mqtt import Publisher
 from lantern_bridge.notify import Notifier
 from lantern_bridge.pulse import Pulse
+from lantern_bridge.push import Push
 from lantern_bridge.releases import Releases
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
@@ -106,6 +107,8 @@ class Runtime:
         self.notifier = Notifier(config.notify, config.name) if config.notify else None
         if self.notifier is not None:
             self.history.listeners.append(self.notifier.on_event)
+        self.push = Push(state_dir / "push.json", config.name)  # the application gives it the pages' languages
+        self.history.listeners.append(self.push.on_event)
         self.releases: Releases | None = None
         if config.homebrew:
             token = os.environ.get(config.github_token_env or "") if config.github_token_env else None
@@ -445,6 +448,7 @@ class Runtime:
             self.atlas.close()
         if self.releases is not None:
             self.releases.close()
+        self.push.close()
         self.traffic.close()
         self.history.close()
         self.index.close()

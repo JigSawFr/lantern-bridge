@@ -1,6 +1,7 @@
 {
  "Add its address in a Lantern-compatible app on your console to browse and download the library.": "Agrega su dirección en una aplicación compatible con Lantern en su consola para explorar y descargar la biblioteca.",
  "Create one above and give its code to the person, who types it in Lantern when adding this server.": "Cree una arriba y dé su código a la persona, que lo ingresará en Lantern al agregir este servidor.",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "Las páginas se pueden instalar como app (desde el menú del navegador) y muestran una alerta cuando algo necesita revisión: una fuente que no contesta, un dispositivo que espera para vincularse, una conversión fallida. Las alertas llegan mientras las páginas están abiertas, en una pestaña o en la app.",
  "Open Lantern on the console, add this server, then accept its request here.": "Abra Lantern en la consola, agrega este servidor y acepte aquí su solicitud.",
  "The index of hashes is broken": "El índice de hashes está dagrego",
  "The bridge sends one POST of JSON with how many files were added, changed or removed per source (no path, no title), at most every ten seconds. A failed call is not repeated.": "El puente envía un POST de JSON con el número de archivos agregidos, modificados o eliminados por fuente (sin rutas ni títulos), como máximo cada diez segundos. Una llamada fallida no se repite.",
@@ -28,7 +29,6 @@
  "Alerts are on for this browser.": "Las alertas están habilitadas para este navegador.",
  "Alerts are off for this browser.": "Las alertas están deshabilitadas para este navegador.",
  "This browser refuses alerts from this page: allow them in its site settings.": "Este navegador bloquea las alertas de esta página: permítelas en la configuración del sitio.",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "Las páginas se pueden instalar como app (desde el menú del navegador) y muestran una alerta cuando algo necesita revisión: una fuente que no contesta, un dispositivo que espera para vincularse, una conversión fallida. Las alertas llegan mientras las páginas están abiertas, en una pestaña o en la app; no se envía nada por medio de terceros.",
  "Turn alerts on": "Activar alertas",
  "Files hashed at once (0: automatic)": "Archivos procesados al mismo tiempo (0: automático)",
  "The hashing uses the processor's own SHA-256 instructions when it has them. Several files at once use several cores; on a spinning disk or a network share, one or two is kinder.": "El cálculo del hash usa las instrucciones SHA-256 del propio procesador cuando las tiene. Varios archivos al mismo tiempo usan varios núcleos; en un disco duro mecánico o una carpeta de red compartida, uno o dos es más conveniente.",

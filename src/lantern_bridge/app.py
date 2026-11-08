@@ -18,6 +18,7 @@ from lantern.server.fastapi import include
 from lantern_bridge import health
 from lantern_bridge.admin import Admin, mount
 from lantern_bridge.admin.auth import AdminStore
+from lantern_bridge.admin.i18n import translator
 from lantern_bridge.compress import Compressor
 from lantern_bridge.config import Config
 from lantern_bridge.logs import LogRing, install
@@ -82,6 +83,7 @@ def _build(
         requests=runtime.requests,
     )
     runtime.answer_request = lantern.answer_request
+    runtime.push.translate = lambda lang, text: translator(lang)(text)  # a push speaks the language of its device
     include(app, lantern)
 
     def identify(token: str) -> tuple[str, str] | None:

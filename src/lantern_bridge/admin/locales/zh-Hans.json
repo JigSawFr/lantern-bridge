@@ -1,6 +1,9 @@
 {
  "Find a setting…": "查找设置…",
  "Find a setting": "查找设置",
+ "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app.": "这些页面可以安装为应用（通过浏览器菜单），并会在有需要查看的情况时显示通知：来源没有响应、设备正在等待配对、转换失败。通知在页面打开期间（在标签页或应用中）送达。",
+ "Alerts also arrive when no page is open.": "即使没有打开任何页面，也会收到提醒。",
+ "To reach this device when no page is open, the bridge sends an encrypted message through the push service of the browser (Google, Mozilla, Apple or Microsoft), which sees that a message goes by but not what it says.": "为了在没有打开任何页面时也能联系到此设备，桥接器会通过浏览器的推送服务（Google、Mozilla、Apple 或 Microsoft）发送加密消息；推送服务只知道有消息经过，看不到消息内容。",
  "Full screen": "全屏",
  "The last 24 hours": "过去 24 小时",
  "No setting matches.": "没有匹配的设置。",
@@ -539,7 +542,6 @@
  "This browser refuses alerts from this page: allow them in its site settings.": "此浏览器拒绝了本页面的通知：请在网站设置中允许。",
  "This browser cannot show alerts.": "此浏览器无法显示通知。",
  "Alerts on this device": "此设备上的通知",
- "The pages can be installed as an app (from the browser's menu), and show an alert when something needs a look: a source that does not answer, a device waiting to pair, a failed conversion. Alerts come while the pages are open, in a tab or in the app; nothing is sent through a third party.": "这些页面可以安装为应用（通过浏览器菜单），并会在有需要查看的情况时显示通知：来源没有响应、设备正在等待配对、转换失败。通知在页面打开期间（在标签页或应用中）送达；不会通过第三方发送任何内容。",
  "Turn alerts on": "开启通知",
  "Speed": "速度",
  "Files hashed at once (0: automatic)": "同时计算哈希的文件数(0:自动)",
