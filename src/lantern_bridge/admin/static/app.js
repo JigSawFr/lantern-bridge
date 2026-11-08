@@ -284,9 +284,10 @@
     next.innerHTML = html;
     ago(next);
     const was = [...live.querySelectorAll(PICK)], now = [...next.querySelectorAll(PICK)];
-    const rows = new Set([...live.querySelectorAll("tbody tr")].map((tr) => tr.textContent.trim()));
+    const ROWS = "tbody tr, .timeline .ev";
+    const rows = new Set([...live.querySelectorAll(ROWS)].map((tr) => tr.textContent.trim()));
     const changes = [];
-    if (was.length === now.length) {
+    if (was.length === now.length && live.querySelectorAll(ROWS).length === next.querySelectorAll(ROWS).length) {
       now.forEach((el, i) => {
         const old = was[i];
         if (el.tagName === "PROGRESS") { if (old.tagName === "PROGRESS") changes.push(["bar", el, Number(old.value)]); return; }
@@ -303,7 +304,7 @@
       else flash(el);
     }
     if (!changes.length && rows.size) {
-      for (const tr of live.querySelectorAll("tbody tr")) if (!rows.has(tr.textContent.trim())) flash(tr, "enter");
+      for (const tr of live.querySelectorAll(ROWS)) if (!rows.has(tr.textContent.trim())) flash(tr, "enter");
     }
   };
   for (const live of document.querySelectorAll("[data-live]")) {

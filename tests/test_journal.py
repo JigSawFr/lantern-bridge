@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from lantern_bridge.admin import _FOLLOWED
 from lantern_bridge.admin.i18n import FR
 from lantern_bridge.history import KEEP_DAYS, MAX_EVENTS, History
 from lantern_bridge.runtime import Runtime, SourceState
@@ -123,6 +124,18 @@ def test_the_page_lists_events_and_the_settings_leave_a_line(tmp_path: Path) -> 
     only = client.get("/admin/events?kind=scan").text
     assert "Nothing of this kind yet." in only
     assert "Nothing of this kind yet." not in client.get("/admin/events?kind=bogus").text  # an unknown kind: all
+
+
+def test_the_list_of_the_journal_follows_the_server_as_a_fragment(tmp_path: Path) -> None:
+    client = _admin(_client(tmp_path, sources=True))
+    page = client.get("/admin/events?kind=settings").text
+    assert 'data-live="/admin/events?fragment=1&amp;kind=settings"' in page
+    fragment = client.get("/admin/events?fragment=1")
+    assert fragment.status_code == 200 and "<html" not in fragment.text and "Nothing yet" in fragment.text
+    _runtime(client).history.event("settings", detail="saved")
+    assert "Settings saved" in client.get("/admin/events?fragment=1").text
+    # the stream may follow it, with the same checks as the page
+    assert "/admin/events" in _FOLLOWED
 
 
 def test_the_journal_is_for_the_administrator_only(tmp_path: Path) -> None:

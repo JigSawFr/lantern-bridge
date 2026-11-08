@@ -467,3 +467,10 @@ dialog.helpbox dl{display:grid;grid-template-columns:auto 1fr;gap:.45rem 1rem;ma
 dialog.helpbox dt,dialog.helpbox dd{margin:0}
 dialog.helpbox dd{color:var(--mist)}
 dialog.helpbox .key{position:static;transform:none;display:inline-block;min-width:1.6rem;padding:.05rem .45rem;text-align:center;color:var(--mist);font-size:.8rem}
+
+/* -- the journal follows the server: a new line slides in and lights up, each kind has its dot --------------------- */
+.timeline .ev::before{content:"";flex:none;align-self:center;width:.5rem;height:.5rem;border-radius:50%;background:var(--dusk)}
+.timeline .ev.source_down::before,.timeline .ev.pairing_refused::before,.timeline .ev.revoked::before,.timeline .ev.signin_blocked::before,.timeline .ev.deleted::before{background:var(--danger)}
+.timeline .ev.source_up::before,.timeline .ev.paired::before,.timeline .ev.started::before,.timeline .ev.restored::before{background:var(--aurora);box-shadow:0 0 6px var(--aurora)}
+.timeline .ev.update::before,.timeline .ev.scan::before,.timeline .ev.converted::before{background:var(--ice)}
+@media (prefers-reduced-motion:no-preference){.timeline .ev.enter{animation:lb-rise .4s ease-out backwards,lb-flash 1.8s ease-out}}
