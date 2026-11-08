@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -242,3 +243,32 @@ def test_the_command_box_finds_titles_by_name_and_only_for_a_signed_in_session(t
     assert client.get("/admin/library/find?q=").status_code == 200
     anonymous = TestClient(client.app, client=("127.0.0.1", 50001), follow_redirects=False)
     assert anonymous.get("/admin/library/find?q=a").status_code == 401
+
+
+def test_the_bridge_keeps_the_last_day_and_the_last_minute_of_its_traffic() -> None:
+    traffic = Traffic()
+    assert len(traffic.day()) >= 144 and all(r == 0 and b == 0 for _, r, b in traffic.day())  # no holes, no traffic
+    transfer = traffic.begin("10.0.0.9", "GET", "/api/lantern/v1/apps", None)
+    traffic.sent(transfer, 4096)
+    traffic.end(transfer, "")
+    day = traffic.day()
+    assert sum(r for _, r, _ in day) == 1 and sum(b for _, _, b in day) == 4096
+    assert [s for s, *_ in day] == sorted(s for s, *_ in day)  # oldest first
+    seconds = traffic.seconds(30)
+    assert len(seconds) == 30 and sum(b for _, _, b in seconds) == 4096 and sum(r for _, r, _ in seconds) == 1
+
+
+def test_the_last_day_is_cut_to_a_day() -> None:
+    traffic = Traffic()
+    long_ago = int(time.time() // 60) - 3 * 24 * 60
+    traffic._minutes[long_ago] = [5, 5]
+    traffic._minutes.update({long_ago + i: [1, 1] for i in range(1, 1500)})
+    traffic.end(traffic.begin("10.0.0.9", "GET", "/x", None), "")  # a write cuts what is older than a day
+    assert min(traffic._minutes) > int(time.time() // 60) - 24 * 60
+
+
+def test_the_activity_page_draws_the_last_day_and_seeds_the_curve(tmp_path: Path) -> None:
+    client = _admin(_public(tmp_path))
+    client.get("/api/lantern/v1/apps", headers={"User-Agent": "TestSwitch/1.0"})
+    page = client.get("/admin/activity?fragment=1").text
+    assert 'class="card daychart"' in page and "<rect" in page and "data-seed=" in page

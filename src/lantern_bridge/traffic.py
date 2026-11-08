@@ -32,6 +32,7 @@ _OWN = ("/admin", "/healthz", "/metrics")
 #: What a browser, a scanner or a health check asks for: it moves no library data and says who asks nobody.
 _SIMPLE = ("/", "/favicon.ico", "/robots.txt", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png")
 WINDOW = 60  # seconds of history for the rates
+LONG = 24 * 60  # minutes kept for the curve of the last day (memory only: it starts again with the bridge)
 FLUSH = 15.0  # seconds between two writes to the history
 WHO_TTL = 60.0  # seconds a token's device is remembered (a revoked device is forgotten within a minute)
 
@@ -117,6 +118,7 @@ class Traffic:
     _who: dict[str, tuple[float, tuple[str, str] | None]] = field(default_factory=dict)
     _flushed: float = field(default_factory=time.monotonic)
     _buckets: dict[int, list[int]] = field(default_factory=dict)  # second -> [requests, bytes]
+    _minutes: dict[int, list[int]] = field(default_factory=dict)  # minute -> [requests, bytes], the last day
     _ids: Any = field(default_factory=itertools.count)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -179,6 +181,7 @@ class Traffic:
         transfer.sent += count
         with self._lock:
             self._bucket()[1] += count
+            self._minute()[1] += count
 
     def _bucket(self) -> list[int]:
         now = int(time.time())
@@ -186,11 +189,19 @@ class Traffic:
             del self._buckets[old]
         return self._buckets.setdefault(now, [0, 0])
 
+    def _minute(self) -> list[int]:
+        now = int(time.time() // 60)
+        if len(self._minutes) > LONG:
+            for old in [m for m in self._minutes if m <= now - LONG]:
+                del self._minutes[old]
+        return self._minutes.setdefault(now, [0, 0])
+
     def end(self, transfer: Transfer, agent: str) -> None:
         now = time.time()
         with self._lock:
             self.active.pop(transfer.id, None)
             self._bucket()[0] += 1
+            self._minute()[0] += 1
             self.totals.requests += 1
             self.totals.sent += transfer.sent
             if transfer.status >= 500:
@@ -253,6 +264,25 @@ class Traffic:
         with self._lock:
             window = [b for s, b in self._buckets.items() if now - 10 <= s <= now]
         return {"requests": sum(b[0] for b in window) / 10, "bytes": sum(b[1] for b in window) / 10}
+
+    def day(self, step: int = 10) -> list[tuple[int, int, int]]:
+        """The last twenty-four hours in slices of `step` minutes, oldest first: (start of the slice, requests,
+        bytes sent). A slice nothing went through is a zero: the curve has no holes."""
+        now = int(time.time() // 60)
+        first = now - LONG + 1
+        with self._lock:
+            kept = {m: list(v) for m, v in self._minutes.items() if m >= first}
+        out = []
+        for start in range(first - first % step, now + 1, step):
+            parts = [kept.get(m, (0, 0)) for m in range(max(start, first), min(start + step, now + 1))]
+            out.append((start * 60, sum(p[0] for p in parts), sum(p[1] for p in parts)))
+        return out
+
+    def seconds(self, count: int = WINDOW) -> list[tuple[int, int, int]]:
+        """The last `count` seconds, oldest first: (second, requests, bytes), to start a curve that is drawn live."""
+        now = int(time.time())
+        with self._lock:
+            return [(s, *self._buckets.get(s, (0, 0))) for s in range(now - count + 1, now + 1)]
 
     def snapshot(self) -> tuple[list[Transfer], list[Client], list[Done]]:
         with self._lock:

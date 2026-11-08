@@ -474,3 +474,11 @@ dialog.helpbox .key{position:static;transform:none;display:inline-block;min-widt
 .timeline .ev.source_up::before,.timeline .ev.paired::before,.timeline .ev.started::before,.timeline .ev.restored::before{background:var(--aurora);box-shadow:0 0 6px var(--aurora)}
 .timeline .ev.update::before,.timeline .ev.scan::before,.timeline .ev.converted::before{background:var(--ice)}
 @media (prefers-reduced-motion:no-preference){.timeline .ev.enter{animation:lb-rise .4s ease-out backwards,lb-flash 1.8s ease-out}}
+
+/* -- the last twenty-four hours, drawn by the bridge itself ------------------------------------------------------- */
+.daychart{position:relative}
+.daychart .peak{position:absolute;top:.5rem;left:1.25rem;font-family:var(--mono)}
+.daychart svg{display:block;width:100%;height:5.5rem}
+.daychart rect{fill:var(--aurora);opacity:.8}.daychart rect.none{fill:var(--line);opacity:1}
+.daychart rect:hover{opacity:1;fill:var(--ice)}
+.daychart .axis{display:flex;justify-content:space-between;margin:.4rem 0 0;font-family:var(--mono)}

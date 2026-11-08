@@ -265,6 +265,10 @@
     if (!holder) return;
     const now = Date.now();
     const [bytes, requests] = holder.dataset.sample.split(",").map(Number);
+    if (!samples.length && holder.dataset.seed) {
+      // the bridge remembers the last minute: the curve starts with it instead of empty
+      samples = holder.dataset.seed.split(";").filter(Boolean).map((p) => { const [t, b, r] = p.split(":").map(Number); return [t * 1000, b, r]; });
+    }
     samples = samples.filter((s) => now - s[0] <= WINDOW);
     if (!samples.length || now - samples[samples.length - 1][0] > 400) samples.push([now, bytes, requests]);
     try { sessionStorage.setItem("lb-samples", JSON.stringify(samples)); } catch (_) { /* skipped */ }
