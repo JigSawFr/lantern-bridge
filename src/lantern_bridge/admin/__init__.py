@@ -1458,6 +1458,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
             ],
             "clients": clients,
             "rates": traffic.rates(),
+            "day": traffic.day(),
+            "seconds": traffic.seconds(),
             "totals": traffic.totals,
             "uptime": time.time() - admin.runtime.stats.started,
             "state": admin.state(),
