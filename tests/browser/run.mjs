@@ -273,6 +273,25 @@ await test("Ctrl+K opens the command box: filter, go to a page, search the libra
   assert.equal(await page.locator("dialog.palette[open]").count(), 0);
 });
 
+await test("the library: a title's sheet opens in a panel, and the chosen view is remembered", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/library`);
+  await page.locator("li:has-text('Night Harbor') [data-peek]").first().click();
+  await page.locator("dialog.peekpanel[open] .hero h1").waitFor();
+  assert.equal((await page.locator("dialog.peekpanel h1").innerText()).trim(), "Night Harbor");
+  assert.match(await page.locator("dialog.peekpanel .peekbar a").getAttribute("href"), /\/admin\/library\/0100BBBB00000000$/);
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("dialog.peekpanel[open]").count(), 0);
+  await page.locator(".views a", { hasText: "List" }).click();
+  await page.waitForURL(/view=list/);
+  await page.goto(`${BASE}/library`); // no view in the address: the list comes back by itself
+  await page.waitForURL(/view=list/);
+  await page.locator(".views a", { hasText: "Grid" }).click();
+  await page.waitForURL(/view=grid/);
+  await page.goto(`${BASE}/library`);
+  await page.waitForTimeout(400);
+  assert.ok(!page.url().includes("view="), "the grid is the default: no redirect");
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);

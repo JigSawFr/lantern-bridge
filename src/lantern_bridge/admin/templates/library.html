@@ -62,7 +62,8 @@
 {% else %}
 <ul class="shelf">
   {% for t in found.titles %}
-  <li><a class="game tone-{{ t.tone }}" href="/admin/library/{{ t.title_id }}">
+  <li><button type="button" class="peek" data-peek="/admin/library/{{ t.title_id }}" aria-label="{{ _('Open') }} {{ t.name }}" title="{{ _('Open') }}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <a class="game tone-{{ t.tone }}" href="/admin/library/{{ t.title_id }}">
     <span class="cover" aria-hidden="true"><span>{{ t.initials }}</span>{% if t.title_id in icons %}<img src="/admin/library/{{ t.title_id }}/image/icon" alt="" loading="lazy">{% endif %}</span>
     <span class="meta">
       <strong>{{ t.name }}</strong>
