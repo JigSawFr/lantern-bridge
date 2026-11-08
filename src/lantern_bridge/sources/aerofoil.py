@@ -110,9 +110,6 @@ class AeroFoil(Shop):
         self._session = cookie
         return cookie
 
-        parts = urlsplit(self.url)
-        return f"{parts.scheme}://{parts.netloc.rsplit('@', 1)[-1]}"
-
     def _root(self) -> str:
         parts = urlsplit(self.url)
         return f"{parts.scheme}://{parts.netloc.rsplit('@', 1)[-1]}"
@@ -135,15 +132,15 @@ class AeroFoil(Shop):
 
     def _call_in_session(self, method: str, path: str, **kw: Any) -> bytes:
         """The same call with the session cookie; the session is made first, and made again once if it ended."""
-        for attempt in (0, 1):
-            cookie = self._session or self._sign_in()
-            try:
-                return self._send(method, path, cookie=cookie, **kw)
-            except _SessionEnded:
-                self._session = None
-                if attempt:
-                    raise UpstreamError("the AeroFoil did not keep the session") from None
-        raise AssertionError("unreachable")  # pragma: no cover
+        try:
+            return self._send(method, path, cookie=self._session or self._sign_in(), **kw)
+        except _SessionEnded:
+            self._session = None
+        try:
+            return self._send(method, path, cookie=self._sign_in(), **kw)
+        except _SessionEnded:
+            self._session = None
+            raise UpstreamError("the AeroFoil did not keep the session") from None
 
     def _send(
         self,
