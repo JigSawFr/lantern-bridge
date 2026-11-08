@@ -255,6 +255,24 @@ await test("the rates are drawn under their tiles, and the tab says when somethi
   assert.equal(/^\(\d+\) /.test(title) ? Number(title.match(/^\((\d+)\)/)[1]) : 0, look, `the title counts what needs a look (${title})`);
 });
 
+await test("Ctrl+K opens the command box: filter, go to a page, search the library", { width: 1200, height: 800 }, async (page) => {
+  await page.goto(`${BASE}/`);
+  await page.keyboard.press("Control+k");
+  await page.locator("dialog.palette[open] input").waitFor();
+  assert.ok((await page.locator("dialog.palette li").count()) >= 4, "the pages are listed");
+  await page.fill("dialog.palette input", "activ");
+  assert.equal((await page.locator("dialog.palette li").first().innerText()).trim(), "Activity");
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/\/admin\/activity/);
+  await page.keyboard.press("Control+k");
+  await page.fill("dialog.palette input", "harbor");
+  await page.locator("dialog.palette li").last().click();
+  await page.waitForURL(/library\?q=harbor/);
+  await page.keyboard.press("Control+k");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("dialog.palette[open]").count(), 0);
+});
+
 await test("nothing moves for who asked for less motion", { width: 1200, height: 800 }, async (page) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${BASE}/`);
