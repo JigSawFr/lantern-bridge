@@ -1,0 +1,12 @@
+{% from "_labels.html" import labels with context %}
+{% if events %}
+<p class="small"><a href="/admin/events/export?format=csv{% if kind %}&amp;kind={{ kind }}{% endif %}" download>{{ _("Download as CSV") }}</a> · <a href="/admin/events/export?format=json{% if kind %}&amp;kind={{ kind }}{% endif %}" download>{{ _("Download as JSON") }}</a></p>
+<ul class="timeline">
+  {% for e in events %}
+  {% if loop.first or (e.ts | day) != (events[loop.index0 - 1].ts | day) %}<li class="day"><h2>{{ e.ts | day }}</h2></li>{% endif %}
+  <li class="ev {{ e.kind }}"><time datetime="{{ e.ts | iso }}">{{ e.ts | clock }}</time> <strong>{{ labels.get(e.kind, e.kind) }}</strong>{% if e.subject %} <span class="pill">{{ e.subject }}</span>{% endif %}{% if e.detail %} <span class="dim small">{{ e.detail }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty card"><p>{% if not usable %}{{ _("The journal is off: the history file of this bridge cannot be used.") }}{% elif kind %}{{ _("Nothing of this kind yet.") }} <a href="/admin/events">{{ _("All") }}</a>{% else %}{{ _("Nothing yet: the journal fills as the bridge scans, pairs and changes.") }}{% endif %}</p></div>
+{% endif %}
