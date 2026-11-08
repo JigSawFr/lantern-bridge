@@ -22,8 +22,8 @@ _RULES: tuple[tuple[re.Pattern[str], str, bool], ...] = tuple(
         # The owner's: the operators, and what takes the whole bridge out or puts one in.
         (r"/admin/operators(/.*)?", "owner", False),
         (r"/admin/config/(export|import|backup)", "owner", False),
-        # An admin's: tying an account to a user of an AeroFoil, which holds the name of a secret.
-        (r"/admin/accounts/.+", "admin", False),
+        # An admin's: tying an account to a user of an AeroFoil, which holds the name of a secret
+        (r"/admin/accounts/[^/]+/login(/remove)?", "admin", False),
         # A manager's: who may use the bridge, and the consoles that do.
         (r"/admin/(accounts|pairings|devices|invitations|events)(/.*)?", "manager", False),
         # What an observer looks at, and cannot change.

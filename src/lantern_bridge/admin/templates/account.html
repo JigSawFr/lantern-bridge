@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ account.name }}{% endblock %}
+{% block body %}
+<p class="dim small"><a href="/admin/accounts">← {{ _("Accounts") }}</a></p>
+<h1>{{ account.name }}{% if account.state != "active" %} <span class="pill wait">{{ _("frozen") }}</span>{% endif %}</h1>
+<p class="lede">{{ _("An account holds the rights of the devices paired with it: none of them goes beyond it. Changing the rights, the age limit or freezing the account acts on those devices at once.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if not editable %}<p class="note" role="status">{{ _("This account holds a scope that only an administrator may change.") }}</p>{% endif %}
+{% if editable %}
+<form method="post" action="/admin/accounts/{{ account.name }}/edit" class="card" data-dirty>
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Rights") }}</h2>
+  {% include "_account_fields.html" %}
+  <button>{{ _("Save") }}</button>
+</form>
+{% endif %}
+<form method="post" action="/admin/accounts/{{ account.name }}/state" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Freeze") }}</h2>
+  <p class="muted">{{ _("A frozen account can do nothing for now: its devices stay paired and are answered as frozen until you thaw it.") }}</p>
+  {% if account.state == "frozen" %}<button name="state" value="active">{{ _("Thaw") }}</button>{% else %}<button name="state" value="frozen" class="ghost" data-confirm="{{ _('Freeze this account? Its devices can do nothing until you thaw it.') }}">{{ _("Freeze") }}</button>{% endif %}
+</form>
+<h2>{{ _("Devices") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Device") }}</th><th>{{ _("Scopes") }}</th><th>{{ _("Paired") }}</th><th>{{ _("Last used") }}</th></tr></thead>
+  <tbody>
+  {% for d in devices %}<tr><td><strong>{{ d.device }}</strong></td><td>{{ d.scopes | join(", ") }}</td><td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td></tr>
+  {% else %}<tr><td colspan="4">{{ _("No device is paired with this account.") }}</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+<p class="dim small"><a href="/admin/devices">{{ _("Devices") }} →</a></p>
+<h2>{{ _("Open invitations") }}</h2>
+<div class="scroll"><table>
+  <thead><tr><th>{{ _("Code") }}</th><th>{{ _("Used") }}</th><th>{{ _("Expires") }}</th><th>{{ _("Note") }}</th></tr></thead>
+  <tbody>
+  {% for i in invitations %}<tr><td><code>{{ i.code }}</code></td><td>{{ i.used }} / {{ i.devices }}</td><td>{{ i.expires }}</td><td>{{ i.note or "–" }}</td></tr>
+  {% else %}<tr><td colspan="4">{{ _("No open invitation.") }}</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% if editable %}
+<form method="post" action="/admin/accounts/{{ account.name }}/delete" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Delete") }}</h2>
+  <p class="muted">{{ _("Deleting an account removes its devices, its invitations, its save backups, its requests and its sync data, at once. It cannot be undone.") }}</p>
+  <button class="danger" data-confirm="{{ _('Delete this account and everything kept for it?') }}">{{ _("Delete this account") }}</button>
+</form>
+{% endif %}
+{% endblock %}

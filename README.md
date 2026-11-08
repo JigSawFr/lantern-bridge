@@ -135,7 +135,7 @@ Open `http://<host>:8080/admin/`. The first time, the server writes a one-time *
 - **Speed** (in *Settings*): hashing already uses the processor's own SHA-256 instructions when it has them (OpenSSL picks them), and `hash_threads` sets how many files are hashed at once (0: half the cores, one to four; one or two is kinder to a spinning disk or a share). `compress_threads` caps the threads nsz converts with (0: its own choice, every core for a block compression). *Diagnostic* says what the machine offers. There is no graphics-card path: neither SHA-256 nor nsz has one.
 - **Homebrew** (under Manage): add the address of a GitHub repository (or `owner/name`) and the bridge serves its latest release as homebrew, like Sphaira does: it reads the repository through GitHub's API with the ETag of the last answer (an unchanged release costs one light read, and a repository is read every six hours), downloads the `.nro` (or the only `.zip`, or the asset a pattern names) once, keeps it by its SHA-256, and serves it again after a restart without reading GitHub. A project can describe itself with a `lantern.json` among the assets of its release (`id`, `name`, `kind`, `summary`, `description`, `author`, `license`, `tags`, `genres`, `language`); without it the bridge takes the name from the repository, the summary, licence and topics from GitHub, and the version from the tag. A zip carries its own manifest of files, and one that writes outside `/switch/<id>/`, `/atmosphere/` or `/switch/.overlays/` is refused with a sentence, as the specification asks. Only public repositories and addresses of GitHub are read, and an asset over 256 MiB is refused. Without a token GitHub allows 60 reads an hour; name an environment variable holding one with `github_token_env` for 5 000.
 - **Diagnostic**: the state of the bridge as text to paste in a support request (versions, access, sources and their state, integrations on or off, health, the number of warnings), with no password, token, address or path unless you tick *Include addresses, paths and messages*; even then the webhook and notification addresses (they may carry a secret) and any login in an address are left out. `/admin/diagnostic.json` is the same for a machine.
-- **Accounts**: each account's scopes and devices, and, with an `aerofoil` source, the AeroFoil user it acts as (only the name of the variable holding the password is kept).
+- **Accounts**: add an account, change its rights, freeze it or delete it, and see its devices and invitations; with an `aerofoil` source, the AeroFoil user it acts as (only the name of the variable holding the password is kept). See *Accounts and rights* below.
 - **Invitations**: a code that pairs a device without approval, for 1, 7 or 30 days and a number of devices.
 - **Diagnostic**: a JSON file with versions, sources, counts and recent warnings, and no secret.
 
@@ -181,6 +181,17 @@ What an administrator types is trusted: a source's address, the webhook and the 
 | Owner | also the operators, the backup, and the export and import of the settings |
 
 A role is checked on the server for every request, not only hidden in the menu, and a page that nothing names needs an administrator. Changing a role, setting a password or removing an operator acts on the sessions already open, at once. Everybody changes their own password from *My account* (a link in the footer), which ends their other sessions; too many wrong guesses of the current password are slowed down like a wrong sign-in. An owner who lost the password runs `lantern-bridge operator reset <name>` on the machine that runs the bridge (it asks for the new password twice, without showing it, or reads one line on the standard input; `lantern-bridge operator list` lists the operators). The last owner cannot be demoted or removed.
+
+**Accounts and rights.** An account is what the devices paired with it act as: none of them goes beyond it. A form sets its rights as a preset, or scope by scope:
+
+| Preset | Scopes |
+|---|---|
+| Full | library, saves, cheats, requests, sync |
+| Child | the same without cheats, and an age limit (12 when the field is left empty) |
+| Guest | the library only |
+| Custom | the scopes ticked, `cheats.write` and `admin` only for an administrator |
+
+The age limit is a rating cap for the whole account, applied at once to its devices already paired (where a device has a cap of its own, the stricter holds); *Hide what has no rating* hides the unrated. Changing the rights cuts the devices' scopes back with it. *Freeze* keeps the devices paired and answers them as a frozen account until you thaw it. *Delete* removes the account with its devices, invitations, save backups, requests and sync data, and its AeroFoil login. A manager may do all this, but neither give nor change a scope it may not give: an account holding `admin` or `cheats.write` is for an administrator. When a pairing is approved, or an invitation made, for an account that does not exist yet, the form's preset makes it; an account that exists keeps its own rights.
 
 ### 🐳 In a container
 
