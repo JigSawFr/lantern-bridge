@@ -462,6 +462,80 @@
     setTimeout(() => { if (!document.querySelector("dialog[open]")) location.reload(); }, 3000);
   }
 
+  // -- Ctrl/Cmd+K: one box to go to a page, to search the library, or to ask for a scan ----------------------------
+  const opener = document.querySelector("[data-palette-open]");
+  if (opener && typeof HTMLDialogElement === "function") {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    opener.querySelector("kbd").textContent = mac ? "⌘K" : "Ctrl K";
+    opener.hidden = false;
+    let box = null, input, list, items = [], at = 0;
+    const build = () => {
+      box = document.createElement("dialog");
+      box.className = "palette";
+      box.setAttribute("aria-label", say("search"));
+      input = document.createElement("input");
+      input.type = "search";
+      input.placeholder = say("search");
+      input.setAttribute("aria-label", say("search"));
+      input.autocomplete = "off";
+      list = document.createElement("ul");
+      list.setAttribute("role", "listbox");
+      box.append(input, list);
+      document.body.append(box);
+      input.addEventListener("input", render);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); at = (at + (e.key === "ArrowDown" ? 1 : items.length - 1)) % Math.max(1, items.length); mark(); }
+        else if (e.key === "Enter") { e.preventDefault(); if (items[at]) items[at].run(); }
+      });
+      box.addEventListener("click", (e) => { if (e.target === box) box.close(); });
+    };
+    const pages = () => {
+      const seen = new Set();
+      return [...document.querySelectorAll("header nav a[href]")].map((a) => {
+        const label = [...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
+        return { label, run: () => { location.href = a.href; } };
+      }).filter((p) => p.label && !seen.has(p.label) && seen.add(p.label));
+    };
+    const mark = () => {
+      [...list.children].forEach((li, i) => { li.setAttribute("aria-selected", String(i === at)); if (i === at) li.scrollIntoView({ block: "nearest" }); });
+    };
+    const render = () => {
+      const q = input.value.trim().toLowerCase();
+      items = pages().filter((p) => !q || p.label.toLowerCase().includes(q));
+      if (document.body.dataset.csrf && (!q || say("scan").toLowerCase().includes(q))) {
+        items.push({ label: say("scan"), run: () => {
+          const form = document.createElement("form");
+          form.method = "post"; form.action = "/admin/scan"; form.hidden = true;
+          for (const [name, value] of [["csrf", document.body.dataset.csrf], ["action", "scan"]]) { const f = document.createElement("input"); f.name = name; f.value = value; form.append(f); }
+          document.body.append(form); form.submit();
+        } });
+      }
+      if (q) items.push({ label: `“${input.value.trim()}”`, run: () => { location.href = `/admin/library?q=${encodeURIComponent(input.value.trim())}`; } });
+      at = 0;
+      list.replaceChildren(...items.map((item, i) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.textContent = item.label;
+        li.addEventListener("click", () => item.run());
+        li.addEventListener("mousemove", () => { at = i; mark(); });
+        return li;
+      }));
+      mark();
+    };
+    const open = () => {
+      if (!box) build();
+      if (box.open) return;
+      input.value = "";
+      render();
+      box.showModal();
+      input.focus();
+    };
+    opener.addEventListener("click", open);
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") { e.preventDefault(); if (box && box.open) box.close(); else open(); }
+    });
+  }
+
   // -- "/" jumps to the search box, as on most sites; Escape leaves it ---------------------------------------
   const search = document.getElementById("q");
   if (search) {
