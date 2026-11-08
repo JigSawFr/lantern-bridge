@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ device.device }}{% endblock %}
+{% block body %}
+<p class="dim small"><a href="/admin/devices">← {{ _("Devices") }}</a></p>
+<h1>{{ device.device }}{% if device.suspended %} <span class="pill wait">{{ _("suspended") }}</span>{% endif %}</h1>
+<p class="lede">{{ _("A console paired with this bridge. What it may do is what its account allows, less what you take away here.") }}</p>
+{% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<div class="scroll"><table>
+  <tbody>
+  <tr><th scope="row">{{ _("Account") }}</th><td>{% if account %}<a href="/admin/accounts/{{ account.name }}">{{ account.name }}</a>{% else %}{{ device.user }}{% endif %}{% if account and account.state != "active" %} <span class="pill wait">{{ _("frozen") }}</span>{% endif %}</td></tr>
+  <tr><th scope="row">{{ _("Scopes") }}</th><td>{{ device.scopes | join(", ") }}</td></tr>
+  <tr><th scope="row">{{ _("Age limit") }}</th><td>{% if in_force is not none %}{{ in_force }}{% else %}<span class="dim">{{ _("none") }}</span>{% endif %}</td></tr>
+  <tr><th scope="row">{{ _("Paired") }}</th><td>{{ device.created }}</td></tr>
+  <tr><th scope="row">{{ _("Last used") }}</th><td>{{ device.last_used or "–" }}</td></tr>
+  <tr><th scope="row">{{ _("Bound") }}</th><td>{{ _("yes") if device.bound else _("no") }}{% if device.key %} · {{ _("Key") }} <code>{{ fingerprint(device.key) }}</code>{% endif %}</td></tr>
+  {% if device.expires %}<tr><th scope="row">{{ _("Expires") }}</th><td>{{ device.expires }}</td></tr>{% endif %}
+  {% if seen %}
+  <tr><th scope="row">{{ _("Last seen from") }}</th><td><code>{{ seen.address }}</code>{% if seen.agent %} <span class="dim small" title="{{ seen.agent }}">{{ seen.agent[:60] }}</span>{% endif %}</td></tr>
+  <tr><th scope="row">{{ _("Requests") }}</th><td>{{ seen.requests }} · {{ seen.sent | size }}</td></tr>
+  {% endif %}
+  </tbody>
+</table></div>
+
+<form method="post" action="/admin/devices/{{ device.id }}/rename" class="card" data-dirty>
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Name") }}</h2>
+  <div class="form-grid"><label>{{ _("Name") }} <input name="name" value="{{ device.device }}" maxlength="64" required></label></div>
+  <button>{{ _("Save") }}</button>
+</form>
+
+<form method="post" action="/admin/devices/{{ device.id }}/rights" class="card" data-dirty>
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Take rights away") }}</h2>
+  <p class="muted">{{ _("Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.") }}</p>
+  <p>{% for s in device.scopes %}<label class="check"><input type="checkbox" name="scope.{{ s }}"{% if s in values.scopes %} checked{% endif %}> <code>{{ s }}</code></label> {% endfor %}</p>
+  <div class="form-grid">
+    <label>{{ _("Age limit") }} <input name="age" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" value="{{ values.age }}" placeholder="{{ _('none') }}"></label>
+    <label class="check"><input type="checkbox" name="hide_unrated"{% if values.hide_unrated %} checked{% endif %}> {{ _("Hide what has no rating") }}</label>
+  </div>
+  <button>{{ _("Save") }}</button>
+</form>
+
+<form method="post" action="/admin/devices/{{ device.id }}/suspend" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Suspend") }}</h2>
+  <p class="muted">{{ _("A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.") }}</p>
+  {% if device.suspended %}<button name="state" value="active">{{ _("Lift the suspension") }}</button>{% else %}<button name="state" value="suspended" class="ghost" data-confirm="{{ _('Suspend this console? It can do nothing until you lift the suspension.') }}">{{ _("Suspend") }}</button>{% endif %}
+</form>
+
+<form method="post" action="/admin/devices/{{ device.id }}/revoke" class="card">
+  <input type="hidden" name="csrf" value="{{ session.csrf }}">
+  <h2>{{ _("Revoke") }}</h2>
+  <button class="danger" data-confirm="{{ _('Revoke this device? It has to pair again.') }}">{{ _("Revoke") }}</button>
+</form>
+{% endblock %}

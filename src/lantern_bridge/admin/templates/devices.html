@@ -8,7 +8,7 @@
   <tbody>
   {% for d in devices %}
   <tr>
-    <td><strong>{{ d.device }}</strong></td><td>{{ d.user }}</td><td>{{ d.scopes | join(", ") }}</td>
+    <td><a href="/admin/devices/{{ d.id }}"><strong>{{ d.device }}</strong></a>{% if d.suspended %} <span class="pill wait">{{ _("suspended") }}</span>{% endif %}</td><td>{{ d.user }}</td><td>{{ d.scopes | join(", ") }}</td>
     <td>{{ d.created }}</td><td>{{ d.last_used or "–" }}</td><td>{{ _("yes") if d.bound else _("no") }}</td>
     <td><form method="post" action="/admin/devices/{{ d.id }}/revoke"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger small" data-confirm="{{ _('Revoke this device? It has to pair again.') }}">{{ _("Revoke") }}</button></form></td>
   </tr>

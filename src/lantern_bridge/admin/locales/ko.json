@@ -656,5 +656,20 @@
  "This account holds a scope that only an administrator may change.": "이 계정에는 관리자만 바꿀 수 있는 범위가 있습니다.",
  "Tick at least one scope.": "범위를 하나 이상 체크하세요.",
  "frozen": "동결됨",
- "unrated hidden": "등급 없는 항목 숨김"
+ "unrated hidden": "등급 없는 항목 숨김",
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "이 브리지에 페어링된 콘솔입니다. 할 수 있는 일은 계정이 허용하는 것에서 여기서 뺀 것을 제외한 만큼입니다.",
+ "A device name is 1 to 64 characters.": "기기 이름은 1~64자입니다.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "일시 중지된 콘솔은 페어링된 채로 남지만 중지를 해제할 때까지 아무것도 할 수 없습니다. 동결된 계정처럼 응답받습니다. 대신 폐기하면 다시 페어링해야 합니다.",
+ "Compare the code and the key with the ones the console shows before you approve.": "승인하기 전에 코드와 키를 콘솔에 표시된 것과 비교하세요.",
+ "Device changed": "기기 변경됨",
+ "Device changed.": "기기를 변경했습니다.",
+ "Keep at least one scope.": "범위를 하나 이상 남기세요.",
+ "Key": "키",
+ "Last seen from": "마지막으로 확인된 위치",
+ "Lift the suspension": "중지 해제",
+ "Suspend": "일시 중지",
+ "Suspend this console? It can do nothing until you lift the suspension.": "이 콘솔을 일시 중지할까요? 해제할 때까지 아무것도 할 수 없습니다.",
+ "Take rights away": "권한 빼기",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "범위의 체크를 해제하면 이 기기에서 뺄 수 있고, 기기 전용 연령 제한도 줄 수 있습니다. 더 주려면 다시 페어링하세요.",
+ "suspended": "일시 중지됨"
 }

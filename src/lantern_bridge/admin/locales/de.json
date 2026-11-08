@@ -656,5 +656,20 @@
  "This account holds a scope that only an administrator may change.": "Dieses Konto hat eine Berechtigung, die nur ein Administrator ändern darf.",
  "Tick at least one scope.": "Kreuzen Sie mindestens eine Berechtigung an.",
  "frozen": "gesperrt",
- "unrated hidden": "Ohne Einstufung verborgen"
+ "unrated hidden": "Ohne Einstufung verborgen",
+ "A console paired with this bridge. What it may do is what its account allows, less what you take away here.": "Eine mit dieser Bridge gekoppelte Konsole. Was sie darf, ist das, was ihr Konto erlaubt, abzüglich dessen, was Sie ihr hier wegnehmen.",
+ "A device name is 1 to 64 characters.": "Ein Gerätename hat 1 bis 64 Zeichen.",
+ "A suspended console stays paired but can do nothing until you lift the suspension: it is answered as a frozen account. Revoking it, instead, makes it pair again.": "Eine ausgesetzte Konsole bleibt gekoppelt, kann aber nichts tun, bis Sie die Aussetzung aufheben: Sie wird wie ein gesperrtes Konto beantwortet. Sie stattdessen zu widerrufen, zwingt sie zu einer neuen Kopplung.",
+ "Compare the code and the key with the ones the console shows before you approve.": "Vergleichen Sie Code und Schlüssel mit denen, die die Konsole zeigt, bevor Sie genehmigen.",
+ "Device changed": "Gerät geändert",
+ "Device changed.": "Gerät geändert.",
+ "Keep at least one scope.": "Behalten Sie mindestens eine Berechtigung.",
+ "Key": "Schlüssel",
+ "Last seen from": "Zuletzt gesehen von",
+ "Lift the suspension": "Aussetzung aufheben",
+ "Suspend": "Aussetzen",
+ "Suspend this console? It can do nothing until you lift the suspension.": "Diese Konsole aussetzen? Sie kann nichts tun, bis Sie die Aussetzung aufheben.",
+ "Take rights away": "Rechte entziehen",
+ "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Entfernen Sie das Häkchen bei einer Berechtigung, um sie diesem Gerät zu entziehen, oder geben Sie ihm eine eigene Altersgrenze. Um ihm mehr zu geben, koppeln Sie es neu.",
+ "suspended": "ausgesetzt"
 }

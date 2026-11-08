@@ -9,6 +9,7 @@
 <article class="card glow">
   <h2>{{ p.device }}</h2>
   <p>{{ _("Code") }} <code class="code">{{ p.code }}</code></p>
+  {% if p.key %}<p>{{ _("Key") }} <code class="code">{{ fingerprint(p.key) }}</code> <span class="dim small">{{ _("Compare the code and the key with the ones the console shows before you approve.") }}</span></p>{% endif %}
   <p class="muted">{{ _("asked at") }} {{ p.created }} · {{ _("expires") }} {{ p.expires }}</p>
   <p>{{ _("Wants") }}: {{ p.scopes | join(", ") }}</p>
   <form method="post" action="/admin/pairings/{{ p.id }}" class="row">
