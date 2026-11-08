@@ -9,6 +9,7 @@ back. A file written by a newer schema is refused and never rewritten.
 from __future__ import annotations
 
 import os
+import re
 import tomllib
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -105,6 +106,45 @@ Source = FolderSource | TinfoilSource | OwnfoilSource | AerofoilSource
 
 
 @dataclass(slots=True)
+class Oidc:
+    """An OpenID Connect provider the pages sign in with (authorization code with PKCE)."""
+
+    issuer: str
+    client_id: str
+    #: Where the browser comes back to: this bridge's address as the browser sees it, no path.
+    public_url: str
+    #: The environment variable holding the client secret; None for a public client (PKCE alone).
+    secret_env: str | None = None
+    name_claim: str = "preferred_username"
+    groups_claim: str = "groups"
+    scopes: str = "openid profile email groups"
+    #: The provider's name on the sign-in button; empty: a generic text.
+    label: str = ""
+
+
+@dataclass(slots=True)
+class SignIn:
+    """How the administration pages let people in besides the operators' own passwords (`[sign_in]`).
+
+    A name (from the proxy's header, or the provider) and its groups become a role through `roles`; nobody whose
+    groups match none gets in. Everything read is kept in `table` to be written back whole: the pages do not edit it.
+    """
+
+    local: bool = True
+    logout_url: str | None = None
+    roles: dict[str, str] = field(default_factory=dict)
+    #: The headers a trusted proxy puts its user and groups in; None: the proxy mode is off.
+    proxy_user_header: str | None = None
+    proxy_groups_header: str = "Remote-Groups"
+    oidc: Oidc | None = None
+    table: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    @property
+    def external(self) -> bool:
+        return self.proxy_user_header is not None or self.oidc is not None
+
+
+@dataclass(slots=True)
 class Mqtt:
     """The broker the bridge publishes its state on (and takes a few orders from). Absent: nothing is published."""
 
@@ -167,6 +207,8 @@ class Config:
     # Reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are believed, as networks.
     trusted_proxies: list[str] = field(default_factory=list)
     mqtt: Mqtt | None = None
+    # Sign-in through a trusted proxy or an OpenID Connect provider; None: the operators' passwords only.
+    sign_in: SignIn | None = None
     # Megabytes free on the volume of the state below which the health says to look (it fails below 20).
     low_disk_mb: int = 500
     # Files hashed at once, from the folders (0: the machine decides, see `hashing.workers`). Hashing is the SHA-256
@@ -212,6 +254,8 @@ class Config:
                 data[key] = list(getattr(self, key))
         if self.mqtt is not None:
             data["mqtt"] = self.mqtt.table()
+        if self.sign_in is not None:
+            data["sign_in"] = deepcopy(self.sign_in.table)
         if self.webhook is not None:
             data["webhook"] = self.webhook
         if self.notify is not None:
@@ -319,6 +363,96 @@ def parse_mqtt(raw: object) -> Mqtt | None:
     return Mqtt(host.strip(), port, user, env, prefix, tls, {k: v for k, v in raw.items() if k not in own})
 
 
+_HEADER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,63}$")
+_CLAIM = re.compile(r"^[A-Za-z0-9_:./-]{1,64}$")
+_ENV = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _text(table: dict[str, Any], key: str, where: str, default: str | None = None) -> str | None:
+    value = table.get(key, default)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise ConfigError(f"`{where}.{key}` must be a non-empty string")
+    return value.strip()
+
+
+def _https_url(value: str, name: str, *, path_ok: bool) -> str:
+    """An https address (http only for the machine itself, for a test); no query, no fragment."""
+    parts = urlsplit(value)
+    local = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    if parts.scheme not in ("https", "http") or not parts.hostname or (parts.scheme == "http" and not local):
+        raise ConfigError(f"`{name}` must be an https address")
+    if parts.query or parts.fragment or parts.username or parts.password or (parts.path.strip("/") and not path_ok):
+        raise ConfigError(f"`{name}` must not carry a query, a fragment, a login{'' if path_ok else ' or a path'}")
+    return value.rstrip("/")
+
+
+def parse_sign_in(raw: object, trusted_proxies: list[str]) -> SignIn | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ConfigError("`sign_in` must be a table")
+    from lantern_bridge.admin.auth import ROLES  # at call time: the pages import this module
+
+    local = raw.get("local", True)
+    if not isinstance(local, bool):
+        raise ConfigError("`sign_in.local` must be true or false")
+    logout = _text(raw, "logout_url", "sign_in")
+    if logout is not None:
+        logout = _https_url(logout, "sign_in.logout_url", path_ok=True)
+    roles = raw.get("roles", {})
+    if not isinstance(roles, dict) or any(not isinstance(k, str) or not k or v not in ROLES for k, v in roles.items()):
+        raise ConfigError(f"`sign_in.roles` maps a group name to one of {', '.join(ROLES)}")
+    sign_in = SignIn(local=local, logout_url=logout, roles=dict(roles), table=deepcopy(raw))
+    proxy = raw.get("proxy")
+    if proxy is not None:
+        if not isinstance(proxy, dict) or not isinstance(proxy.get("enabled", False), bool):
+            raise ConfigError("`sign_in.proxy` must be a table with `enabled` true or false")
+        if proxy.get("enabled", False):
+            user, groups = (
+                _text(proxy, "user_header", "sign_in.proxy", "Remote-User"),
+                _text(proxy, "groups_header", "sign_in.proxy", "Remote-Groups"),
+            )
+            if not (user and groups and _HEADER.match(user) and _HEADER.match(groups)):
+                raise ConfigError("`sign_in.proxy` headers must be header names")
+            if not trusted_proxies:
+                raise ConfigError("`sign_in.proxy` needs `trusted_proxies`: the headers are only believed from them")
+            sign_in.proxy_user_header, sign_in.proxy_groups_header = user, groups
+    oidc = raw.get("oidc")
+    if oidc is not None:
+        if not isinstance(oidc, dict) or not isinstance(oidc.get("enabled", False), bool):
+            raise ConfigError("`sign_in.oidc` must be a table with `enabled` true or false")
+        if oidc.get("enabled", False):
+            issuer, client_id = _text(oidc, "issuer", "sign_in.oidc"), _text(oidc, "client_id", "sign_in.oidc")
+            public_url = _text(oidc, "public_url", "sign_in.oidc")
+            if not (issuer and client_id and public_url):
+                raise ConfigError("`sign_in.oidc` needs `issuer`, `client_id` and `public_url`")
+            secret = _text(oidc, "secret_env", "sign_in.oidc")
+            if secret is not None and not _ENV.match(secret):
+                raise ConfigError("`sign_in.oidc.secret_env` must name an environment variable")
+            name_claim = _text(oidc, "name_claim", "sign_in.oidc", "preferred_username") or ""
+            groups_claim = _text(oidc, "groups_claim", "sign_in.oidc", "groups") or ""
+            scopes = _text(oidc, "scopes", "sign_in.oidc", "openid profile email groups") or ""
+            if not (_CLAIM.match(name_claim) and _CLAIM.match(groups_claim)) or "openid" not in scopes.split():
+                raise ConfigError("`sign_in.oidc` claims are names, and `scopes` holds `openid`")
+            sign_in.oidc = Oidc(
+                _https_url(issuer, "sign_in.oidc.issuer", path_ok=True),
+                client_id,
+                _https_url(public_url, "sign_in.oidc.public_url", path_ok=False),
+                secret,
+                name_claim,
+                groups_claim,
+                scopes,
+                ((_text(oidc, "label", "sign_in.oidc") if "label" in oidc else None) or "")[:40],
+            )
+    if sign_in.external and not roles:
+        raise ConfigError("`sign_in.roles` must name the groups that may sign in")
+    if not local and not sign_in.external:
+        raise ConfigError("`sign_in.local = false` needs the proxy or OIDC on: nobody could sign in")
+    return sign_in
+
+
 def _logins(sid: str, raw: dict[str, Any]) -> tuple[Login, ...]:
     rows = raw.get("logins", [])
     if not isinstance(rows, list):
@@ -373,6 +507,7 @@ def _parse(data: dict[str, Any]) -> Config:
         "admin_hosts",
         "trusted_proxies",
         "mqtt",
+        "sign_in",
         "webhook",
         "notify",
         "sources",
@@ -420,6 +555,7 @@ def _parse(data: dict[str, Any]) -> Config:
     admin_hosts = parse_list(data.get("admin_hosts"), "admin_hosts")
     trusted_proxies = parse_list(data.get("trusted_proxies"), "trusted_proxies", networks=True)
     mqtt = parse_mqtt(data.get("mqtt"))
+    sign_in = parse_sign_in(data.get("sign_in"), trusted_proxies)
     webhook = parse_webhook(data.get("webhook"))
     notify = parse_webhook(data.get("notify"), "notify")
     sources: list[Source] = []
@@ -482,6 +618,7 @@ def _parse(data: dict[str, Any]) -> Config:
         atlas=atlas,
         metrics=metrics,
         mqtt=mqtt,
+        sign_in=sign_in,
         update_check=update_check,
         low_disk_mb=low_disk,
         homebrew=homebrew,

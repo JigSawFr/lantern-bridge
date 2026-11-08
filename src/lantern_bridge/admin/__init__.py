@@ -45,7 +45,7 @@ from markupsafe import Markup
 from starlette.background import BackgroundTask
 
 from lantern_bridge import SPEC_DRAFT, __version__, backup, health, releases, selfcheck
-from lantern_bridge.admin import attention, nav, netguard, presets
+from lantern_bridge.admin import attention, nav, netguard, presets, signin
 from lantern_bridge.admin.auth import ROLES, AdminStore, Session
 from lantern_bridge.admin.i18n import COOKIE as LANG_COOKIE
 from lantern_bridge.admin.i18n import HTML_LANG, LANGUAGES, NAMES, flag, pick, translator
@@ -81,6 +81,7 @@ log = logging.getLogger("lantern_bridge.admin")
 _BODY_LIMIT = 8192
 _COOKIE = "lb_session"
 _THEME_COOKIE = "lb_theme"
+_OIDC_COOKIE = "lb_oidc"
 _HEADERS = {
     "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
     "img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; form-action 'self'; base-uri 'none'; "
@@ -148,6 +149,7 @@ _JOURNAL = (
     "deleted",
     "converted",
     "signin_blocked",
+    "signin_denied",
     "session_ended",
     "operator_added",
     "operator_changed",
@@ -294,6 +296,14 @@ class Admin:
         self.reloader: Any = None  # the server that swaps itself for a new one when the settings change
         self.networks = netguard.parse_networks(config.admin_allow)
         self.proxies = netguard.parse_networks(config.trusted_proxies)
+        self.sign_in = config.sign_in
+        self.oidc: signin.OidcSignIn | None = None
+        if self.sign_in is not None and self.sign_in.oidc is not None:
+            oidc = self.sign_in.oidc
+            client_key = os.environ.get(oidc.secret_env) if oidc.secret_env else None
+            if oidc.secret_env and not client_key:
+                log.warning("single sign-on: the variable the settings name for the client's key is not set")
+            self.oidc = signin.OidcSignIn(oidc, client_key)
         self.attempts = Limiter(5, 300.0)  # wrong passwords, per address
         self.accounts = Limiter(30, 900.0)  # and per name, wide enough that a stranger cannot lock the real one out
         self.streams: dict[str, int] = {}  # open /admin/live streams, per session
@@ -691,7 +701,23 @@ class Admin:
 
     def session(self, request: Request) -> Session | None:
         # a block asking again by itself (the replay of a live stream) is not someone using the page
-        return self.store.session(request.cookies.get(_COOKIE), touch=not request.scope.get("replay"))
+        token = request.cookies.get(_COOKIE)
+        found = self.store.session(token, touch=not request.scope.get("replay"))
+        if found is not None and found.source == "proxy":
+            # The proxy is asked again at every request: its user and groups are what counts, not what they were.
+            identity = self.proxy_identity(request)
+            role = signin.role_for(identity.groups, self.sign_in.roles) if identity and self.sign_in else None
+            if identity is None or identity.name != found.name or role is None:
+                self.store.logout(token)
+                return None
+            found.role = role
+        return found
+
+    def proxy_identity(self, request: Request) -> signin.Identity | None:
+        """Who the trusted proxy says is there; None unless the request comes from it and the proxy mode is on."""
+        if self.sign_in is None or not netguard.within(self.peer(request), self.proxies):
+            return None
+        return signin.proxy_identity(self.sign_in, request.headers)
 
 
 def mount(app: FastAPI, admin: Admin) -> None:
@@ -799,26 +825,121 @@ def mount(app: FastAPI, admin: Admin) -> None:
         log.info("administrator %s created", fields["name"].strip())
         return redirect("/login", request)
 
+    def login_page(request: Request, status: int = 200, error: str | None = None, note: str | None = None) -> Response:
+        config = admin.sign_in
+        return admin.page(
+            request,
+            "login.html",
+            status=status,
+            error=error,
+            note=note,
+            local=config is None or config.local,
+            oidc=admin.oidc is not None,
+            oidc_label=config.oidc.label if config is not None and config.oidc is not None else "",
+        )
+
+    def signed_in(request: Request, token: str) -> Response:
+        """A page that leads to the overview, not a redirect: a session cookie is strict, and a redirect that follows
+        a visit from another site would be sent without it, to the sign-in page, for ever."""
+        t = admin.tr(request)
+        link = Markup('<a href="/admin/">{}</a>').format(t("Sign in"))
+        response = HTMLResponse(
+            Markup('<!doctype html><meta charset="utf-8"><meta name="referrer" content="no-referrer">')
+            + Markup('<meta http-equiv="refresh" content="0;url=/admin/"><title>{}</title><p>{}</p>').format(
+                t("Sign in"), link
+            ),
+            headers=_HEADERS,
+        )
+        admin.cookie(response, request, token)
+        response.delete_cookie(_OIDC_COOKIE, path="/admin/login/oidc")
+        return response
+
+    def denied(request: Request, name: str) -> Response:
+        admin.runtime.history.event("signin_denied", name[:64])
+        log.warning("a single sign-on user was refused: no group of theirs opens the pages")
+        return login_page(request, 403, admin.tr(request)(signin.DENIED))
+
     @router.get("/login")
     async def login_form(request: Request) -> Response:
         if not admin.store.configured:
             return redirect("/setup", request)
-        return admin.page(request, "login.html", error=None)
+        if admin.sign_in is not None and admin.sign_in.proxy_user_header is not None:
+            if admin.session(request) is not None:
+                return redirect("/", request)
+            identity = admin.proxy_identity(request) if not request.query_params.get("out") else None
+            if identity is not None:
+                role = signin.role_for(identity.groups, admin.sign_in.roles)
+                if role is None:
+                    return denied(request, identity.name)
+                token, _ = admin.store.login(
+                    identity.name,
+                    role,
+                    address=admin.client(request),
+                    agent=request.headers.get("user-agent", ""),
+                    source="proxy",
+                )
+                return signed_in(request, token)
+        note = admin.tr(request)("You are signed out.") if request.query_params.get("out") else None
+        return login_page(request, note=note)
+
+    @router.get("/login/oidc")
+    async def login_oidc(request: Request) -> Response:
+        if admin.oidc is None:
+            raise HTTPException(404)
+        try:
+            url, binder = await asyncio.to_thread(admin.oidc.start)
+        except signin.SignInError as error:
+            log.warning("single sign-on could not start: %s", error)
+            return login_page(request, 502, admin.tr(request)(error.text))
+        response = RedirectResponse(url, status_code=303, headers=_HEADERS)
+        response.set_cookie(
+            _OIDC_COOKIE,
+            binder,
+            max_age=signin.ATTEMPT_SECONDS,
+            path="/admin/login/oidc",
+            httponly=True,
+            samesite="lax",  # sent when the provider sends the browser back
+            secure=admin.secure(request),
+        )
+        return response
+
+    @router.get("/login/oidc/callback")
+    async def login_oidc_back(request: Request) -> Response:
+        if admin.oidc is None or admin.sign_in is None:
+            raise HTTPException(404)
+        query, t = request.query_params, admin.tr(request)
+        code, state = query.get("code", ""), query.get("state", "")
+        if query.get("error") or not code or not state:
+            log.warning("single sign-on was not completed (the provider answered %s)", query.get("error", "no code"))
+            return login_page(request, 400, t(signin.FAILED))
+        try:
+            identity = await asyncio.to_thread(admin.oidc.finish, code, state, request.cookies.get(_OIDC_COOKIE))
+        except signin.SignInError as error:
+            log.warning("single sign-on failed: %s", error)
+            return login_page(request, 400, t(error.text))
+        role = signin.role_for(identity.groups, admin.sign_in.roles)
+        if role is None:
+            return denied(request, identity.name)
+        token, _ = admin.store.login(
+            identity.name,
+            role,
+            address=admin.client(request),
+            agent=request.headers.get("user-agent", ""),
+            source="oidc",
+        )
+        return signed_in(request, token)
 
     @router.post("/login")
     async def login_post(request: Request) -> Response:
         if not admin.own_form(request):
             return Response("The form is out of date: go back and try again.", 403, headers=_HEADERS)
+        if admin.sign_in is not None and not admin.sign_in.local:
+            return Response("Signing in with a password is turned off.", 403, headers=_HEADERS)
         fields = await admin.form(request)
         key = admin.client(request)
         who = "name:" + fields.get("name", "").strip().lower()
         if wait := max(admin.attempts.wait(key), admin.accounts.wait(who)):
-            return admin.page(
-                request,
-                "login.html",
-                status=429,
-                error=admin.tr(request)("Too many tries: wait {wait} s.", wait=f"{wait:.0f}"),
-            )
+            return login_page(request, 429, admin.tr(request)("Too many tries: wait {wait} s.", wait=f"{wait:.0f}"))
         role = admin.store.identify(fields.get("name", ""), fields.get("password", ""))
         if role is None:
             admin.attempts.record(key)
@@ -827,7 +948,7 @@ def mount(app: FastAPI, admin: Admin) -> None:
             if max(admin.attempts.wait(key), admin.accounts.wait(who)):  # this very failure shut the door
                 log.warning("sign-ins are blocked for a while (from %s)", key)
                 admin.runtime.history.event("signin_blocked", detail="too many wrong passwords")
-            return admin.page(request, "login.html", status=401, error=admin.tr(request)("Wrong name or password."))
+            return login_page(request, 401, admin.tr(request)("Wrong name or password."))
         token, _ = admin.store.login(
             fields["name"].strip(), role, address=key, agent=request.headers.get("user-agent", "")
         )
@@ -992,6 +1113,8 @@ def mount(app: FastAPI, admin: Admin) -> None:
         if refused is not None or session is None:
             return refused or redirect("/login", request)
         t = admin.tr(request)
+        if session.source != "local":
+            return me_page(request, session, 403, error=t("Your password is managed by your single sign-on."))
         key, who = admin.client(request), "name:" + session.name.lower()
         if wait := max(admin.attempts.wait(key), admin.accounts.wait(who)):  # a stolen session cannot guess it
             return me_page(request, session, 429, error=t("Too many tries: wait {wait} s.", wait=f"{wait:.0f}"))
@@ -1011,11 +1134,16 @@ def mount(app: FastAPI, admin: Admin) -> None:
 
     @router.post("/logout")
     async def logout(request: Request) -> Response:
-        _, _, refused = await authed(request)
-        if refused is not None:
-            return refused
+        session, _, refused = await authed(request)
+        if refused is not None or session is None:
+            return refused or redirect("/login", request)
         admin.store.logout(request.cookies.get(_COOKIE))
-        return redirect("/login", request, None)
+        if session.source != "local" and admin.sign_in is not None and admin.sign_in.logout_url:
+            # the provider's own sign-out; without one, the sign-in page does not sign the person straight back in
+            response = RedirectResponse(admin.sign_in.logout_url, status_code=303, headers=_HEADERS)
+            admin.cookie(response, request, None)
+            return response
+        return redirect("/login?out=1" if session.source != "local" else "/login", request, None)
 
     @router.get("")
     @router.get("/")

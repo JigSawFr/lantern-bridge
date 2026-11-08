@@ -676,5 +676,12 @@
  "Take rights away": "Rechten intrekken",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Haal het vinkje bij een recht weg om het van dit apparaat af te nemen, of geef het een eigen leeftijdsgrens. Om het meer te geven, koppel het opnieuw.",
  "suspended": "geschorst",
- "Done by": "Gedaan door"
+ "Done by": "Gedaan door",
+ "Sign in with {name}": "Aanmelden met {name}",
+ "Sign in with your single sign-on": "Aanmelden met uw single sign-on",
+ "You are signed out.": "U bent afgemeld.",
+ "Your single sign-on signed you in, but none of your groups opens these pages. Ask the owner.": "Uw single sign-on heeft u aangemeld, maar geen van uw groepen opent deze pagina's. Vraag het aan de eigenaar.",
+ "The single sign-on did not complete. Try again.": "De single sign-on is niet voltooid. Probeer het opnieuw.",
+ "Your password is managed by your single sign-on.": "Uw wachtwoord wordt beheerd door uw single sign-on.",
+ "Sign-in refused": "Aanmelden geweigerd"
 }

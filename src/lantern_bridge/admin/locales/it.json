@@ -676,5 +676,12 @@
  "Take rights away": "Togli permessi",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Deseleziona un permesso per toglierlo a questo dispositivo, o dagli un limite di età proprio. Per dargliene di più, abbinalo di nuovo.",
  "suspended": "sospeso",
- "Done by": "Eseguito da"
+ "Done by": "Eseguito da",
+ "Sign in with {name}": "Accedi con {name}",
+ "Sign in with your single sign-on": "Accedi con il tuo accesso unico",
+ "You are signed out.": "Sei uscito.",
+ "Your single sign-on signed you in, but none of your groups opens these pages. Ask the owner.": "Il tuo accesso unico ti ha identificato, ma nessuno dei tuoi gruppi apre queste pagine. Chiedi al proprietario.",
+ "The single sign-on did not complete. Try again.": "L'accesso unico non è stato completato. Riprova.",
+ "Your password is managed by your single sign-on.": "La tua password è gestita dal tuo accesso unico.",
+ "Sign-in refused": "Accesso rifiutato"
 }

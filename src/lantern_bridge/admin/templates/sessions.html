@@ -9,7 +9,7 @@
   <tbody>
   {% for r in rows %}
   <tr>
-    <td><strong>{{ r.name }}</strong>{% if r.current %} <span class="pill ok">{{ _("this one") }}</span>{% endif %}</td>
+    <td><strong>{{ r.name }}</strong>{% if r.source != "local" %} <span class="pill">{{ r.source }}</span>{% endif %}{% if r.current %} <span class="pill ok">{{ _("this one") }}</span>{% endif %}</td>
     <td>{{ roles[r.role] if r.role in roles else r.role }}</td>
     <td><code>{{ r.address or "–" }}</code>{% if r.agent %}<br><span class="dim small" title="{{ r.agent }}">{{ r.agent[:60] }}</span>{% endif %}</td>
     <td>{{ r.signed | when }}</td><td>{{ r.last | when }}</td>

@@ -6,10 +6,14 @@
 <h1>{{ _("Sign in") }}</h1>
 <p class="lede">{{ _("The administration pages of this bridge.") }}</p>
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if note %}<p class="good" role="status">{{ note }}</p>{% endif %}
+{% if oidc %}<p><a class="button" href="/admin/login/oidc">{% if oidc_label %}{{ _("Sign in with {name}", name=oidc_label) }}{% else %}{{ _("Sign in with your single sign-on") }}{% endif %}</a></p>{% endif %}
+{% if local %}
 <form method="post" class="stack">
   <label>{{ _("Name") }} <input name="name" autocomplete="username" required autofocus></label>
   <label>{{ _("Password") }} <span class="reveal"><input name="password" type="password" autocomplete="current-password" required><button type="button" class="link" data-reveal>{{ _("Show") }}</button></span></label>
   <button>{{ _("Sign in") }}</button>
 </form>
+{% endif %}
 </div>
 {% endblock %}

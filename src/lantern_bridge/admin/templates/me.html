@@ -5,6 +5,9 @@
 <p class="lede">{{ session.name }} · {{ roles[session.role] if session.role in roles else session.role }}</p>
 {% if message %}<p class="good" role="status" data-toast>{{ message }}</p>{% endif %}
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if session.source != "local" %}
+<div class="card"><p>{{ _("Your password is managed by your single sign-on.") }}</p></div>
+{% else %}
 <form method="post" action="/admin/me" class="card">
   <input type="hidden" name="csrf" value="{{ session.csrf }}">
   <h2>{{ _("Change my password") }}</h2>
@@ -16,4 +19,5 @@
   <p class="dim small">{{ _("Your other sessions end when the password changes.") }}</p>
   <button>{{ _("Save") }}</button>
 </form>
+{% endif %}
 {% endblock %}
