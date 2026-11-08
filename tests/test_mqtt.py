@@ -206,6 +206,7 @@ def test_each_journal_line_is_published_as_it_happens_and_the_state_counts_the_p
         "kind": "source_down",
         "subject": "games",
         "detail": "gone",
+        "actor": "",
     }
     assert state(runtime)["problems"] >= 0
 

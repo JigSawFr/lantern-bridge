@@ -40,6 +40,8 @@ class Notifier:
             parts.append(event.subject)
         if event.detail:
             parts.append(event.detail)
+        if event.actor:
+            parts.append(f"by {event.actor}")
         return " - ".join(parts)
 
     def on_event(self, event: Event) -> None:

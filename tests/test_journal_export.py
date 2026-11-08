@@ -22,8 +22,8 @@ def test_the_journal_downloads_as_csv_and_json_and_a_formula_stays_text(tmp_path
     sheet = client.get("/admin/events/export?format=csv")
     assert sheet.status_code == 200 and "attachment" in sheet.headers["content-disposition"]
     rows = list(csv.reader(io.StringIO(sheet.text)))
-    assert rows[0] == ["time", "kind", "subject", "detail"]
-    assert ["settings", "'=SUM(A1)", "'+cmd"] in [r[1:] for r in rows]
+    assert rows[0] == ["time", "kind", "subject", "detail", "actor"]
+    assert ["settings", "'=SUM(A1)", "'+cmd", ""] in [r[1:] for r in rows]
     data = client.get("/admin/events/export?format=json&kind=paired").json()
     assert data["schema"] == 1 and [e["subject"] for e in data["events"]] == ["alice"]
 

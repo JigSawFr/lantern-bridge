@@ -672,5 +672,6 @@
  "Suspend this console? It can do nothing until you lift the suspension.": "暫停這台遊戲機？在解除暫停之前它什麼都做不了。",
  "Take rights away": "收回權限",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "取消勾選某項權限範圍即可從此裝置收回，也可以給它設定單獨的年齡限制。若要給它更多，請重新配對。",
- "suspended": "已暫停"
+ "suspended": "已暫停",
+ "Done by": "操作者"
 }

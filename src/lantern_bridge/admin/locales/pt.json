@@ -672,5 +672,6 @@
  "Suspend this console? It can do nothing until you lift the suspension.": "Suspender esta consola? Não poderá fazer nada até levantar a suspensão.",
  "Take rights away": "Retirar permissões",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Desmarque um âmbito para o retirar a este dispositivo, ou dê-lhe um limite de idade próprio. Para lhe dar mais, emparelhe-o de novo.",
- "suspended": "suspenso"
+ "suspended": "suspenso",
+ "Done by": "Feito por"
 }
