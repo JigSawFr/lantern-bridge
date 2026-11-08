@@ -536,6 +536,60 @@
     });
   }
 
+  // -- the library keeps the view you chose (grid or list) ------------------------------------------------------
+  const views = document.querySelector(".views");
+  if (views) {
+    const VIEW = "lb-view";
+    const params = new URLSearchParams(location.search);
+    if (!params.get("view") && store(VIEW) === "list") { params.set("view", "list"); location.replace(`${location.pathname}?${params}`); }
+    views.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a[href*='view=']");
+      if (a) store(VIEW, new URL(a.href).searchParams.get("view") === "list" ? "list" : "grid");
+    });
+  }
+
+  // -- a title's sheet beside the shelf, without leaving it ---------------------------------------------------
+  if (document.querySelector("[data-peek]") && typeof HTMLDialogElement === "function") {
+    let panel = null, body;
+    const close = () => { if (panel && panel.open) panel.close(); };
+    const make = () => {
+      panel = document.createElement("dialog");
+      panel.className = "peekpanel";
+      const bar = document.createElement("div");
+      bar.className = "peekbar";
+      const go = document.createElement("a");
+      go.className = "button small";
+      go.textContent = `${say("open")} →`;
+      const x = document.createElement("button");
+      x.type = "button"; x.className = "ghost small"; x.textContent = "×"; x.setAttribute("aria-label", say("cancel"));
+      x.addEventListener("click", close);
+      bar.append(go, x);
+      body = document.createElement("div");
+      body.className = "peekbody";
+      panel.append(bar, body);
+      panel.addEventListener("click", (e) => { if (e.target === panel) close(); });
+      panel.go = go;
+      document.body.append(panel);
+    };
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest && e.target.closest("[data-peek]");
+      if (!button) return;
+      if (!panel) make();
+      const href = button.dataset.peek;
+      panel.go.href = href;
+      body.replaceChildren();
+      body.setAttribute("aria-busy", "true");
+      panel.showModal();
+      fetch(href, { credentials: "same-origin" }).then((r) => (r.ok ? r.text() : Promise.reject(r.status))).then((html) => {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const parts = [...doc.querySelectorAll("main > .hero, main > .shots, main > .atlas")];
+        if (!parts.length) { location.href = href; return; }
+        body.replaceChildren(...parts.map((p) => document.importNode(p, true)));
+        body.removeAttribute("aria-busy");
+      }).catch(() => { location.href = href; });
+    });
+  }
+
   // -- "/" jumps to the search box, as on most sites; Escape leaves it ---------------------------------------
   const search = document.getElementById("q");
   if (search) {
