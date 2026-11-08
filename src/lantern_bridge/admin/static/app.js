@@ -637,6 +637,25 @@
     });
   }
 
+  // -- the activity page on a screen across the room: only the big figures, the day and the transfers --------------
+  const tvOn = document.querySelector("[data-tv]");
+  if (tvOn) {
+    const body = document.body, exit = document.querySelector("[data-tv-exit]");
+    const set = (on) => {
+      body.classList.toggle("tv", on);
+      if (exit) exit.hidden = !on;
+      if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    };
+    tvOn.addEventListener("click", () => {
+      set(true);
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); // refused: the page still fills the window
+    });
+    if (exit) exit.addEventListener("click", () => set(false));
+    document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && body.classList.contains("tv")) set(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && body.classList.contains("tv") && !document.querySelector("dialog[open]")) set(false); });
+    if (new URLSearchParams(location.search).get("tv") === "1") set(true); // a screen that opens the address by itself
+  }
+
   // -- keys: j and k walk the shelf (or the list), Space looks at the title, ? lists them ---------------------------
   {
     const typing = (el) => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));

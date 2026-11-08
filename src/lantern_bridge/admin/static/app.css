@@ -482,3 +482,19 @@ dialog.helpbox .key{position:static;transform:none;display:inline-block;min-widt
 .daychart rect{fill:var(--aurora);opacity:.8}.daychart rect.none{fill:var(--line);opacity:1}
 .daychart rect:hover{opacity:1;fill:var(--ice)}
 .daychart .axis{display:flex;justify-content:space-between;margin:.4rem 0 0;font-family:var(--mono)}
+
+/* -- the activity page as a screen across the room: big figures, the day, the transfers -------------------------- */
+.tvexit{position:fixed;top:.8rem;right:.8rem;z-index:40;width:2.6rem;min-height:0;height:2.6rem;padding:0;border-radius:50%;font-size:1.4rem;line-height:1}
+.tvexit[hidden]{display:none}
+body.tv .top,body.tv footer,body.tv h1,body.tv .lede,body.tv .notv,body.tv #toasts{display:none}
+body.tv main{max-width:none;padding:2rem 3vw}
+body.tv .cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2rem}
+body.tv .tile{padding:1.2rem 1.4rem}
+body.tv .tile .n{font-size:clamp(2.4rem,5vw,6rem)}
+body.tv .tile .what{font-size:clamp(.9rem,1.4vw,1.4rem)}
+body.tv .tile .spark{height:3rem}
+body.tv h2{font-size:clamp(1.1rem,2vw,1.6rem)}
+body.tv .daychart svg{height:clamp(8rem,30vh,20rem)}
+body.tv table{font-size:clamp(1rem,1.8vw,1.5rem)}
+@media (max-width:60rem){body.tv .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:40rem){body.tv .cards{grid-template-columns:1fr}}
