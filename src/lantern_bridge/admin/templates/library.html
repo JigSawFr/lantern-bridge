@@ -88,6 +88,6 @@
 </nav>
 {% endif %}
 {% else %}
-<div class="empty card"><p>{% if counts["all"] %}{{ _("No title matches these filters.") }} <a href="/admin/library">{{ _("Clear the filters") }}</a>{% else %}{{ _("Nothing here yet: add a source, then let the bridge scan and hash it.") }} <a href="/admin/sources">{{ _("Sources") }}</a>{% endif %}</p></div>
+<div class="empty card"><p>{% if counts["all"] %}{{ _("No title matches these filters.") }} <a class="button small" href="/admin/library">{{ _("Clear the filters") }}</a>{% else %}{{ _("Nothing here yet: add a source, then let the bridge scan and hash it.") }} <a class="button small" href="/admin/sources">{{ _("Sources") }}</a>{% endif %}</p></div>
 {% endif %}
 {% endblock %}

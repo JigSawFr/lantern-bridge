@@ -9,7 +9,7 @@
     <td><form method="post" action="/admin/scan"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source" value="{{ s.id }}"><button class="ghost small" name="action" value="rehash" data-confirm="{{ _('Hash every file of this source again?') }}">{{ _("Rehash") }}</button></form></td>
   </tr>
   {% else %}
-  <tr><td colspan="7">{{ _("No source configured yet.") }} <a href="/admin/sources">{{ _("Add one") }}</a></td></tr>
+  <tr><td colspan="7">{{ _("No source configured yet.") }} <a class="button small" href="/admin/sources">{{ _("Add one") }}</a></td></tr>
   {% endfor %}
   </tbody>
 </table></div>

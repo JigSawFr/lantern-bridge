@@ -36,7 +36,7 @@
   {% for c in clients %}
   <tr><td>{% if c.label %}<strong>{{ c.label }}</strong> <span class="dim">{{ c.address }}</span>{% else %}{{ c.address }}{% endif %}</td><td class="dim">{{ c.agent or "–" }}</td><td>{{ c.last | when }}</td><td>{{ c.requests }}</td><td>{{ c.sent | size }}</td></tr>
   {% else %}
-  <tr><td colspan="5">{{ _("No machine has called the library since the bridge started.") }} <a href="/admin/devices">{{ _("Paired devices") }}</a></td></tr>
+  <tr><td colspan="5">{{ _("No machine has called the library since the bridge started.") }} <a class="button small ghost" href="/admin/devices">{{ _("Paired devices") }}</a></td></tr>
   {% endfor %}
   </tbody>
 </table></div>

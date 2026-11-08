@@ -358,6 +358,8 @@
   // -- the library's filters apply as they change (the search waits for a pause in the typing) ------------
   for (const form of document.querySelectorAll("form[data-autosubmit]")) {
     let timer = 0;
+    // the list under the filters is greyed and shimmers until the next page comes
+    form.addEventListener("submit", () => { for (const list of document.querySelectorAll(".shelf, main .scroll")) list.setAttribute("aria-busy", "true"); });
     form.addEventListener("change", () => form.requestSubmit());
     form.addEventListener("input", (e) => {
       if (e.target.type !== "search") return;
