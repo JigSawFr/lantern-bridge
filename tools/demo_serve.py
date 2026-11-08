@@ -14,8 +14,10 @@ import tempfile
 from pathlib import Path
 
 import uvicorn
+from lantern import signatures as sig
 from lantern.uid import new_uid
 
+from lantern_bridge.admin import presets
 from lantern_bridge.app import make_app
 from lantern_bridge.config import Config, FolderSource
 
@@ -52,7 +54,26 @@ def build(root: Path):  # type: ignore[no-untyped-def]
     assert store.create(store.setup_code() or "", "maya", PASSWORD) is None
     while app.state.runtime.cycle(batch=50):
         pass
+    people(app)
     return app
+
+
+def people(app) -> None:  # type: ignore[no-untyped-def]
+    """Made-up operators, accounts and consoles, for the accounts pages (first names that belong to no one here)."""
+    store = app.state.admin
+    assert store.add("theo", "manager", PASSWORD) is None
+    assert store.add("ines", "observer", PASSWORD) is None
+    accounts = app.state.accounts
+    accounts.create_user("noah", presets.PRESETS["full"])
+    accounts.create_user("mia", presets.PRESETS["child"])
+    accounts.update_user("mia", rating_cap=presets.cap_from("child", "10", False)[0])
+    accounts.create_user("zoe", presets.PRESETS["guest"])
+    accounts.create_user("sam", presets.PRESETS["full"], state="frozen")
+    for number, (user, device) in enumerate(
+        (("noah", "Living room"), ("noah", "Travel Lite"), ("mia", "Kids room"), ("zoe", "Guest console"))
+    ):
+        key = sig.DeviceKey(bytes([number + 1] * 32)).public
+        accounts.issue(user, device, accounts.user(user).scopes, key=key)
 
 
 if __name__ == "__main__":

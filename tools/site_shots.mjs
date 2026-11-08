@@ -8,7 +8,7 @@ const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODUL
 const PORT = process.env.PORT || "8771";
 const BASE = `http://127.0.0.1:${PORT}/admin`;
 const PASSWORD = "correct horse battery staple";
-const PAGES = [["overview", ""], ["library", "library"], ["sources", "sources"]];
+const PAGES = [["overview", ""], ["library", "library"], ["sources", "sources"], ["accounts", "accounts"], ["console", null], ["operators", "operators"]];
 
 const server = spawn(process.env.PYTHON || "python", ["tools/demo_serve.py", PORT], { stdio: ["ignore", "pipe", "inherit"] });
 await new Promise((resolve, reject) => {
@@ -26,7 +26,14 @@ try {
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(`${BASE}/`);
   for (const [name, path] of PAGES) {
-    await page.goto(`${BASE}/${path}`);
+    if (path === null) {
+      // a console's own page: the one of the child's console, reached from the list
+      await page.goto(`${BASE}/devices`);
+      await page.getByRole("link", { name: "Kids room" }).click();
+      await page.waitForURL(/\/admin\/devices\/[^/]+$/);
+    } else {
+      await page.goto(`${BASE}/${path}`);
+    }
     // The library lives in a temporary folder: the page shows a plausible path instead.
     await page.evaluate(() => document.querySelectorAll("code").forEach((c) => { c.textContent = c.textContent.replace(/\/tmp\/[^/]+\/games/, "/srv/games"); }));
     await page.waitForTimeout(600);
