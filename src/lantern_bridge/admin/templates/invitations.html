@@ -10,6 +10,7 @@
   <h2>{{ _("New invitation") }}</h2>
   <div class="form-grid">
     <label>{{ _("Account") }} <input name="user" list="users" value="family" maxlength="64" required></label>
+    <label>{{ _("If new, its rights") }} <select name="preset">{% for key in ["full", "child", "guest"] %}<option value="{{ key }}">{{ preset_labels[key] }}</option>{% endfor %}</select></label>
     <label>{{ _("Valid for") }} <select name="days"><option value="1">1 {{ _("day") }}</option><option value="7" selected>7 {{ _("days") }}</option><option value="30">30 {{ _("days") }}</option></select></label>
     <label>{{ _("Devices that may use it") }} <input name="devices" type="number" min="1" max="20" value="1" required></label>
     <label>{{ _("Note") }} <input name="note" maxlength="200"></label>

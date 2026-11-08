@@ -1,0 +1,16 @@
+{# The fields that describe an account's rights: a preset, or scopes one by one, and the age limit. `values` holds
+   the preset, the scopes held and the cap of an account being edited; `choices` the scopes the operator may give. #}
+<div class="form-grid">
+  <label>{{ _("Rights") }}
+    <select name="preset">
+      {% for key in ["full", "child", "guest", "custom"] %}<option value="{{ key }}"{% if values.preset == key %} selected{% endif %}>{{ preset_labels[key] }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>{{ _("Age limit") }} <input name="age" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" value="{{ values.age }}" placeholder="{{ _('none') }}"></label>
+  <label class="check"><input type="checkbox" name="hide_unrated"{% if values.hide_unrated %} checked{% endif %}> {{ _("Hide what has no rating") }}</label>
+</div>
+<p class="dim small">{{ _("Full: library, saves, cheats, requests and sync. Child: the same without cheats, and an age limit (12 when left empty). Guest: the library only. Custom: the scopes ticked below.") }}</p>
+<details{% if values.preset == "custom" %} open{% endif %}>
+  <summary>{{ _("Scopes, for Custom") }}</summary>
+  <p>{% for s in choices %}<label class="check"><input type="checkbox" name="scope.{{ s }}"{% if s in values.scopes %} checked{% endif %}> <code>{{ s }}</code></label> {% endfor %}</p>
+</details>

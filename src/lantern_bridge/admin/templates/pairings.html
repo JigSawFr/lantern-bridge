@@ -14,6 +14,7 @@
   <form method="post" action="/admin/pairings/{{ p.id }}" class="row">
     <input type="hidden" name="csrf" value="{{ session.csrf }}">
     <label>{{ _("Account") }} <input name="user" list="users" value="{{ users[0] if users else 'family' }}" maxlength="64" required></label>
+    <label>{{ _("If new, its rights") }} <select name="preset">{% for key in ["full", "child", "guest"] %}<option value="{{ key }}">{{ preset_labels[key] }}</option>{% endfor %}</select></label>
     <button name="decision" value="approve">{{ _("Approve") }}</button>
     <button name="decision" value="refuse" class="danger">{{ _("Refuse") }}</button>
   </form>
@@ -21,5 +22,5 @@
 {% else %}
 <p class="card muted">{{ _("Nothing is waiting. Open Lantern on a device and pick this server to pair it.") }}</p>
 {% endfor %}
-<p class="dim">{{ _("An account that does not exist yet is created with the usual scopes (library, saves, cheats, requests, sync).") }}</p>
+<p class="dim">{{ _("An account that does not exist yet is created with the rights chosen here; one that exists keeps its own.") }}</p>
 {% endblock %}
