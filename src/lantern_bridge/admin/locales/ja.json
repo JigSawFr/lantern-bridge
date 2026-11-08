@@ -674,5 +674,12 @@
  "Take rights away": "権限を外す",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "スコープのチェックを外すと、このデバイスから外せます。デバイス専用の年齢制限も設定できます。権限を増やすには、もう一度ペアリングしてください。",
  "suspended": "一時停止中",
- "Done by": "実行者"
+ "Done by": "実行者",
+ "Sign in with {name}": "{name} でサインイン",
+ "Sign in with your single sign-on": "シングルサインオンでサインイン",
+ "You are signed out.": "サインアウトしました。",
+ "Your single sign-on signed you in, but none of your groups opens these pages. Ask the owner.": "シングルサインオンでサインインできましたが、所属するどのグループもこのページを開けません。オーナーに問い合わせてください。",
+ "The single sign-on did not complete. Try again.": "シングルサインオンが完了しませんでした。もう一度お試しください。",
+ "Your password is managed by your single sign-on.": "パスワードはシングルサインオンで管理されています。",
+ "Sign-in refused": "サインインが拒否されました"
 }

@@ -79,6 +79,9 @@ class Session:
     address: str = ""
     agent: str = ""
     signed: float = 0.0  # when it was opened, by the clock on the wall
+    #: "local" (an operator of the bridge, with a password), "proxy" or "oidc" (a name and a role given from outside:
+    #: it says nothing about the operators, whose names it may share).
+    source: str = "local"
 
 
 def short(token: str) -> str:
@@ -240,7 +243,7 @@ class AdminStore:
             data["operators"] = entries
             self._write(data)
             for session in self._sessions.values():
-                if session.name == name:
+                if session.name == name and session.source == "local":
                     session.role = role
             return None
 
@@ -285,9 +288,11 @@ class AdminStore:
             return None
 
     def _drop(self, name: str, keep: str | None) -> None:
-        self._sessions = {t: s for t, s in self._sessions.items() if s.name != name or t == keep}
+        self._sessions = {t: s for t, s in self._sessions.items() if s.name != name or s.source != "local" or t == keep}
 
-    def login(self, name: str, role: str = "admin", address: str = "", agent: str = "") -> tuple[str, Session]:
+    def login(
+        self, name: str, role: str = "admin", address: str = "", agent: str = "", source: str = "local"
+    ) -> tuple[str, Session]:
         token = secrets.token_urlsafe(32)
         session = Session(
             name,
@@ -298,13 +303,14 @@ class AdminStore:
             address=address[:64],
             agent=agent[:160],
             signed=time.time(),
+            source=source,
         )
         with self._lock:
             self._sessions = {t: s for t, s in self._sessions.items() if s.expires > time.monotonic()}
             self._sessions[token] = session
             data = self._read()
             entries = self._entries(data)
-            if found := next((e for e in entries if e["name"] == name), None):
+            if source == "local" and (found := next((e for e in entries if e["name"] == name), None)):
                 found["last"] = session.signed
                 data["operators"] = entries
                 self._write(data)
@@ -342,6 +348,7 @@ class AdminStore:
                     "id": short(token),
                     "name": s.name,
                     "role": s.role,
+                    "source": s.source,
                     "address": s.address,
                     "agent": s.agent,
                     "signed": s.signed,

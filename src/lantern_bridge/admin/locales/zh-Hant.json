@@ -674,5 +674,12 @@
  "Take rights away": "收回權限",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "取消勾選某項權限範圍即可從此裝置收回，也可以給它設定單獨的年齡限制。若要給它更多，請重新配對。",
  "suspended": "已暫停",
- "Done by": "操作者"
+ "Done by": "操作者",
+ "Sign in with {name}": "使用 {name} 登入",
+ "Sign in with your single sign-on": "使用單一登入進行登入",
+ "You are signed out.": "您已登出。",
+ "Your single sign-on signed you in, but none of your groups opens these pages. Ask the owner.": "單一登入已識別您的身分，但您所屬的群組都無法開啟這些頁面。請聯絡擁有者。",
+ "The single sign-on did not complete. Try again.": "單一登入未完成，請重試。",
+ "Your password is managed by your single sign-on.": "您的密碼由單一登入管理。",
+ "Sign-in refused": "登入被拒絕"
 }

@@ -674,5 +674,12 @@
  "Take rights away": "Rechte entziehen",
  "Untick a scope to take it from this device, or give it an age limit of its own. To give it more, pair it again.": "Entfernen Sie das Häkchen bei einer Berechtigung, um sie diesem Gerät zu entziehen, oder geben Sie ihm eine eigene Altersgrenze. Um ihm mehr zu geben, koppeln Sie es neu.",
  "suspended": "ausgesetzt",
- "Done by": "Durchgeführt von"
+ "Done by": "Durchgeführt von",
+ "Sign in with {name}": "Mit {name} anmelden",
+ "Sign in with your single sign-on": "Mit Ihrem Single Sign-on anmelden",
+ "You are signed out.": "Sie sind abgemeldet.",
+ "Your single sign-on signed you in, but none of your groups opens these pages. Ask the owner.": "Ihr Single Sign-on hat Sie angemeldet, aber keine Ihrer Gruppen öffnet diese Seiten. Fragen Sie den Eigentümer.",
+ "The single sign-on did not complete. Try again.": "Das Single Sign-on wurde nicht abgeschlossen. Versuchen Sie es erneut.",
+ "Your password is managed by your single sign-on.": "Ihr Passwort wird von Ihrem Single Sign-on verwaltet.",
+ "Sign-in refused": "Anmeldung abgelehnt"
 }

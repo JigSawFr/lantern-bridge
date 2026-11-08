@@ -182,6 +182,33 @@ What an administrator types is trusted: a source's address, the webhook and the 
 
 A role is checked on the server for every request, not only hidden in the menu, and a page that nothing names needs an administrator. Changing a role, setting a password or removing an operator acts on the sessions already open, at once. Everybody changes their own password from *My account* (a link in the footer), which ends their other sessions; too many wrong guesses of the current password are slowed down like a wrong sign-in. An owner who lost the password runs `lantern-bridge operator reset <name>` on the machine that runs the bridge (it asks for the new password twice, without showing it, or reads one line on the standard input; `lantern-bridge operator list` lists the operators). The last owner cannot be demoted or removed.
 
+**Signing in through a proxy or a provider.** Besides the operators' own passwords, the pages can let in the people of an authentication proxy (Authelia, Authentik, oauth2-proxy…) or of an OpenID Connect provider. Both are set in `config.toml` (the pages do not edit them), and both turn a person's **groups** into a role; someone none of whose groups is listed does not get in (the journal says *Sign-in refused*, with their name):
+
+```toml
+[sign_in]
+local = true                      # false: no password form (the proxy or the provider must be on)
+logout_url = "https://sso.example.org/logout"   # where "Sign out" goes for those signed in from outside
+
+[sign_in.roles]                   # group -> owner | admin | manager | observer; the highest one counts
+"lantern-owners" = "owner"
+"lantern-family" = "manager"
+
+[sign_in.proxy]                   # the proxy puts the user and the groups in headers
+enabled = true
+user_header = "Remote-User"       # the defaults
+groups_header = "Remote-Groups"   # "a,b,c"
+
+[sign_in.oidc]                    # or, without a proxy, the provider itself (authorization code with PKCE)
+enabled = true
+issuer = "https://sso.example.org"
+client_id = "lantern-bridge"
+secret_env = "LANTERN_OIDC_SECRET"   # the variable holding the client secret (none: a public client)
+public_url = "https://lantern.example.org"   # this bridge as the browser sees it; the provider's redirect address is <public_url>/admin/login/oidc/callback
+groups_claim = "groups"           # and name_claim = "preferred_username", scopes = "openid profile email groups"
+```
+
+The proxy's headers are believed **only** from an address of `trusted_proxies` (and the mode refuses to start without one): keep the bridge reachable only through the proxy, and have the proxy remove any `Remote-User` a client sends. They are read again at every request, so a person whose groups change, or who leaves, loses the role at once. With a provider, the role is the one of the sign-in, until the session ends (the owner can end sessions from *Sessions*); groups the identity token does not carry are read from the provider's user information. The identity token comes straight from the provider's token endpoint over TLS and is not checked for a signature (OpenID Connect Core 3.1.3.7); its issuer, audience, expiry and nonce are. A person signed in from outside is not an operator of the bridge: they have no password here, and a name they share with an operator gives them nothing of that operator's. Whatever is set, `lantern-bridge operator reset` stays the way back for an owner who locked themselves out.
+
 **Accounts and consoles from a terminal.** For an installation without a browser, or a script, the same store as the pages (the bridge may run): `lantern-bridge account list|create|freeze|unfreeze|delete` (`create <name> --preset full|child|guest --age 12 --hide-unrated`; `delete <name> --yes` takes the account's consoles, invitations and what is kept for it, and its AeroFoil login, with it) and `lantern-bridge device list|suspend|resume|revoke` (`device list --account <name>`; `suspend|resume|revoke <id>` with the id the list shows). `list` prints a table, or JSON of `schema` 1 with `--json`; neither shows a token or its hash. Each change is a line of the journal whose actor is `(command line)`. Add `--config <file>` when the bridge's files are not in the current folder (in a container: `docker exec <container> lantern-bridge account list`).
 
 **Accounts and rights.** An account is what the devices paired with it act as: none of them goes beyond it. A form sets its rights as a preset, or scope by scope:
