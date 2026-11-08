@@ -10,15 +10,14 @@ import json
 import sqlite3
 from pathlib import Path
 
-from tests.test_admin import _admin, _client
-from tests.test_roles import _csrf
-
-from lantern_bridge.history import History
+from lantern_bridge.history import Event, History
+from test_admin import _admin, _client
+from test_roles import _csrf
 
 
 def test_a_line_keeps_who_did_it_and_the_bridge_s_own_lines_keep_nobody(tmp_path: Path) -> None:
     history = History(tmp_path / "activity.sqlite3")
-    seen = []
+    seen: list[Event] = []
     history.listeners.append(seen.append)
     history.event("started", detail="1.0")
     history.event("paired", "lea", "Living room", actor="Alex")
