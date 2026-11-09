@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import secrets
+from collections.abc import Mapping
 from pathlib import Path
 
 import httpx
@@ -26,7 +27,7 @@ BASE = "http://aerofoil.test:8465/"
 INDEX = {"files": [{"url": "/api/get_game/1#Frost Garden [0100ABCD00010000][v0].nsp", "size": 2000}]}
 
 
-def encrypt_like_aerofoil(shop: dict[str, object], public_pem: bytes) -> bytes:
+def encrypt_like_aerofoil(shop: Mapping[str, object], public_pem: bytes) -> bytes:
     """AeroFoil's `encrypt_shop` (app/shop.py), step for step."""
     aes = secrets.token_bytes(16)
     packed = zstandard.ZstdCompressor(level=6).compress(json.dumps(shop).encode())
