@@ -27,6 +27,15 @@ and what an attacker gains.
   unbounded memory, disk or bandwidth.
 - A served file whose bytes do not match the SHA-256 it was listed with.
 
+## Known, accepted code-scanning alerts
+
+- **AES in ECB mode** (CodeQL `py/weak-cryptographic-algorithm`, in `src/lantern_bridge/sources/shopkey.py`, and
+  in the test helper that builds an encrypted index). AeroFoil encrypts its index the way Tinfoil reads it:
+  AES-128 in ECB mode under a key wrapped with RSA-OAEP. The bridge only ever **decrypts** that document, with a
+  private key of its own, to read a library its owner runs; it chooses neither the mode nor protects a secret
+  with it. A different mode would make the index unreadable, so the alerts are dismissed as "used in tests" /
+  "won't fix", with this note as the reason. The option is off unless a source names an `index_key_file`.
+
 ## What happens next
 
 - The report is acknowledged, then confirmed or answered with why it is
