@@ -116,6 +116,12 @@ connection (*Settings › Shop*), and the `url` must use the host name AeroFoil 
 - **Requests.** A request is also made on AeroFoil, and when AeroFoil closes it (`done`) or denies it
   (`declined`), the account is told.
 
+A stock AeroFoil needs three settings for this to work (checked against a running AeroFoil 2.6, without its Lantern support):
+
+- *Settings › Shop › Encrypt the shop* must be **off**: AeroFoil encrypts its index for Tinfoil by default, and the bridge cannot read it (the source then reports "the index is not valid JSON").
+- Each account needs *shop access*, and *backup access* for the saves; the cheat writes need an administrator.
+- AeroFoil takes a Basic login for the shop, the saves and the cheat files, but keeps the cheat list, cheat writes and requests behind a web session, so for those the bridge signs in through the `/login` form with the same user and password and keeps the session cookie. AeroFoil's failed-login protection applies to it like to any browser, so a wrong password repeated will lock the bridge's address out.
+
 A Lantern account with no `logins` entry acts as the service account; with neither, nothing is mirrored for it.
 The age-rating ceiling is not read from AeroFoil: set it on the Lantern token.
 
