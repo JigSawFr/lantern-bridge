@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import sys
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -103,7 +104,8 @@ def test_the_key_command_writes_a_private_key_and_prints_the_public_one(
     printed = capsys.readouterr().out
     assert "BEGIN PUBLIC KEY" in printed
     assert "BEGIN" not in printed.replace("BEGIN PUBLIC KEY", "")
-    assert out.stat().st_mode & 0o777 == 0o600 or not hasattr(out.stat(), "st_mode")
+    if sys.platform != "win32":  # POSIX permissions
+        assert out.stat().st_mode & 0o777 == 0o600
     assert shopkey.load(out).has_private()
     # it is not written over
     assert main(["aerofoil-key", "-o", str(out)]) == 1
