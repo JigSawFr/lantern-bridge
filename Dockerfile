@@ -5,7 +5,7 @@
 # `git clone --recurse-submodules` before building.
 
 # The base images are pinned by digest; Dependabot moves them (tag and digest).
-FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca AS build
+FROM python:3.15-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a AS build
 COPY --from=ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 /uv /usr/local/bin/uv
 # The environment is built where it will run: its scripts name their interpreter by path
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never UV_PROJECT_ENVIRONMENT=/opt/venv
@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     && find /opt/venv -name uv_cache.json -delete \
     && find /opt/venv -name RECORD -exec sed -i '/uv_cache\.json/d' {} +
 
-FROM python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca
+FROM python:3.15-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
 # The run needs neither pip nor the GUI and teaching modules
 RUN addgroup -S -g 10001 bridge \
     && adduser -S -u 10001 -G bridge -h /config -H bridge \
