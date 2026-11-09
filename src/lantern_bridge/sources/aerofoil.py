@@ -9,6 +9,8 @@ one a Lantern account is tied to.
 A stock AeroFoil takes that login as HTTP Basic for the saves and the cheat files only; its cheat list, its
 cheat writes and its requests want a web session. For those the login is made the way the web page does it
 (the ``/login`` form, with the same user and password) and the session cookie is kept, per user.
+
+An AeroFoil that encrypts its index is read with the source's own index key (``shopkey``), when it has one.
 """
 
 from __future__ import annotations
@@ -19,7 +21,9 @@ from typing import Any
 from urllib.parse import quote, urlsplit
 
 import httpx
+from Crypto.PublicKey.RSA import RsaKey
 
+from lantern_bridge.sources import shopkey
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
 
 #: The largest answer read from a call (a save archive is read whole, to be hashed).
@@ -87,8 +91,17 @@ class AeroFoil(Shop):
         """The same AeroFoil, called as another user (the connection is shared)."""
         return AeroFoil(self.url, user=user, password=password, client=self._client, hauth=self.hauth)
 
-    def __init__(self, url: str, *, user: str | None = None, password: str | None = None, **kw: Any) -> None:
+    def __init__(
+        self,
+        url: str,
+        *,
+        user: str | None = None,
+        password: str | None = None,
+        index_key: RsaKey | None = None,
+        **kw: Any,
+    ) -> None:
         super().__init__(url, user=user, password=password, **kw)
+        self._index_key = index_key
         self._login_form = {"user": user, "password": password} if user is not None and password is not None else None
         self._session: str | None = None
 
@@ -109,6 +122,12 @@ class AeroFoil(Shop):
             raise UpstreamError("the AeroFoil refused the login")
         self._session = cookie
         return cookie
+
+    def index_data(self, data: bytes) -> bytes:
+        """The index, opened with the index key when AeroFoil encrypted it and the source has one."""
+        if self._index_key is not None and shopkey.is_encrypted(data):
+            return shopkey.decrypt(data, self._index_key)
+        return data
 
     def _root(self) -> str:
         parts = urlsplit(self.url)

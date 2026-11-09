@@ -71,6 +71,11 @@ def depth(value: Any, limit: int = MAX_DEPTH) -> int:
 
 def parse_index(data: bytes) -> dict[str, Any]:
     """The index document: a JSON object, not too deep. Raises UpstreamError otherwise."""
+    if data.startswith(b"TINFOIL"):
+        raise UpstreamError(
+            "the index is encrypted (Tinfoil's own encryption): turn encryption off on the shop, "
+            "or, for an AeroFoil, give the source an `index_key_file`"
+        )
     try:
         document = json.loads(data)
     except (ValueError, RecursionError) as error:
@@ -245,13 +250,17 @@ class Shop:
                 raise UpstreamError(f"the shop cannot be read ({type(error).__name__})") from error
         raise UpstreamError("too many redirects")
 
+    def index_data(self, data: bytes) -> bytes:
+        """What an index answer holds, as JSON: the answer itself (a shop that encrypts it overrides this)."""
+        return data
+
     def listing(self) -> Iterator[Listed]:
         """Every file of the shop: its index, then the directories it names, breadth first and bounded."""
         queue, seen, files = [self.url], {self.url}, 0
         while queue and len(seen) <= MAX_DIRECTORIES + 1:
             address = queue.pop(0)
             try:
-                document = parse_index(self.get(address))
+                document = parse_index(self.index_data(self.get(address)))
             except UpstreamError as error:
                 if address == self.url:
                     raise
