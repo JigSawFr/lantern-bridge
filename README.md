@@ -118,12 +118,28 @@ connection (*Settings › Shop*), and the `url` must use the host name AeroFoil 
 
 A stock AeroFoil needs three settings for this to work (checked against a running AeroFoil 2.6, without its Lantern support):
 
-- *Settings › Shop › Encrypt the shop* must be **off**: AeroFoil encrypts its index for Tinfoil by default, and the bridge cannot read it (the source then reports "the index is not valid JSON").
+- *Settings › Shop › Encrypt the shop* must be **off**, or encrypted for a key of the bridge's (below): AeroFoil encrypts its index for Tinfoil's key by default, and the bridge cannot read that (the source then says the index is encrypted).
 - Each account needs *shop access*, and *backup access* for the saves; the cheat writes need an administrator.
 - AeroFoil takes a Basic login for the shop, the saves and the cheat files, but keeps the cheat list, cheat writes and requests behind a web session, so for those the bridge signs in through the `/login` form with the same user and password and keeps the session cookie. AeroFoil's failed-login protection applies to it like to any browser, so a wrong password repeated will lock the bridge's address out.
 
 A Lantern account with no `logins` entry acts as the service account; with neither, nothing is mirrored for it.
 The age-rating ceiling is not read from AeroFoil: set it on the Lantern token.
+
+#### An AeroFoil that keeps its index encrypted
+
+If the shop's encryption has to stay on, the bridge can have a key of its own, which AeroFoil then encrypts for:
+
+```sh
+lantern-bridge aerofoil-key -o /config/aerofoil-index.pem
+```
+
+It writes the private key (readable by you only, never over an existing file) and prints the public key: paste it in AeroFoil under *Settings › Shop › Public key*, keep the encryption on, and name the file in the source:
+
+```toml
+index_key_file = "/config/aerofoil-index.pem"
+```
+
+**Tinfoil can then no longer read that AeroFoil**: the key is one for the whole shop, and Tinfoil's private key is in the console. Use it only when the bridge (so Lantern clients) is what reads the library. The key is not in the backup of the bridge's settings; keep a copy of the file, as without it the source reads nothing.
 
 ### 🖥️ Administration pages
 

@@ -32,6 +32,7 @@ from lantern_bridge.notify import Notifier
 from lantern_bridge.pulse import Pulse
 from lantern_bridge.push import Push
 from lantern_bridge.releases import Releases
+from lantern_bridge.sources import shopkey
 from lantern_bridge.sources.aerofoil import AeroFoil
 from lantern_bridge.sources.ownfoil import Ownfoil
 from lantern_bridge.sources.tinfoil import Shop, UpstreamError
@@ -159,7 +160,13 @@ class Runtime:
                 "source %s: the variable %s is not set; no host verification is sent", source.id, source.hauth_env
             )
         if isinstance(source, AerofoilSource):
-            return AeroFoil(source.url, user=user, password=password, hauth=hauth)
+            key = None
+            if source.index_key_file:
+                try:
+                    key = shopkey.load(source.index_key_file)
+                except (OSError, ValueError) as error:
+                    log.warning("source %s: the index key cannot be read (%s)", source.id, type(error).__name__)
+            return AeroFoil(source.url, user=user, password=password, hauth=hauth, index_key=key)
         if isinstance(source, OwnfoilSource):
             return Ownfoil(source.url, user=user, password=password)
         return Shop(source.url, user=user, password=password, hauth=hauth)

@@ -39,6 +39,7 @@ dependencies = [
     "tomli-w>=1.2.0",
     "uvicorn>=0.30",
     "websockets>=13",
+    "zstandard>=0.22",
 ]
 
 [project.scripts]

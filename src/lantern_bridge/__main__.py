@@ -40,6 +40,13 @@ def build_parser() -> argparse.ArgumentParser:
     backup.add_argument("-o", "--output", type=Path, help="the file to write (default: lantern-bridge-backup.zip)")
     restore = commands.add_parser("restore", help="restore a backup (stop the bridge first)")
     restore.add_argument("file", type=Path)
+    aero_key = commands.add_parser(
+        "aerofoil-key",
+        help="make the key pair for an AeroFoil whose index is encrypted for the bridge (see the README)",
+    )
+    aero_key.add_argument(
+        "-o", "--output", type=Path, default=Path("aerofoil-index.pem"), help="the private key to write"
+    )
     operator = commands.add_parser("operator", help="list the operators of the pages, or give one a new password")
     actions = operator.add_subparsers(dest="action", required=True)
     listing = actions.add_parser("list", help="the operators and their roles")
@@ -199,8 +206,30 @@ def _operator(args: argparse.Namespace) -> int:
     return 0
 
 
+def _aerofoil_key(args: argparse.Namespace) -> int:
+    from lantern_bridge.sources import shopkey
+
+    private, public = shopkey.generate()
+    try:
+        shopkey.write_private(args.output, private)
+    except FileExistsError:
+        print(f"lantern-bridge: {args.output} exists; it is not overwritten", file=sys.stderr)
+        return 1
+    except OSError as error:
+        print(f"lantern-bridge: {args.output} cannot be written ({error.strerror})", file=sys.stderr)
+        return 1
+    print(f"The private key is in {args.output} (readable by you only): keep it, and out of any backup you share.")
+    print("Put this public key in AeroFoil, under Settings > Shop > Public key, with encryption on:\n")
+    print(public.decode())
+    print(f'\nThen give the source `index_key_file = "{args.output}"` in the configuration.')
+    print("Tinfoil can no longer read that AeroFoil: the key is one for the whole shop.")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "aerofoil-key":
+        return _aerofoil_key(args)
     if args.command in {"status", "rehash"}:
         return _inspect(args)
     if args.command == "invite":

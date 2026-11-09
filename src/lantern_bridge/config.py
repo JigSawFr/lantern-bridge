@@ -100,6 +100,9 @@ class AerofoilSource(ShopSource):
     """
 
     logins: tuple[Login, ...] = ()
+    #: A PEM file with the private key AeroFoil's index is encrypted for (``lantern-bridge aerofoil-key`` makes
+    #: it). Without it, the index must not be encrypted.
+    index_key_file: str | None = None
 
 
 Source = FolderSource | TinfoilSource | OwnfoilSource | AerofoilSource
@@ -290,6 +293,8 @@ def _source_table(source: Source) -> dict[str, Any]:
         table["password_env"] = source.password_env
     if source.hauth_env is not None:
         table["hauth_env"] = source.hauth_env
+    if isinstance(source, AerofoilSource) and source.index_key_file is not None:
+        table["index_key_file"] = source.index_key_file
     if isinstance(source, AerofoilSource) and source.logins:
         table["logins"] = [
             {"account": x.account, "user": x.user, "password_env": x.password_env} for x in source.logins
@@ -591,12 +596,21 @@ def _parse(data: dict[str, Any]) -> Config:
                 raise ConfigError(f"source {sid!r}: `hauth_env` must be a non-empty string")
             url = _parse_url(sid, raw.get("url"))
             if kind == "aerofoil":
+                key_file = raw.get("index_key_file")
+                if key_file is not None and (not isinstance(key_file, str) or not key_file):
+                    raise ConfigError(f"source {sid!r}: `index_key_file` must be a non-empty string")
                 sources.append(
                     AerofoilSource(
-                        id=sid, url=url, user=user, password_env=env, hauth_env=hauth, logins=_logins(sid, raw)
+                        id=sid,
+                        url=url,
+                        user=user,
+                        password_env=env,
+                        hauth_env=hauth,
+                        logins=_logins(sid, raw),
+                        index_key_file=key_file,
                     )
                 )
-                own = {"id", "kind", "url", "user", "password_env", "hauth_env", "logins"}
+                own = {"id", "kind", "url", "user", "password_env", "hauth_env", "logins", "index_key_file"}
             else:
                 shop = OwnfoilSource if kind == "ownfoil" else TinfoilSource
                 sources.append(shop(id=sid, url=url, user=user, password_env=env, hauth_env=hauth))
