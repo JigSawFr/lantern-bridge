@@ -1,6 +1,6 @@
 [build-system]
 # Pinned, so that a release can be built again byte for byte; raised by hand.
-requires = ["hatchling==1.32.4"]
+requires = ["hatchling==1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
