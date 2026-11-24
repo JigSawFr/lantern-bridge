@@ -12,6 +12,6 @@ permissions:
 
 jobs:
   links:
-    uses: JigSawFr/boreale-site/.github/workflows/links.yml@2f83041741afc602a3c42e4799d1b449a6db6c52 # main after #22
+    uses: JigSawFr/boreale-site/.github/workflows/links.yml@fe95805c576fd5c6a0e1457a401e6eb7527c2435 # main after #22
     with:
       build: python3 tools/build_site.py build
